@@ -9,8 +9,9 @@ import * as atk008 from './atk-008-tarball-tamper.js';
 import * as atk009 from './atk-009-dormant-trigger.js';
 import * as atk010 from './atk-010-sandbox-evasion.js';
 import * as atk011 from './atk-011-transitive-prop.js';
+import { scanAll as megalodonScan } from './megalodon/index.js';
 
-export async function runAll(pkgJson, files = []) {
+export async function runAll(pkgJson, files = [], registryMeta = null, allFiles = null) {
   const findings = [];
   findings.push(...await atk001.scan(pkgJson, files));
   findings.push(...await atk002.scan(pkgJson, files));
@@ -23,5 +24,6 @@ export async function runAll(pkgJson, files = []) {
   findings.push(...await atk009.scan(pkgJson, files));
   findings.push(...await atk010.scan(pkgJson, files));
   findings.push(...await atk011.scan(pkgJson, files));
+  findings.push(...await megalodonScan(pkgJson, allFiles || files, registryMeta));
   return findings.sort((a, b) => b.severity.localeCompare(a.severity));
 }

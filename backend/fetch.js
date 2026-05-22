@@ -150,7 +150,12 @@ async function extractTarball(buffer, tmpDir) {
     content: fs.readFileSync(p, 'utf8')
   }));
 
-  return { pkgJson, jsFiles, tmpDir };
+  const allFiles = walkFiles(tmpDir, '').map(p => ({
+    path: p,
+    content: fs.readFileSync(p, 'utf8')
+  }));
+
+  return { pkgJson, jsFiles, allFiles, tmpDir };
 }
 
 function walkFiles(dir, ext) {

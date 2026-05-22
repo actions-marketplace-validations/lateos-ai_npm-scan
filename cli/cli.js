@@ -67,11 +67,11 @@ program
         }
       }
 
-      const { pkgJson, jsFiles, tmpDir } = options.file
+      const { pkgJson, jsFiles, allFiles, tmpDir, meta } = options.file
         ? await import('../backend/fetch.js').then(m => m.scanLocalTarball(options.file))
         : await import('../backend/fetch.js').then(m => m.fetchPackage(target, fetchOptions));
       const pkgName = target || pkgJson.name || 'unknown';
-      const findings = await import('../backend/detectors/index.js').then(m => m.runAll(pkgJson, jsFiles));
+      const findings = await import('../backend/detectors/index.js').then(m => m.runAll(pkgJson, jsFiles, meta, allFiles));
       const { saveScan } = await import('../backend/db.js');
       const scanId = await saveScan(pkgName, 'latest', findings);
 
