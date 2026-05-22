@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-324%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-371%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
@@ -24,6 +24,8 @@ The 2025–2026 wave of npm supply chain attacks proved that traditional tooling
 
 Attackers have moved past simple typosquatting. They now ship **obfuscated preinstall hooks**, **credential harvesters hidden behind environment detection**, **dormant backdoors with time-based activation**, and **worm-style transitive propagation** that spreads through peer dependencies.
 
+The **Megalodon campaign** (2026) alone compromised 5,500+ repositories via fake GitHub PRs, malicious workflow injection, and cloud credential exfiltration — all coordinated through a single actor automating the entire kill chain. **@lateos/npm-scan** now detects artifacts of this campaign out of the box.
+
 **npm audit** checks known CVEs. **Snyk** scans for vulnerabilities. **Socket** looks at package behavior. None of them were designed for the generation of attacks that emerged in 2025 — attacks that look benign until they reach production.
 
 **@lateos/npm-scan** was built for this moment.
@@ -42,6 +44,7 @@ Attackers have moved past simple typosquatting. They now ship **obfuscated prein
 | Conditional trigger detection (ATK-009) | ❌ | ❌ | ❌ | ✅ |
 | Sandbox evasion detection (ATK-010) | ❌ | ❌ | ❌ | ✅ |
 | Transitive worm propagation (ATK-011) | ❌ | ❌ | ❌ | ✅ |
+| Campaign detection (Megalodon CI/CD) | ❌ | ❌ | ❌ | ✅ |
 | Attack taxonomy (ATK series) | ❌ | ❌ | ❌ | ✅ |
 | SBOM output (CycloneDX + SPDX) | ❌ | ✅ | ❌ | ✅ |
 | SARIF v2.1 (GitHub Code Scanning) | ❌ | ❌ | ❌ | ✅ |
@@ -279,8 +282,10 @@ npm-scan report --pdf             # all scans (premium)
 | **ATK-009** | Conditional/dormant triggers (CI detection, time-based) | Behavioral | 🔴 high | SR-9.2 |
 | **ATK-010** | Sandbox evasion / anti-analysis | Behavioral | 🟠 medium | SR-10.3 |
 | **ATK-011** | Transitive propagation (worm-style lateral spread) | Behavioral | 🔴 high | SR-11.4 |
+| **MEGALODON** | Megalodon CI/CD campaign — workflow C2 exfil, credential harvest, publish velocity spike, publisher drift | Static + Registry | ⚫ critical | SR-3.1, SR-7.5 |
 
 > **How evasive attacks are caught:** ATK-009 detects packages that check `process.env.CI`, probe hostnames, or use time-based activation. ATK-010 flags `debugger` statements, `os.hostname()` probes, and env fingerprinting. ATK-011 traces peer dependency graphs to detect worm-like propagation patterns.  
+> **MEGALODON** campaign detection analyzes bundled `.github/workflows/` files for C2 co-occurrence and base64 decode chains, scans tarball files for credential + outbound network patterns, detects version publish velocity spikes via npm registry metadata, and identifies publisher account drift — all without any network calls beyond the initial package fetch.  
 > See [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) for full evasion surface documentation and PoC examples.
 
 ---
@@ -627,7 +632,7 @@ See the [Docker quick-start section](#-run-lateosnpm-scan-anywhere-with-docker--
 
 ### Free tier (shipped)
 
-- All 11 ATK detectors (static + behavioral)
+- All 11 ATK detectors + **MEGALODON** CI/CD campaign detection (D1–D6)
 - SBOM output (CycloneDX + SPDX)
 - HTML, text, and compliance reports (NIST + EU CRA)
 - Policy-as-code engine (YAML)
@@ -686,6 +691,7 @@ node --test test/detectors-corpus.test.js
 
 **Test structure:**
 - `test/fixtures/mock-data.js` — shared mock scans, packages, and code snippets
+- `test/megalodon.test.js` — 30 Megalodon campaign detection tests (D1–D4 + aggregator + runAll integration)
 - `test/db.test.js` — database CRUD (save, query, persist)
 - `test/detectors-edge-cases.test.js` — per-detector boundary tests (no-ops, clean clears, severity)
 - `test/detectors-corpus.test.js` — 33 malicious + 50 clean tarball integration (offline)
