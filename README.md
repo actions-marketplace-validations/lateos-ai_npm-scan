@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-371%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-384%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
@@ -23,6 +23,8 @@ Static + behavioral analysis that catches what npm audit, Snyk, and Socket miss 
 The 2025–2026 wave of npm supply chain attacks proved that traditional tooling is no longer enough.
 
 Attackers have moved past simple typosquatting. They now ship **obfuscated preinstall hooks**, **credential harvesters hidden behind environment detection**, **dormant backdoors with time-based activation**, and **worm-style transitive propagation** that spreads through peer dependencies.
+
+A growing attack vector is **HuggingFace org impersonation** — packages that masquerade as legitimate HF model repositories (e.g., `0penai/gpt2` instead of `openai/gpt2`) to trick users into downloading malicious model artifacts during CI/CD pipelines, often bundled with suspicious binaries (`.exe`, `.dll`) in model repos that deep-learned tools trust by default.
 
 The **Megalodon campaign** (2026) alone compromised 5,500+ repositories via fake GitHub PRs, malicious workflow injection, and cloud credential exfiltration — all coordinated through a single actor automating the entire kill chain. **@lateos/npm-scan** now detects artifacts of this campaign out of the box.
 
@@ -45,6 +47,7 @@ The **Megalodon campaign** (2026) alone compromised 5,500+ repositories via fake
 | Sandbox evasion detection (ATK-010) | ❌ | ❌ | ❌ | ✅ |
 | Transitive worm propagation (ATK-011) | ❌ | ❌ | ❌ | ✅ |
 | Campaign detection (Megalodon CI/CD) | ❌ | ❌ | ❌ | ✅ |
+| HF model repo impersonation + README clone | ❌ | ❌ | ❌ | ✅ |
 | Attack taxonomy (ATK series) | ❌ | ❌ | ❌ | ✅ |
 | SBOM output (CycloneDX + SPDX) | ❌ | ✅ | ❌ | ✅ |
 | SARIF v2.1 (GitHub Code Scanning) | ❌ | ❌ | ❌ | ✅ |
@@ -74,6 +77,7 @@ The **Megalodon campaign** (2026) alone compromised 5,500+ repositories via fake
 | 🛡️ | **Zero telemetry** | No data leaves your machine. No cloud. No callbacks. |
 | 💾 | **Local scan history** | SQLite-backed persistence, zero external dependencies |
 | 🪝 | **Pre-commit hook** | Block threats before commit — one-liner install, scans `package-lock.json` changes |
+| 🤖 | **HF impersonation detection** | Detects typosquatted HuggingFace orgs (Jaro-Winkler), README clones (SimHash), artifact mismatches (`.exe` in model repos), and new-org amplifier — with lazy two-stage evaluation, zero network in Stage 1 |
 | 📎 | **Yarn + pnpm support** | `scan-lockfile` parses `yarn.lock` and `pnpm-lock.yaml` alongside `package-lock.json` |
 
 ---
@@ -283,9 +287,11 @@ npm-scan report --pdf             # all scans (premium)
 | **ATK-010** | Sandbox evasion / anti-analysis | Behavioral | 🟠 medium | SR-10.3 |
 | **ATK-011** | Transitive propagation (worm-style lateral spread) | Behavioral | 🔴 high | SR-11.4 |
 | **MEGALODON** | Megalodon CI/CD campaign — workflow C2 exfil, credential harvest, publish velocity spike, publisher drift | Static + Registry | ⚫ critical | SR-3.1, SR-7.5 |
+| **HF_IMPERSONATION** | HuggingFace org spoof detection — Jaro-Winkler similarity against 15 known-good orgs, SimHash README clone detection, artifact mismatch (`.exe`/`.dll` in model repos), postinstall escalation, new-org amplifier | Static + Network (Stage 2) | 🔴 high / ⚫ critical | SR-2.1 |
 
 > **How evasive attacks are caught:** ATK-009 detects packages that check `process.env.CI`, probe hostnames, or use time-based activation. ATK-010 flags `debugger` statements, `os.hostname()` probes, and env fingerprinting. ATK-011 traces peer dependency graphs to detect worm-like propagation patterns.  
 > **MEGALODON** campaign detection analyzes bundled `.github/workflows/` files for C2 co-occurrence and base64 decode chains, scans tarball files for credential + outbound network patterns, detects version publish velocity spikes via npm registry metadata, and identifies publisher account drift — all without any network calls beyond the initial package fetch.  
+> **HF_IMPERSONATION** detection uses a lazy two-stage evaluation: Stage 1 scans `package.json` scripts and JS/TS sources for HuggingFace references (URLs, `from_pretrained()`, `hub.download()`) and runs Jaro-Winkler similarity against 15 known-good HF orgs — zero network. If spoofs are found, Stage 2 fetches the HF model API, computes SimHash of both READMEs for clone detection, validates artifact type consistency (e.g., `transformers` library with `.exe` files is flagged as critical), applies a new-org amplifier (<30 days), and escalates when the reference appears in a lifecycle script.  
 > See [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) for full evasion surface documentation and PoC examples.
 
 ---
@@ -632,7 +638,7 @@ See the [Docker quick-start section](#-run-lateosnpm-scan-anywhere-with-docker--
 
 ### Free tier (shipped)
 
-- All 11 ATK detectors + **MEGALODON** CI/CD campaign detection (D1–D6)
+- All 11 ATK detectors + **MEGALODON** CI/CD campaign detection (D1–D6) + **HF_IMPERSONATION** detector
 - SBOM output (CycloneDX + SPDX)
 - HTML, text, and compliance reports (NIST + EU CRA)
 - Policy-as-code engine (YAML)
@@ -701,6 +707,7 @@ node --test test/detectors-corpus.test.js
 - `test/report-snapshots.test.js` — HTML/text/CRA/PDF format assertions
 - `test/report.test.js` — SARIF, CSV, STIG, risk score format tests
 - `test/lockfile.test.js` — npm/yarn/pnpm parser, auto-detect, ATK-007/011 lockfile tests
+- `test/hf-impersonation.test.js` — 13 HF impersonation detection tests (no-ref, exact match, spoof, README clone, artifact mismatch, postinstall escalation, new-org tag)
 - `test/cli.test.js` — commander integration tests (help, version, scan, report, error handling)
 - `test/cli-lockfile.test.js` — scan-lockfile CLI options, yarn/pnpm/monorepo/watch tests
 

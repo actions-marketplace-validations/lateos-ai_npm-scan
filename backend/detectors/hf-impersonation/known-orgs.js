@@ -1,0 +1,5 @@
+export const KNOWN_HF_ORGS = [
+  'openai', 'meta-llama', 'mistralai', 'google', 'microsoft',
+  'stabilityai', 'EleutherAI', 'huggingface', 'tiiuae', 'cohere',
+  'anthropic', 'deepseek-ai', 'Qwen', 'NousResearch', 'teknium',
+];
