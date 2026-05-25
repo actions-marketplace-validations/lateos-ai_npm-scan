@@ -1,0 +1,47 @@
+{
+  "lastUpdated": "2026-05-24T00:00:00.000Z",
+  "waves": {
+    "wave1": {
+      "id": "mini-shai-hulud-wave1",
+      "description": "TanStack CI/CD hijack (mid-May 2026) — 84 malicious versions across 42 packages in ~6 minutes via compromised GitHub Actions CI. Forged SLSA BL3 provenance attestations.",
+      "windowMinutes": 6,
+      "iocs": [
+        {
+          "type": "packageScope",
+          "value": "@tanstack",
+          "maliciousVersionRanges": [],
+          "notes": "Seed IOC — update from threat intel feed. Affected: @tanstack/router, @tanstack/react-router, @tanstack/query, @tanstack/form, @tanstack/store, @tanstack/virtual, @tanstack/ranger, @tanstack/table."
+        }
+      ]
+    },
+    "wave2": {
+      "id": "mini-shai-hulud-wave2",
+      "description": "AntV/atool maintainer account compromise (late May 2026) — 600+ malicious versions across 300+ packages in ~22 minutes. ~16M weekly download blast radius.",
+      "windowMinutes": 22,
+      "iocs": [
+        {
+          "type": "publisherAccount",
+          "value": "atool",
+          "compromiseWindowStart": "2026-05-20T00:00:00.000Z",
+          "compromiseWindowEnd": null,
+          "notes": "Seed IOC — compromised @antv/atool maintainer account. Update compromise window from threat intel."
+        },
+        {
+          "type": "packageScope",
+          "value": "@antv",
+          "maliciousVersionRanges": [],
+          "notes": "Blast radius: @antv/g2, @antv/g6, @antv/x6, @antv/l7, echarts-for-react, timeago.js. Seed IOC — update from threat intel."
+        }
+      ]
+    }
+  },
+  "iocs": [
+    {
+      "type": "sha512",
+      "value": "sha512-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "package": "@antv/g2",
+      "wave": 2,
+      "notes": "Placeholder sha512 — replace with actual SHA-512 integrity hash from npm dist.integrity of a confirmed malicious version."
+    }
+  ]
+}

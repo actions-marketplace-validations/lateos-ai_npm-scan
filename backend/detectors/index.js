@@ -11,6 +11,7 @@ import * as atk010 from './atk-010-sandbox-evasion.js';
 import * as atk011 from './atk-011-transitive-prop.js';
 import { scanAll as megalodonScan } from './megalodon/index.js';
 import { scan as hfScan } from './hf-impersonation/index.js';
+import { scan as miniShaiHuludScan } from './mini-shai-hulud/index.js';
 
 export async function runAll(pkgJson, files = [], registryMeta = null, allFiles = null) {
   const findings = [];
@@ -27,5 +28,6 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
   findings.push(...await atk011.scan(pkgJson, files));
   findings.push(...await megalodonScan(pkgJson, allFiles || files, registryMeta));
   findings.push(...await hfScan(pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await miniShaiHuludScan(pkgJson, files, registryMeta, allFiles || files));
   return findings.sort((a, b) => b.severity.localeCompare(a.severity));
 }
