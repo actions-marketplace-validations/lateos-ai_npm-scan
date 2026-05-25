@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-384%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-428%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
@@ -47,7 +47,9 @@ The **Megalodon campaign** (2026) alone compromised 5,500+ repositories via fake
 | Sandbox evasion detection (ATK-010) | ❌ | ❌ | ❌ | ✅ |
 | Transitive worm propagation (ATK-011) | ❌ | ❌ | ❌ | ✅ |
 | Campaign detection (Megalodon CI/CD) | ❌ | ❌ | ❌ | ✅ |
+| Worm campaign detection (Mini Shai-Hulud Wave 1–3) | ❌ | ❌ | ❌ | ✅ |
 | HF model repo impersonation + README clone | ❌ | ❌ | ❌ | ✅ |
+| VS Code extension supply chain scan (--vsix) | ❌ | ❌ | ❌ | ✅ |
 | Attack taxonomy (ATK series) | ❌ | ❌ | ❌ | ✅ |
 | SBOM output (CycloneDX + SPDX) | ❌ | ✅ | ❌ | ✅ |
 | SARIF v2.1 (GitHub Code Scanning) | ❌ | ❌ | ❌ | ✅ |
@@ -68,6 +70,8 @@ The **Megalodon campaign** (2026) alone compromised 5,500+ repositories via fake
 | 🕵️ | **Heuristic static analysis** | AST-level inspection catches obfuscation, eval chains, env probing, and suspicious lifecycle scripts that regex-based tools miss |
 | 🧠 | **Behavioral detection** | Identifies conditional triggers (time-based, CI-aware), sandbox evasion, and dormant activation patterns |
 | 🧬 | **ATK attack taxonomy** | 11 classified attack types with NIST 800-161 mappings — versioned, documented, and PR-able |
+| 🪱 | **Worm campaign detection** | Mini Shai-Hulud — 6 sub-checks detecting burst publish, sibling compromise, SLSA attestation mismatch, publisher drift, IOC match, and token exfil across 3 waves (TanStack, AntV/atool, Nx Console) |
+| 🧩 | **VSIX extension scanning** | `npm-scan scan --vsix nrwl.angular-console` — detects VS Code Marketplace supply chain attacks: burst publish, publisher anomaly, activation event risk, orphan commit fetch, known IOC, and exfil patterns (Nx Console 18.95.0 CVE-2026-48027) |
 | 📦 | **SBOM generation** | CycloneDX 1.5 and SPDX 2.3 with findings embedded as vulnerabilities |
 | 🔍 | **SARIF output** | GitHub Advanced Security / CodeQL compatible SARIF v2.1 — shows findings directly in Security tab |
 | 🧾 | **Compliance reporting** | NIST SP 800-161 traceability matrix + EU Cyber Resilience Act mapping (free tier) |
@@ -193,41 +197,28 @@ npm-scan scan some-package --policy .npm-scan.yml
 
 # Scan a local tarball (no registry fetch needed)
 npm-scan scan --file path/to/malicious-package.tgz
+
+# Scan a VS Code extension for Marketplace supply chain attacks
+npm-scan scan --vsix nrwl.angular-console
+
+# Scan a package AND a VSIX extension together (findings merge)
+npm-scan scan lodash --vsix nrwl.angular-console
 ```
 
 ### Scan a lockfile
 
 ```bash
-# Scan the current project's dependencies (auto-detects npm/yarn/pnpm)
+# Scan a single package
+npm-scan scan lodash
+
+# Scan your lockfile
 npm-scan scan-lockfile
 
-# Scan a specific lockfile
-npm-scan scan-lockfile -f ./path/to/package-lock.json
+# Scan a VS Code extension for supply chain threats
+npm-scan scan --vsix nrwl.angular-console
 
-# Scan yarn.lock or pnpm-lock.yaml
-npm-scan scan-lockfile -f ./yarn.lock --yarn
-npm-scan scan-lockfile -f ./pnpm-lock.yaml --pnpm
-
-# Fail CI/CD on high or critical findings (exit code 1)
-npm-scan scan-lockfile --fail-on high
-
-# Fail on any findings (low and above)
-npm-scan scan-lockfile --fail-on low
-
-# Generate SARIF v2.1 output for GitHub Advanced Security / VS Code
-npm-scan scan-lockfile --sarif results.sarif
-
-# Watch for changes and auto-rescan (single lockfile)
-npm-scan scan-lockfile --watch
-
-# Watch with faster debounce (500ms) — great for dev workflows
-npm-scan scan-lockfile --watch --debounce 500
-
-# Watch monorepo (all lockfiles — npm/yarn/pnpm — in workspace)
-npm-scan scan-lockfile --watch --monorepo
-
-# Output only risk score (0-10) for dashboards/thresholds
-npm-scan scan-lockfile --score-only
+# View latest scans
+npm-scan report
 ```
 
 ### Generate reports
@@ -288,10 +279,14 @@ npm-scan report --pdf             # all scans (premium)
 | **ATK-011** | Transitive propagation (worm-style lateral spread) | Behavioral | 🔴 high | SR-11.4 |
 | **MEGALODON** | Megalodon CI/CD campaign — workflow C2 exfil, credential harvest, publish velocity spike, publisher drift | Static + Registry | ⚫ critical | SR-3.1, SR-7.5 |
 | **HF_IMPERSONATION** | HuggingFace org spoof detection — Jaro-Winkler similarity against 15 known-good orgs, SimHash README clone detection, artifact mismatch (`.exe`/`.dll` in model repos), postinstall escalation, new-org amplifier | Static + Network (Stage 2) | 🔴 high / ⚫ critical | SR-2.1 |
+| **MINI_SHAI_HULUD** | Mini Shai-Hulud worm campaign — burst publish velocity (≥3 versions/30 min), co-temporal sibling compromise, SLSA attestation mismatch (sub-60s gap, first-ever, builder mismatch), publisher drift (<10 min account change), IOC match (scope/sha512/publisher from seed file), token exfil (NPM_TOKEN/.npmrc/atob patterns), Nx Console downstream detection | Static + Registry | 🔴 high / ⚫ critical | SR-3.1, SR-7.5 |
+| **VSIX_SCAN** | VS Code extension supply chain scan — burst publish (≥2 versions/30 min, hot-pull <20 min), publisher anomaly (account substitution, new-account on high-install ext, 15-min add+publish), activation event risk (onStartupFinished→HIGH, *→CRITICAL, escalation on shell keywords), orphan commit fetch (GitHub API SHA refs, npx git URL, MCP-disguised exfil, Bun install), known IOC (extensionId/publisherAccount/commit hash from seed), exfil patterns (cred paths, DNS tunneling, AES+RSA, anti-analysis, Bun APIs) | Static + Registry | 🟠 medium / 🔴 high / ⚫ critical | SR-3.1, SR-5.3 |
 
 > **How evasive attacks are caught:** ATK-009 detects packages that check `process.env.CI`, probe hostnames, or use time-based activation. ATK-010 flags `debugger` statements, `os.hostname()` probes, and env fingerprinting. ATK-011 traces peer dependency graphs to detect worm-like propagation patterns.  
 > **MEGALODON** campaign detection analyzes bundled `.github/workflows/` files for C2 co-occurrence and base64 decode chains, scans tarball files for credential + outbound network patterns, detects version publish velocity spikes via npm registry metadata, and identifies publisher account drift — all without any network calls beyond the initial package fetch.  
 > **HF_IMPERSONATION** detection uses a lazy two-stage evaluation: Stage 1 scans `package.json` scripts and JS/TS sources for HuggingFace references (URLs, `from_pretrained()`, `hub.download()`) and runs Jaro-Winkler similarity against 15 known-good HF orgs — zero network. If spoofs are found, Stage 2 fetches the HF model API, computes SimHash of both READMEs for clone detection, validates artifact type consistency (e.g., `transformers` library with `.exe` files is flagged as critical), applies a new-org amplifier (<30 days), and escalates when the reference appears in a lifecycle script.  
+> **MINI_SHAI_HULUD** worm campaign detection uses a lazy two-stage evaluation: Stage 1 runs burst velocity, publisher drift, IOC, and token exfil checks (in-memory, no network). If burst triggers, Stage 2 queries npm attestation endpoints for SLSA anomalies and fetches sibling package registry metadata for co-temporal burst detection. Composite finding includes wave attribution (wave1-tanstack, wave2-antv, wave3-nx-console) and critical severity when SLSA or IOC match. NX_CONSOLE_DOWNSTREAM (D7) flags npm packages with `@nx/*` dependencies and checks for `nrwl.angular-console` in `.vscode/extensions.json`.  
+> **VSIX_SCAN** extension scanning wraps both VS Code Marketplace and Open VSX registries with rate-limited (10 req/min), cached (5 min TTL) API clients. All 6 detectors run asynchronously and aggregate into a single composite `VSIX_SCAN` finding. Zero extension code is executed — all analysis is static regex/text-pattern matching. No Bun installation required for Bun pattern detection.  
 > See [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) for full evasion surface documentation and PoC examples.
 
 ---
@@ -367,6 +362,18 @@ npm-scan scan target --policy .npm-scan.yml
 | `NPM_SCAN_LICENSE_KEY` | Premium / enterprise license key | — |
 | `NPM_SCAN_DATA_DIR` | Scan history directory | `./.npm-scan` |
 | `NPM_SCAN_LOG_LEVEL` | Log verbosity | `info` |
+| `NPM_SCAN_LICENSE_SECRET` | HMAC key for license generation/validation | `npm-scan-default-dev-key` |
+
+### IOC configuration
+
+Campaign detectors use seed IOC files for known-malicious fingerprints:
+
+| IOC File | Detector | Types |
+|----------|----------|-------|
+| `backend/detectors/mini-shai-hulud/iocs.json` | Mini Shai-Hulud (Waves 1–3) | `packageScope`, `publisherAccount`, `sha512`, `extensionId` |
+| `backend/vsix-scan/vsix-iocs.json` | VSIX extension scan | `extensionId`, `publisherAccount`, `orphanCommitHash` |
+
+IOC files follow a unified schema (`iocs: [{ type, value, ... }]`) and are loaded at module init. Update them from your threat intel feed to extend detection coverage without code changes.
 
 ### Premium licensing
 
@@ -638,7 +645,7 @@ See the [Docker quick-start section](#-run-lateosnpm-scan-anywhere-with-docker--
 
 ### Free tier (shipped)
 
-- All 11 ATK detectors + **MEGALODON** CI/CD campaign detection (D1–D6) + **HF_IMPERSONATION** detector
+- All 11 ATK detectors + **MEGALODON** CI/CD campaign detection (D1–D6) + **HF_IMPERSONATION** detector + **MINI_SHAI_HULUD** worm campaign (D1–D7, 3 waves) + **VSIX_SCAN** extension supply chain scan (6 detectors)
 - SBOM output (CycloneDX + SPDX)
 - HTML, text, and compliance reports (NIST + EU CRA)
 - Policy-as-code engine (YAML)
@@ -647,6 +654,7 @@ See the [Docker quick-start section](#-run-lateosnpm-scan-anywhere-with-docker--
 - Pre-commit hook (husky + lint-staged)
 - Docker images + Compose pipeline
 - Watch mode (--watch / --monorepo for auto-rescan)
+- VS Code extension scanning (--vsix flag with Marketplace + Open VSX registries)
 
 ### Premium (🔐 license key)
 
@@ -708,6 +716,14 @@ node --test test/detectors-corpus.test.js
 - `test/report.test.js` — SARIF, CSV, STIG, risk score format tests
 - `test/lockfile.test.js` — npm/yarn/pnpm parser, auto-detect, ATK-007/011 lockfile tests
 - `test/hf-impersonation.test.js` — 13 HF impersonation detection tests (no-ref, exact match, spoof, README clone, artifact mismatch, postinstall escalation, new-org tag)
+- `test/mini-shai-hulud.test.js` — 22 Mini Shai-Hulud worm campaign detection tests (burst, sibling, SLSA, maintainer, IOC, exfil, wave attribution)
+- `test/vsix-scan/burst-publish.test.js` — 4 VSIX burst publish tests (threshold, sub-threshold, hot-pull, Open VSX window)
+- `test/vsix-scan/publisher-anomaly.test.js` — 5 publisher anomaly tests (cross-namespace, new-account, add+publish, substitution, silent)
+- `test/vsix-scan/activation-event-risk.test.js` — 5 activation event risk tests (onStartupFinished, wildcard, escalation, first-time, silent)
+- `test/vsix-scan/orphan-commit-fetch.test.js` — 5 orphan commit tests (GitHub SHA, npx git, MCP exfil, Bun install, silent)
+- `test/vsix-scan/known-ioc.test.js` — 4 known IOC tests (extensionId, publisher window, outside window)
+- `test/vsix-scan/exfil-pattern.test.js` — 5 exfil pattern tests (creds, DNS tunnel, AES+RSA, anti-analysis, silent)
+- `test/vsix-scan/integration.test.js` — 4 integration tests (Nx Console CRITICAL, safe version clean, orphan commit, skipNetwork)
 - `test/cli.test.js` — commander integration tests (help, version, scan, report, error handling)
 - `test/cli-lockfile.test.js` — scan-lockfile CLI options, yarn/pnpm/monorepo/watch tests
 

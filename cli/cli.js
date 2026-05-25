@@ -38,6 +38,7 @@ program
   .option('--cache-dir <path>', 'Cache directory for offline/air-gapped scans')
   .option('--cache-ttl <seconds>', 'Cache TTL in seconds (default: 604800 = 7 days)', '604800')
   .option('--cache-size <bytes>', 'Max cache size in bytes (default: 1GB)', '1000000000')
+  .option('--vsix <extensionId>', 'Scan a VS Code extension (e.g. nrwl.angular-console)')
   .action(async (target, options) => {
     try {
       if (options.fips) {
@@ -50,9 +51,19 @@ program
         cacheMaxSize: parseInt(options.cacheSize || '1000000000')
       };
 
-      if (!target && !options.file) {
-        console.error('Error: specify a package name or --file <path>');
+      if (!target && !options.file && !options.vsix) {
+        console.error('Error: specify a package name, --file <path>, or --vsix <extensionId>');
         process.exit(1);
+      }
+
+      if (options.vsix && !target && !options.file) {
+        const { vsixScan } = await import('../backend/vsix-scan/index.js');
+        const vsixFindings = await vsixScan(options.vsix);
+        const { saveScan } = await import('../backend/db.js');
+        const scanId = await saveScan(options.vsix, 'latest', vsixFindings);
+        const vsixOutput = JSON.stringify({ scanId, findings: vsixFindings, blocked: false, riskScore: 0, vsix: true }, null, 2);
+        console.log(vsixOutput);
+        return;
       }
 
       const policy = options.policy
@@ -72,10 +83,16 @@ program
         : await import('../backend/fetch.js').then(m => m.fetchPackage(target, fetchOptions));
       const pkgName = target || pkgJson.name || 'unknown';
       const findings = await import('../backend/detectors/index.js').then(m => m.runAll(pkgJson, jsFiles, meta, allFiles));
+      let vsixFindings = [];
+      if (options.vsix) {
+        const { vsixScan } = await import('../backend/vsix-scan/index.js');
+        vsixFindings = await vsixScan(options.vsix);
+      }
+      const allFindings = [...findings, ...vsixFindings];
       const { saveScan } = await import('../backend/db.js');
-      const scanId = await saveScan(pkgName, 'latest', findings);
+      const scanId = await saveScan(pkgName, 'latest', allFindings);
 
-      let outputFindings = findings;
+      let outputFindings = allFindings;
       let blocked = false;
 
       if (policy) {

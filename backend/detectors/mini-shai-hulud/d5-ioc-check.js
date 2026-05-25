@@ -43,7 +43,7 @@ export async function checkIOC(pkgName, pkgVersion, sha512, publisherAccount, ti
 
   for (const waveKey of Object.keys(data.waves || {})) {
     const wave = data.waves[waveKey];
-    const waveNum = waveKey === 'wave1' ? 1 : 2;
+    const waveNum = waveKey === 'wave1' ? 1 : waveKey === 'wave2' ? 2 : 3;
     for (const ioc of (wave.iocs || [])) {
       allIOCs.push({ ...ioc, wave: waveNum });
     }

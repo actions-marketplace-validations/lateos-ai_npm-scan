@@ -1,0 +1,31 @@
+{
+  "lastUpdated": "2026-05-25",
+  "schema": "vsix-ioc-v1",
+  "iocs": [
+    {
+      "type": "extensionId",
+      "value": "nrwl.angular-console",
+      "maliciousVersions": ["18.95.0"],
+      "wave": "nx-console-wave3",
+      "cve": "CVE-2026-48027",
+      "exposureWindowStart": "2026-05-18T12:30:00Z",
+      "exposureWindowEnd": "2026-05-18T13:09:00Z",
+      "registries": ["marketplace", "open-vsx"],
+      "safeVersion": ">=18.100.0",
+      "source": "https://nx.dev/blog/nx-console-v18-95-0-postmortem"
+    },
+    {
+      "type": "publisherAccount",
+      "value": "nrwl",
+      "compromiseWindowStart": "2026-05-11T00:00:00Z",
+      "compromiseWindowEnd": "2026-05-18T13:09:00Z",
+      "note": "Contributor token stolen via TanStack wave1 on May 11; 7-day dwell before publish"
+    },
+    {
+      "type": "orphanCommitHash",
+      "value": "PLACEHOLDER_UPDATE_FROM_THREAT_INTEL",
+      "repo": "nrwl/nx",
+      "note": "Dangling commit hosting 498KB Bun payload — update hash from StepSecurity IOC report"
+    }
+  ]
+}

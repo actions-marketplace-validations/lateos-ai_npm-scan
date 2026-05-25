@@ -28,6 +28,8 @@ export async function scan(pkgJson, files = [], registryMeta = null, allFiles = 
     slsaResult = await checkSlsaMismatch(pkgName, pkgVersion, burstResult, timeMap, config);
   }
 
+  const nxDownstreamResult = checkNxConsoleDownstream(pkgJson, allFiles || files);
+
   const triggeredChecks = [];
   if (burstResult.triggered) triggeredChecks.push('D1_BURST');
   if (siblingResult.triggered) triggeredChecks.push('D2_SIBLING');
@@ -35,6 +37,7 @@ export async function scan(pkgJson, files = [], registryMeta = null, allFiles = 
   if (maintainerResult.triggered) triggeredChecks.push('D4_MAINTAINER');
   if (iocResult.triggered) triggeredChecks.push('D5_IOC');
   if (exfilResult.triggered) triggeredChecks.push('D6_EXFIL');
+  if (nxDownstreamResult.triggered) triggeredChecks.push('D7_NX_CONSOLE');
 
   if (triggeredChecks.length === 0) return [];
 
@@ -43,14 +46,16 @@ export async function scan(pkgJson, files = [], registryMeta = null, allFiles = 
     waveAttribution = 'wave1-tanstack';
   } else if (pkgName.startsWith('@antv')) {
     waveAttribution = 'wave2-antv';
+  } else if (nxDownstreamResult.triggered) {
+    waveAttribution = 'wave3-nx-console';
   } else if (iocResult.matches && iocResult.matches.length > 0) {
     const waves = [...new Set(iocResult.matches.map(m => m.wave))];
     if (waves.length === 1) {
-      waveAttribution = waves[0] === 1 ? 'wave1-tanstack' : 'wave2-antv';
+      waveAttribution = waves[0] === 1 ? 'wave1-tanstack' : waves[0] === 2 ? 'wave2-antv' : 'wave3-nx-console';
     }
   }
 
-  const isCritical = slsaResult.triggered || iocResult.triggered;
+  const isCritical = slsaResult.triggered || iocResult.triggered || nxDownstreamResult.triggered;
 
   const evidence = {
     campaign: 'MINI_SHAI_HULUD',
@@ -65,6 +70,9 @@ export async function scan(pkgJson, files = [], registryMeta = null, allFiles = 
     attestationAnomalies: slsaResult.triggered ? slsaResult.anomalies : null,
     iocMatches: iocResult.triggered ? iocResult.matches : null,
     installScriptSnippets: exfilResult.triggered ? exfilResult.snippets : null,
+    nxConsoleDownstream: nxDownstreamResult.triggered
+      ? { nxDeps: nxDownstreamResult.nxDeps, vsCodeExtensions: nxDownstreamResult.vsCodeExtensions }
+      : null,
   };
 
   return [{
@@ -73,8 +81,38 @@ export async function scan(pkgJson, files = [], registryMeta = null, allFiles = 
     title: 'Mini Shai-Hulud worm campaign',
     description: `${triggeredChecks.length} signal(s): ${triggeredChecks.join(', ')}`,
     evidence: JSON.stringify(evidence),
-    mitigation: 'Revoke all npm tokens immediately. Rotate CI/CD secrets. Audit maintainer access on all scoped packages. Review recent version publish history for anomalous bursts. Check for postinstall scripts accessing credentials or environment variables. If Wave 1 (TanStack scope): inspect GitHub Actions workflow logs for unauthorized build steps. If Wave 2 (atool/AntV scope): rotate all npm tokens associated with @antv/* packages.',
+    mitigation: 'Revoke all npm tokens immediately. Rotate CI/CD secrets. Audit maintainer access on all scoped packages. Review recent version publish history for anomalous bursts. Check for postinstall scripts accessing credentials or environment variables. If Wave 1 (TanStack scope): inspect GitHub Actions workflow logs for unauthorized build steps. If Wave 2 (atool/AntV scope): rotate all npm tokens associated with @antv/* packages. If Wave 3 (Nx Console): remove nrwl.angular-console extension immediately, revoke all npm tokens used in CI/CD, and audit @nx/* dependency versions.',
   }];
+}
+
+function checkNxConsoleDownstream(pkgJson, allFiles) {
+  const deps = { ...pkgJson?.dependencies, ...pkgJson?.devDependencies, ...pkgJson?.peerDependencies };
+  const nxDeps = Object.keys(deps).filter(d => d.startsWith('@nx/') || d.startsWith('nrwl/'));
+  if (nxDeps.length === 0) return { triggered: false, nxDeps: [], vsCodeExtensions: [] };
+
+  let vsCodeExtensions = [];
+  if (allFiles && Array.isArray(allFiles)) {
+    for (const file of allFiles) {
+      if (file.path && (file.path.endsWith('.vscode/extensions.json') || file.path.endsWith('.vscode/extensions.json'))) {
+        try {
+          const content = typeof file.content === 'string' ? file.content : '';
+          const parsed = JSON.parse(content);
+          const allExts = [
+            ...(parsed.recommendations || []),
+            ...(parsed.unwantedRecommendations || []),
+          ];
+          const matched = allExts.filter(e => e.includes('nrwl.angular-console'));
+          if (matched.length > 0) {
+            vsCodeExtensions = matched;
+          }
+        } catch {
+          // non-JSON extensions.json, skip
+        }
+      }
+    }
+  }
+
+  return { triggered: true, nxDeps, vsCodeExtensions };
 }
 
 export { clearSiblingCache } from './d2-sibling-compromise.js';

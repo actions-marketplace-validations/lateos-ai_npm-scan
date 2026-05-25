@@ -33,6 +33,38 @@
           "notes": "Blast radius: @antv/g2, @antv/g6, @antv/x6, @antv/l7, echarts-for-react, timeago.js. Seed IOC — update from threat intel."
         }
       ]
+    },
+    "wave3": {
+      "id": "nx-console-wave3",
+      "description": "Nx Console 18.95.0 VS Code extension compromise (May 18, 2026, CVE-2026-48027, TeamPCP) — contributor token stolen via TanStack wave1 (May 11), 7-day dwell, malicious extension published using npx to fetch 498KB obfuscated Bun payload from dangling orphan commit on nrwl/nx repo. ~3M installs exposed.",
+      "windowMinutes": 36,
+      "iocs": [
+        {
+          "type": "extensionId",
+          "value": "nrwl.angular-console",
+          "maliciousVersionRanges": ["18.95.0"],
+          "notes": "Nx Console v18.95.0 — malicious VS Code extension. CVE-2026-48027. Exposure window: 11 min on Marketplace, 36 min on Open VSX."
+        },
+        {
+          "type": "publisherAccount",
+          "value": "nrwl",
+          "compromiseWindowStart": "2026-05-11T00:00:00.000Z",
+          "compromiseWindowEnd": "2026-05-18T13:09:00.000Z",
+          "notes": "Nx contributor token stolen via TanStack wave1 on May 11; 7-day dwell before publishing malicious extension on May 18."
+        },
+        {
+          "type": "packageScope",
+          "value": "@nx",
+          "maliciousVersionRanges": [],
+          "notes": "NX_CONSOLE_DOWNSTREAM: npm packages under @nx scope deployed by compromised Nx contributor. Check for versions published within 7 days of 2026-05-18."
+        },
+        {
+          "type": "packageScope",
+          "value": "nrwl",
+          "maliciousVersionRanges": [],
+          "notes": "NX_CONSOLE_DOWNSTREAM: nrwl-scoped npm packages — monitor for anomalous burst publishing."
+        }
+      ]
     }
   },
   "iocs": [
