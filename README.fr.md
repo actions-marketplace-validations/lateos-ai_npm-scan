@@ -9,7 +9,7 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-222%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-459%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Coverage](https://img.shields.io/badge/coverage-85%25-yellowgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
@@ -227,6 +227,7 @@ npm-scan report --pdf             # tous les scans (premium)
 | **ATK-009** | Déclencheurs conditionnels/dormants (détection CI, temporel) | Comportementale | 🔴 élevée | SR-9.2 |
 | **ATK-010** | Contournement de sandbox / anti-analyse | Comportementale | 🟠 moyenne | SR-10.3 |
 | **ATK-011** | Propagation transitive (dissémination latérale de type ver) | Comportementale | 🔴 élevée | SR-11.4 |
+| **CVE-2026-48710** | BadHost — contournement d'authentification Starlette par injection d'en-tête Host (CVE-2026-48710, CVSS 7.0). Détection de version de dépendance Python (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg), heuristique transitive (15 paquets aval connus : fastapi, vllm, litellm, serveurs MCP, etc.), analyse statique de code pour `request.url.path` dangereux en contexte auth/middleware avec suppression par `request.scope["path"]` | Statique + Registre | 🔴 élevée / 🟠 moyenne / ℹ️ info | SR-3.1, SR-5.3 |
 
 > **Comment les attaques furtives sont détectées :** ATK-009 détecte les paquets qui vérifient `process.env.CI`, sondent les noms d'hôte ou utilisent une activation temporelle. ATK-009 signale les instructions `debugger`, les sondes `os.hostname()` et l'empreinte environnementale. ATK-011 trace les graphes de dépendances peer pour détecter les schémas de propagation de type ver.  
 > Voir [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) pour la documentation complète de la surface d'évasion et des exemples de PoC.
@@ -548,7 +549,7 @@ Voir la [section Démarrage rapide Docker](#-exécutez-lateosnpm-scan-partout-av
 
 ### Niveau gratuit (livré)
 
-- Les 11 détecteurs ATK (statique + comportemental)
+- Les 11 détecteurs ATK (statique + comportemental) + **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)**
 - Sortie SBOM (CycloneDX + SPDX)
 - Rapports HTML, texte et conformité (NIST + EU CRA)
 - Moteur de politique en tant que code (YAML)
@@ -611,6 +612,10 @@ node --test test/detectors-corpus.test.js
 - `test/fetch.test.js` — extraction de tarball, nettoyage de répertoire temporaire
 - `test/policy-edge-cases.test.js` — cas limites dans la suppression, la surcharge, la validation de chargement
 - `test/report-snapshots.test.js` — assertions de format HTML/texte/CRA/PDF
+- `test/cve-2026-48710-badhost/manifest.test.js` — 13 tests d'analyse de manifeste Python (requirements.txt, pyproject.toml, poetry.lock, cas limites de version)
+- `test/cve-2026-48710-badhost/transitive.test.js` — 7 tests de dépendances transitives (Tier 1/2, contrôle de version fastapi, suppression par épinglage)
+- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 tests de motifs de code statiques (contexte auth, passage INFO, suppression scope)
+- `test/cve-2026-48710-badhost/integration.test.js` — 4 tests d'intégration (résultats composites de bout en bout, projet propre, pas de fichiers Python)
 - `test/cli.test.js` — tests d'intégration commander (aide, version, scan, rapport, gestion d'erreurs)
 
 ### Besoin d'aide ?

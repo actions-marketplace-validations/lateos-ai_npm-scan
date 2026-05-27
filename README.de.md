@@ -9,7 +9,7 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-222%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-459%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Coverage](https://img.shields.io/badge/coverage-85%25-yellowgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
@@ -227,6 +227,7 @@ npm-scan report --pdf             # alle Scans (Premium)
 | **ATK-009** | Bedingte/schlafende Auslöser (CI-Erkennung, zeitbasiert) | Verhaltensbasiert | 🔴 hoch | SR-9.2 |
 | **ATK-010** | Sandbox-Evasion / Anti-Analyse | Verhaltensbasiert | 🟠 mittel | SR-10.3 |
 | **ATK-011** | Transitive Verbreitung (wurmartige laterale Ausbreitung) | Verhaltensbasiert | 🔴 hoch | SR-11.4 |
+| **CVE-2026-48710** | BadHost — Starlette Authentifizierungs-Bypass via Host-Header-Injection (CVE-2026-48710, CVSS 7.0). Python-Abhängigkeitsversionserkennung (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg), transitive Heuristik (15 bekannte Downstream-Pakete: fastapi, vllm, litellm, MCP-Server, etc.), statische Code-Pattern-Analyse für gefährliche `request.url.path`-Nutzung in Auth/Middleware-Kontexten mit `request.scope["path"]`-Unterdrückung | Statisch + Registry | 🔴 hoch / 🟠 mittel / ℹ️ info | SR-3.1, SR-5.3 |
 
 > **Wie ausweichende Angriffe erkannt werden:** ATK-009 erkennt Pakete, die `process.env.CI` prüfen, Hostnamen sondieren oder zeitbasierte Aktivierung verwenden. ATK-010 markiert `debugger`-Anweisungen, `os.hostname()`-Sonden und Umgebungs-Fingerprinting. ATK-011 verfolgt Peer-Abhängigkeitsgraphen, um wurmartige Verbreitungsmuster zu erkennen.  
 > Vollständige Dokumentation der Ausweichfläche und PoC-Beispiele finden Sie in [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md).
@@ -548,7 +549,7 @@ Siehe den obigen [Docker-Schnellstart-Abschnitt](#-lateosnpm-scan-überall-mit-d
 
 ### Kostenlose Stufe (ausgeliefert)
 
-- Alle 11 ATK-Detektoren (statisch + verhaltensbasiert)
+- Alle 11 ATK-Detektoren (statisch + verhaltensbasiert) + **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)**
 - SBOM-Ausgabe (CycloneDX + SPDX)
 - HTML-, Text- und Compliance-Berichte (NIST + EU CRA)
 - Policy-as-Code-Engine (YAML)
@@ -611,6 +612,10 @@ node --test test/detectors-corpus.test.js
 - `test/fetch.test.js` — Tarball-Extraktion, Bereinigung temporärer Verzeichnisse
 - `test/policy-edge-cases.test.js` — Grenzfälle bei Unterdrückung, Überschreibung, Ladevalidierung
 - `test/report-snapshots.test.js` — HTML/Text/CRA/PDF-Format-Assertions
+- `test/cve-2026-48710-badhost/manifest.test.js` — 13 Python-Manifest-Parsing-Tests (requirements.txt, pyproject.toml, poetry.lock, Version-Grenzfälle)
+- `test/cve-2026-48710-badhost/transitive.test.js` — 7 transitive Abhängigkeitstests (Tier 1/2, fastapi-Version-Gating, Pin-Unterdrückung)
+- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 statische Code-Pattern-Tests (Auth-Kontext, INFO-Durchgriff, Scope-Unterdrückung)
+- `test/cve-2026-48710-badhost/integration.test.js` — 4 Integrationstests (End-to-End-Composite-Findings, sauberes Projekt, keine Python-Dateien)
 - `test/cli.test.js` — Commander-Integrationstests (Hilfe, Version, Scan, Bericht, Fehlerbehandlung)
 
 ### Hilfe benötigt?

@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-428%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-459%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
@@ -28,6 +28,8 @@ A growing attack vector is **HuggingFace org impersonation** — packages that m
 
 The **Megalodon campaign** (2026) alone compromised 5,500+ repositories via fake GitHub PRs, malicious workflow injection, and cloud credential exfiltration — all coordinated through a single actor automating the entire kill chain. **@lateos/npm-scan** now detects artifacts of this campaign out of the box.
 
+Critical infrastructure vulnerabilities in the Python ecosystem are also in scope. The **BadHost (CVE-2026-48710)** vulnerability in Starlette < 1.0.1 enables authentication bypass via unvalidated HTTP Host header injection, affecting FastAPI, vLLM, LiteLLM, MCP servers, and any project using Starlette transitively — now detected across Python manifests, transitive dependency chains, and source code patterns in a single scan.
+
 **npm audit** checks known CVEs. **Snyk** scans for vulnerabilities. **Socket** looks at package behavior. None of them were designed for the generation of attacks that emerged in 2025 — attacks that look benign until they reach production.
 
 **@lateos/npm-scan** was built for this moment.
@@ -50,6 +52,7 @@ The **Megalodon campaign** (2026) alone compromised 5,500+ repositories via fake
 | Worm campaign detection (Mini Shai-Hulud Wave 1–3) | ❌ | ❌ | ❌ | ✅ |
 | HF model repo impersonation + README clone | ❌ | ❌ | ❌ | ✅ |
 | VS Code extension supply chain scan (--vsix) | ❌ | ❌ | ❌ | ✅ |
+| Python vulnerability detection (CVE-2026-48710 BadHost) | ❌ | ❌ | ❌ | ✅ |
 | Attack taxonomy (ATK series) | ❌ | ❌ | ❌ | ✅ |
 | SBOM output (CycloneDX + SPDX) | ❌ | ✅ | ❌ | ✅ |
 | SARIF v2.1 (GitHub Code Scanning) | ❌ | ❌ | ❌ | ✅ |
@@ -72,6 +75,7 @@ The **Megalodon campaign** (2026) alone compromised 5,500+ repositories via fake
 | 🧬 | **ATK attack taxonomy** | 11 classified attack types with NIST 800-161 mappings — versioned, documented, and PR-able |
 | 🪱 | **Worm campaign detection** | Mini Shai-Hulud — 6 sub-checks detecting burst publish, sibling compromise, SLSA attestation mismatch, publisher drift, IOC match, and token exfil across 3 waves (TanStack, AntV/atool, Nx Console) |
 | 🧩 | **VSIX extension scanning** | `npm-scan scan --vsix nrwl.angular-console` — detects VS Code Marketplace supply chain attacks: burst publish, publisher anomaly, activation event risk, orphan commit fetch, known IOC, and exfil patterns (Nx Console 18.95.0 CVE-2026-48027) |
+| 🐍 | **Python vulnerability detection** | CVE-2026-48710 (BadHost) — Starlette Host header injection across 6 Python manifest formats, 15 transitive downstream packages (fastapi, vllm, litellm, MCP), and static `request.url.path` code pattern analysis with `scope["path"]` suppression |
 | 📦 | **SBOM generation** | CycloneDX 1.5 and SPDX 2.3 with findings embedded as vulnerabilities |
 | 🔍 | **SARIF output** | GitHub Advanced Security / CodeQL compatible SARIF v2.1 — shows findings directly in Security tab |
 | 🧾 | **Compliance reporting** | NIST SP 800-161 traceability matrix + EU Cyber Resilience Act mapping (free tier) |
@@ -281,12 +285,14 @@ npm-scan report --pdf             # all scans (premium)
 | **HF_IMPERSONATION** | HuggingFace org spoof detection — Jaro-Winkler similarity against 15 known-good orgs, SimHash README clone detection, artifact mismatch (`.exe`/`.dll` in model repos), postinstall escalation, new-org amplifier | Static + Network (Stage 2) | 🔴 high / ⚫ critical | SR-2.1 |
 | **MINI_SHAI_HULUD** | Mini Shai-Hulud worm campaign — burst publish velocity (≥3 versions/30 min), co-temporal sibling compromise, SLSA attestation mismatch (sub-60s gap, first-ever, builder mismatch), publisher drift (<10 min account change), IOC match (scope/sha512/publisher from seed file), token exfil (NPM_TOKEN/.npmrc/atob patterns), Nx Console downstream detection | Static + Registry | 🔴 high / ⚫ critical | SR-3.1, SR-7.5 |
 | **VSIX_SCAN** | VS Code extension supply chain scan — burst publish (≥2 versions/30 min, hot-pull <20 min), publisher anomaly (account substitution, new-account on high-install ext, 15-min add+publish), activation event risk (onStartupFinished→HIGH, *→CRITICAL, escalation on shell keywords), orphan commit fetch (GitHub API SHA refs, npx git URL, MCP-disguised exfil, Bun install), known IOC (extensionId/publisherAccount/commit hash from seed), exfil patterns (cred paths, DNS tunneling, AES+RSA, anti-analysis, Bun APIs) | Static + Registry | 🟠 medium / 🔴 high / ⚫ critical | SR-3.1, SR-5.3 |
+| **CVE-2026-48710** | BadHost — Starlette authentication bypass via Host header injection (CVE-2026-48710, CVSS 7.0). Python dependency version detection (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg), transitive heuristic (15 known downstream packages: fastapi, vllm, litellm, MCP servers, etc.), static code pattern scan for dangerous `request.url.path` usage in auth/middleware context with `request.scope["path"]` suppression | Static + Registry | 🔴 high / 🟠 medium / ℹ️ info | SR-3.1, SR-5.3 |
 
 > **How evasive attacks are caught:** ATK-009 detects packages that check `process.env.CI`, probe hostnames, or use time-based activation. ATK-010 flags `debugger` statements, `os.hostname()` probes, and env fingerprinting. ATK-011 traces peer dependency graphs to detect worm-like propagation patterns.  
 > **MEGALODON** campaign detection analyzes bundled `.github/workflows/` files for C2 co-occurrence and base64 decode chains, scans tarball files for credential + outbound network patterns, detects version publish velocity spikes via npm registry metadata, and identifies publisher account drift — all without any network calls beyond the initial package fetch.  
 > **HF_IMPERSONATION** detection uses a lazy two-stage evaluation: Stage 1 scans `package.json` scripts and JS/TS sources for HuggingFace references (URLs, `from_pretrained()`, `hub.download()`) and runs Jaro-Winkler similarity against 15 known-good HF orgs — zero network. If spoofs are found, Stage 2 fetches the HF model API, computes SimHash of both READMEs for clone detection, validates artifact type consistency (e.g., `transformers` library with `.exe` files is flagged as critical), applies a new-org amplifier (<30 days), and escalates when the reference appears in a lifecycle script.  
 > **MINI_SHAI_HULUD** worm campaign detection uses a lazy two-stage evaluation: Stage 1 runs burst velocity, publisher drift, IOC, and token exfil checks (in-memory, no network). If burst triggers, Stage 2 queries npm attestation endpoints for SLSA anomalies and fetches sibling package registry metadata for co-temporal burst detection. Composite finding includes wave attribution (wave1-tanstack, wave2-antv, wave3-nx-console) and critical severity when SLSA or IOC match. NX_CONSOLE_DOWNSTREAM (D7) flags npm packages with `@nx/*` dependencies and checks for `nrwl.angular-console` in `.vscode/extensions.json`.  
 > **VSIX_SCAN** extension scanning wraps both VS Code Marketplace and Open VSX registries with rate-limited (10 req/min), cached (5 min TTL) API clients. All 6 detectors run asynchronously and aggregate into a single composite `VSIX_SCAN` finding. Zero extension code is executed — all analysis is static regex/text-pattern matching. No Bun installation required for Bun pattern detection.  
+> **CVE-2026-48710 (BadHost)** detection uses three independent layers: Layer 1 parses 6 Python manifest formats (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py, setup.cfg) with PEP 440 semver-aware version comparison. Layer 2 scans for 15 known Starlette-downstream packages with Tier 1 (HIGH confidence) and Tier 2 (MEDIUM confidence) transitive heuristics, suppressed by explicit `starlette >= 1.0.1` pin. Layer 3 performs function-boundary static analysis on `.py` files for `request.url.path` usage, escalating to MEDIUM severity in auth/middleware contexts and suppressing when `request.scope["path"]` is used in the same function.  
 > See [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) for full evasion surface documentation and PoC examples.
 
 ---
@@ -645,7 +651,7 @@ See the [Docker quick-start section](#-run-lateosnpm-scan-anywhere-with-docker--
 
 ### Free tier (shipped)
 
-- All 11 ATK detectors + **MEGALODON** CI/CD campaign detection (D1–D6) + **HF_IMPERSONATION** detector + **MINI_SHAI_HULUD** worm campaign (D1–D7, 3 waves) + **VSIX_SCAN** extension supply chain scan (6 detectors)
+- All 11 ATK detectors + **MEGALODON** CI/CD campaign detection (D1–D6) + **HF_IMPERSONATION** detector + **MINI_SHAI_HULUD** worm campaign (D1–D7, 3 waves) + **VSIX_SCAN** extension supply chain scan (6 detectors) + **CVE-2026-48710 (BadHost)** Python vulnerability detection (3 layers)
 - SBOM output (CycloneDX + SPDX)
 - HTML, text, and compliance reports (NIST + EU CRA)
 - Policy-as-code engine (YAML)
@@ -724,6 +730,10 @@ node --test test/detectors-corpus.test.js
 - `test/vsix-scan/known-ioc.test.js` — 4 known IOC tests (extensionId, publisher window, outside window)
 - `test/vsix-scan/exfil-pattern.test.js` — 5 exfil pattern tests (creds, DNS tunnel, AES+RSA, anti-analysis, silent)
 - `test/vsix-scan/integration.test.js` — 4 integration tests (Nx Console CRITICAL, safe version clean, orphan commit, skipNetwork)
+- `test/cve-2026-48710-badhost/manifest.test.js` — 13 Python manifest parsing tests (requirements.txt, pyproject.toml, poetry.lock, version edge cases)
+- `test/cve-2026-48710-badhost/transitive.test.js` — 7 transitive dependency tests (Tier 1/2, fastapi version gating, pin suppression)
+- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 static code pattern tests (auth context, INFO fallthrough, scope suppression)
+- `test/cve-2026-48710-badhost/integration.test.js` — 4 integration tests (end-to-end composite findings, clean project, no Python files)
 - `test/cli.test.js` — commander integration tests (help, version, scan, report, error handling)
 - `test/cli-lockfile.test.js` — scan-lockfile CLI options, yarn/pnpm/monorepo/watch tests
 

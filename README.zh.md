@@ -9,7 +9,7 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-222%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-459%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Coverage](https://img.shields.io/badge/coverage-85%25-yellowgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
@@ -227,6 +227,7 @@ npm-scan report --pdf             # 所有扫描（高级版）
 | **ATK-009** | 条件/潜伏触发器（CI 检测、基于时间） | 行为 | 🔴 高 | SR-9.2 |
 | **ATK-010** | 沙箱逃逸 / 反分析 | 行为 | 🟠 中 | SR-10.3 |
 | **ATK-011** | 传递性传播（蠕虫式横向扩散） | 行为 | 🔴 高 | SR-11.4 |
+| **CVE-2026-48710** | BadHost — Starlette Host 头注入认证绕过 (CVE-2026-48710, CVSS 7.0)。Python 依赖版本检测 (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg)，传递性启发式检测 (15 个已知下游包：fastapi, vllm, litellm, MCP 服务器等)，auth/middleware 上下文中危险 `request.url.path` 使用的静态代码模式扫描，支持 `request.scope["path"]` 抑制 | 静态 + 注册表 | 🔴 高 / 🟠 中 / ℹ️ 信息 | SR-3.1, SR-5.3 |
 
 > **如何捕获逃避式攻击：** ATK-009 检测检查 `process.env.CI`、探测主机名或使用时间激活的包。ATK-010 标记 `debugger` 语句、`os.hostname()` 探测和环境指纹采集。ATK-011 追踪同级依赖图以检测蠕虫式传播模式。  
 > 完整逃避面文档和 PoC 示例请参阅 [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md)。
@@ -548,7 +549,7 @@ npm-scan report --html > report.html
 
 ### 免费版（已发布）
 
-- 全部 11 个 ATK 检测器（静态 + 行为）
+- 全部 11 个 ATK 检测器（静态 + 行为）+ **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)**
 - SBOM 输出（CycloneDX + SPDX）
 - HTML、文本和合规报告（NIST + EU CRA）
 - 策略即代码引擎（YAML）
@@ -611,6 +612,10 @@ node --test test/detectors-corpus.test.js
 - `test/fetch.test.js` — tarball 提取、临时目录清理
 - `test/policy-edge-cases.test.js` — 抑制、覆盖、加载验证的边缘情况
 - `test/report-snapshots.test.js` — HTML/文本/CRA/PDF 格式断言
+- `test/cve-2026-48710-badhost/manifest.test.js` — 13 个 Python 清单解析测试（requirements.txt, pyproject.toml, poetry.lock, 版本边界情况）
+- `test/cve-2026-48710-badhost/transitive.test.js` — 7 个传递性依赖测试（Tier 1/2, fastapi 版本门控, 固定版本抑制）
+- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 个静态代码模式测试（auth 上下文, INFO 穿透, scope 抑制）
+- `test/cve-2026-48710-badhost/integration.test.js` — 4 个集成测试（端到端复合发现项, 清洁项目, 无 Python 文件）
 - `test/cli.test.js` — commander 集成测试（帮助、版本、扫描、报告、错误处理）
 
 ### 需要帮助？
