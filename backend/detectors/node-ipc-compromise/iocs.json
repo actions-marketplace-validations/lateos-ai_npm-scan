@@ -1,0 +1,59 @@
+{
+  "lastUpdated": "2026-05-28T00:00:00.000Z",
+  "campaign": {
+    "id": "node-ipc-compromise",
+    "description": "node-ipc supply chain compromise (May 14, 2026) — 3 malicious versions (9.1.6, 9.2.3, 12.0.1) published via expired maintainer email domain takeover. 80KB credential stealer delivered via DNS TXT tunneling.",
+    "firstObserved": "2026-05-14T00:00:00.000Z",
+    "attribution": {
+      "npmPublisher": "atiertant",
+      "c2Domain": "sh.azurestaticprovider.net",
+      "c2IP": "37.16.75.69",
+      "exfilZone": "bt.node.js"
+    }
+  },
+  "versions": {
+    "9.1.6": {
+      "tarballSha256": "449e4265979b5fdb2d3446c021af437e815debd66de7da2fe54f1ad93cbcc75e",
+      "safePin": "9.1.5",
+      "semverRanges": ["~9.1.x", "^9.1", "^9"]
+    },
+    "9.2.3": {
+      "tarballSha256": "c2f4dc64aec4631540a568e88932b61daebbfb7e8281b812fa01b7215f9be9ea",
+      "safePin": "9.1.5",
+      "semverRanges": ["~9.2.x", "^9.2"]
+    },
+    "12.0.1": {
+      "tarballSha256": "78a82d93b4f580835f5823b85a3d9ee1f03a15ee6f0e01b4eac86252a7002981",
+      "safePin": "12.0.0",
+      "semverRanges": ["~12.0.x", "^12"]
+    }
+  },
+  "iocs": [
+    {
+      "type": "publisherAccount",
+      "value": "atiertant",
+      "ecosystem": "npm",
+      "notes": "Unauthorized publisher — no prior history on node-ipc, exclusively used for malicious versions."
+    },
+    {
+      "type": "c2Domain",
+      "value": "sh.azurestaticprovider.net",
+      "notes": "Bootstrap resolver domain (lookalike, not Microsoft). DNS TXT tunneling C2."
+    },
+    {
+      "type": "c2IP",
+      "value": "37.16.75.69",
+      "notes": "C2 IP address for DNS TXT tunneling."
+    },
+    {
+      "type": "exfilZone",
+      "value": "bt.node.js",
+      "notes": "DNS TXT exfiltration zone. Queries encode stolen data into subdomain labels."
+    },
+    {
+      "type": "payloadHash",
+      "value": "3427a90c8cb9af764445448648176e120ebc6af0a538158340cf6220de4d01b7",
+      "notes": "SHA-256 of injected payload blob within node-ipc.cjs."
+    }
+  ]
+}
