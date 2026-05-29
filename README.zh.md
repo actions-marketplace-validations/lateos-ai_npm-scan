@@ -228,6 +228,8 @@ npm-scan report --pdf             # 所有扫描（高级版）
 | **ATK-010** | 沙箱逃逸 / 反分析 | 行为 | 🟠 中 | SR-10.3 |
 | **ATK-011** | 传递性传播（蠕虫式横向扩散） | 行为 | 🔴 高 | SR-11.4 |
 | **CVE-2026-48710** | BadHost — Starlette Host 头注入认证绕过 (CVE-2026-48710, CVSS 7.0)。Python 依赖版本检测 (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg)，传递性启发式检测 (15 个已知下游包：fastapi, vllm, litellm, MCP 服务器等)，auth/middleware 上下文中危险 `request.url.path` 使用的静态代码模式扫描，支持 `request.scope["path"]` 抑制 | 静态 + 注册表 | 🔴 高 / 🟠 中 / ℹ️ 信息 | SR-3.1, SR-5.3 |
+| **TRAPDOOR** | TrapDoor 跨生态系统攻击活动 — 活动标记 P-2024-001，trap-core.js 载荷指纹，发布者黑名单 asdxzxc，基于 Gist 的凭证窃取，AI 上下文注入（零宽 Unicode），加密/DeFi 诱饵名称，Fernet+ECDH 加密，XOR 密钥 cargo-build-helper-2026，STS/GitHub API 凭证验证 | 静态 + 注册表 | 🟠 中 / 🔴 高 / ⚫ 严重 | SR-3.1, SR-5.3, SR-7.5 |
+| **NODE_IPC_COMPROMISE** | node-ipc 供应链入侵（2026年5月14日）— 版本黑名单 (9.1.6/9.2.3/12.0.1) 及安全锁定，tarball SHA-256 验证，CJS 载荷 IIFE 注入检测，DNS 非标准端口 C2 模式，引导解析器 sh.azurestaticprovider.net，DNS TXT 外泄区域 bt.node.js，setImmediate() 运行时触发，~/nt-*/ 临时制品检测，未授权发布者 atiertant，锁定文件影响范围检测并推荐安全固定版本 | 静态 + 注册表 | ⚫ 严重 | SR-3.1, SR-5.3, SR-7.5 |
 
 > **如何捕获逃避式攻击：** ATK-009 检测检查 `process.env.CI`、探测主机名或使用时间激活的包。ATK-010 标记 `debugger` 语句、`os.hostname()` 探测和环境指纹采集。ATK-011 追踪同级依赖图以检测蠕虫式传播模式。  
 > 完整逃避面文档和 PoC 示例请参阅 [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md)。
@@ -549,7 +551,7 @@ npm-scan report --html > report.html
 
 ### 免费版（已发布）
 
-- 全部 11 个 ATK 检测器（静态 + 行为）+ **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)**
+- 全部 11 个 ATK 检测器（静态 + 行为）+ **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)** + **TRAPDOOR**（9 条规则）+ **NODE_IPC_COMPROMISE**（11 条规则）
 - SBOM 输出（CycloneDX + SPDX）
 - HTML、文本和合规报告（NIST + EU CRA）
 - 策略即代码引擎（YAML）
@@ -616,6 +618,8 @@ node --test test/detectors-corpus.test.js
 - `test/cve-2026-48710-badhost/transitive.test.js` — 7 个传递性依赖测试（Tier 1/2, fastapi 版本门控, 固定版本抑制）
 - `test/cve-2026-48710-badhost/codePattern.test.js` — 6 个静态代码模式测试（auth 上下文, INFO 穿透, scope 抑制）
 - `test/cve-2026-48710-badhost/integration.test.js` — 4 个集成测试（端到端复合发现项, 清洁项目, 无 Python 文件）
+- `test/trapdoor.test.js` — 40 个 TrapDoor 活动检测测试（D1–D9：活动标记、载荷指纹、发布者黑名单、Gist 外泄、AI 注入、诱饵名称、加密原语、XOR 密钥、凭证验证）
+- `test/node-ipc.test.js` — 37 个 node-ipc 入侵检测测试（D1–D11：版本黑名单、tarball 哈希、CJS 注入、载荷哈希、DNS C2 模式、引导解析器、DNS TXT 外泄、运行时触发、临时制品、未授权发布者、影响范围）
 - `test/cli.test.js` — commander 集成测试（帮助、版本、扫描、报告、错误处理）
 
 ### 需要帮助？

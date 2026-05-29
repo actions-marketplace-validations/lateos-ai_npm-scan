@@ -228,6 +228,8 @@ npm-scan report --pdf             # tous les scans (premium)
 | **ATK-010** | Contournement de sandbox / anti-analyse | Comportementale | 🟠 moyenne | SR-10.3 |
 | **ATK-011** | Propagation transitive (dissémination latérale de type ver) | Comportementale | 🔴 élevée | SR-11.4 |
 | **CVE-2026-48710** | BadHost — contournement d'authentification Starlette par injection d'en-tête Host (CVE-2026-48710, CVSS 7.0). Détection de version de dépendance Python (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg), heuristique transitive (15 paquets aval connus : fastapi, vllm, litellm, serveurs MCP, etc.), analyse statique de code pour `request.url.path` dangereux en contexte auth/middleware avec suppression par `request.scope["path"]` | Statique + Registre | 🔴 élevée / 🟠 moyenne / ℹ️ info | SR-3.1, SR-5.3 |
+| **TRAPDOOR** | Campagne d'attaque multi-écosystème TrapDoor — marqueur de campagne P-2024-001, empreinte de charge utile trap-core.js, liste noire d'éditeur asdxzxc, exfiltration d'identifiants via Gist, empoisonnement de contexte IA (Unicode largeur nulle), noms leurres crypto/DeFi, chiffrement Fernet+ECDH, clé XOR cargo-build-helper-2026, validation d'identifiants STS/API GitHub | Statique + Registre | 🟠 moyenne / 🔴 élevée / ⚫ critique | SR-3.1, SR-5.3, SR-7.5 |
+| **NODE_IPC_COMPROMISE** | Compromission de la chaîne d'approvisionnement node-ipc (14 mai 2026) — liste noire de versions (9.1.6/9.2.3/12.0.1) avec épingle de sécurité, vérification SHA-256 du tarball, injection IIFE de charge utile CJS, DNS sur port non standard, résolveur d'amorçage sh.azurestaticprovider.net, zone d'exfiltration DNS TXT bt.node.js, déclencheur d'exécution setImmediate(), artefacts de staging ~/nt-*/, éditeur non autorisé atiertant, détection du rayon d'impact dans les lockfiles avec recommandations d'épingle | Statique + Registre | ⚫ critique | SR-3.1, SR-5.3, SR-7.5 |
 
 > **Comment les attaques furtives sont détectées :** ATK-009 détecte les paquets qui vérifient `process.env.CI`, sondent les noms d'hôte ou utilisent une activation temporelle. ATK-009 signale les instructions `debugger`, les sondes `os.hostname()` et l'empreinte environnementale. ATK-011 trace les graphes de dépendances peer pour détecter les schémas de propagation de type ver.  
 > Voir [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) pour la documentation complète de la surface d'évasion et des exemples de PoC.
@@ -549,7 +551,7 @@ Voir la [section Démarrage rapide Docker](#-exécutez-lateosnpm-scan-partout-av
 
 ### Niveau gratuit (livré)
 
-- Les 11 détecteurs ATK (statique + comportemental) + **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)**
+- Les 11 détecteurs ATK (statique + comportemental) + **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)** + **TRAPDOOR** (9 règles) + **NODE_IPC_COMPROMISE** (11 règles)
 - Sortie SBOM (CycloneDX + SPDX)
 - Rapports HTML, texte et conformité (NIST + EU CRA)
 - Moteur de politique en tant que code (YAML)
@@ -616,6 +618,8 @@ node --test test/detectors-corpus.test.js
 - `test/cve-2026-48710-badhost/transitive.test.js` — 7 tests de dépendances transitives (Tier 1/2, contrôle de version fastapi, suppression par épinglage)
 - `test/cve-2026-48710-badhost/codePattern.test.js` — 6 tests de motifs de code statiques (contexte auth, passage INFO, suppression scope)
 - `test/cve-2026-48710-badhost/integration.test.js` — 4 tests d'intégration (résultats composites de bout en bout, projet propre, pas de fichiers Python)
+- `test/trapdoor.test.js` — 40 tests de détection de la campagne TrapDoor (D1–D9 : marqueur de campagne, empreinte de charge utile, liste noire d'éditeur, exfiltration Gist, empoisonnement IA, nom leurre, primitives cryptographiques, clé XOR, validation d'identifiants)
+- `test/node-ipc.test.js` — 37 tests de détection de compromission node-ipc (D1–D11 : liste noire de versions, hachage tarball, injection CJS, hachage de charge utile, motif DNS C2, résolveur d'amorçage, exfiltration DNS TXT, déclencheur d'exécution, artefacts temporaires, éditeur non autorisé, rayon d'impact)
 - `test/cli.test.js` — tests d'intégration commander (aide, version, scan, rapport, gestion d'erreurs)
 
 ### Besoin d'aide ?

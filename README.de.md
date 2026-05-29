@@ -228,6 +228,8 @@ npm-scan report --pdf             # alle Scans (Premium)
 | **ATK-010** | Sandbox-Evasion / Anti-Analyse | Verhaltensbasiert | 🟠 mittel | SR-10.3 |
 | **ATK-011** | Transitive Verbreitung (wurmartige laterale Ausbreitung) | Verhaltensbasiert | 🔴 hoch | SR-11.4 |
 | **CVE-2026-48710** | BadHost — Starlette Authentifizierungs-Bypass via Host-Header-Injection (CVE-2026-48710, CVSS 7.0). Python-Abhängigkeitsversionserkennung (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg), transitive Heuristik (15 bekannte Downstream-Pakete: fastapi, vllm, litellm, MCP-Server, etc.), statische Code-Pattern-Analyse für gefährliche `request.url.path`-Nutzung in Auth/Middleware-Kontexten mit `request.scope["path"]`-Unterdrückung | Statisch + Registry | 🔴 hoch / 🟠 mittel / ℹ️ info | SR-3.1, SR-5.3 |
+| **TRAPDOOR** | TrapDoor plattformübergreifende Angriffskampagne — Kampagnenmarker P-2024-001, trap-core.js-Payload-Fingerprint, Publisher-Blocklist asdxzxc, Gist-basierter Credential-Exfil, KI-Kontextvergiftung (Zero-Width-Unicode), Crypto/DeFi-Locknamen, Fernet+ECDH-Verschlüsselung, XOR-Key cargo-build-helper-2026, STS/GitHub-API-Validierung | Statisch + Registry | 🟠 mittel / 🔴 hoch / ⚫ kritisch | SR-3.1, SR-5.3, SR-7.5 |
+| **NODE_IPC_COMPROMISE** | node-ipc Supply-Chain-Kompromittierung (14. Mai 2026) — Versions-Blocklist (9.1.6/9.2.3/12.0.1) mit sicheren Pins, Tarball-SHA-256-Verifikation, CJS-Payload-IIFE-Injektion, DNS-over-nicht-Standard-Port-C2, Bootstrap-Resolver sh.azurestaticprovider.net, DNS-TXT-Exfiltrationszone bt.node.js, setImmediate()-Laufzeitauslöser, ~/nt-*/ Staging-Artefakte, unbefugter Publisher atiertant, Lockfile-Blastradius | Statisch + Registry | ⚫ kritisch | SR-3.1, SR-5.3, SR-7.5 |
 
 > **Wie ausweichende Angriffe erkannt werden:** ATK-009 erkennt Pakete, die `process.env.CI` prüfen, Hostnamen sondieren oder zeitbasierte Aktivierung verwenden. ATK-010 markiert `debugger`-Anweisungen, `os.hostname()`-Sonden und Umgebungs-Fingerprinting. ATK-011 verfolgt Peer-Abhängigkeitsgraphen, um wurmartige Verbreitungsmuster zu erkennen.  
 > Vollständige Dokumentation der Ausweichfläche und PoC-Beispiele finden Sie in [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md).
@@ -549,7 +551,7 @@ Siehe den obigen [Docker-Schnellstart-Abschnitt](#-lateosnpm-scan-überall-mit-d
 
 ### Kostenlose Stufe (ausgeliefert)
 
-- Alle 11 ATK-Detektoren (statisch + verhaltensbasiert) + **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)**
+- Alle 11 ATK-Detektoren (statisch + verhaltensbasiert) + **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)** + **TRAPDOOR** (9 Regeln) + **NODE_IPC_COMPROMISE** (11 Regeln)
 - SBOM-Ausgabe (CycloneDX + SPDX)
 - HTML-, Text- und Compliance-Berichte (NIST + EU CRA)
 - Policy-as-Code-Engine (YAML)
@@ -616,6 +618,8 @@ node --test test/detectors-corpus.test.js
 - `test/cve-2026-48710-badhost/transitive.test.js` — 7 transitive Abhängigkeitstests (Tier 1/2, fastapi-Version-Gating, Pin-Unterdrückung)
 - `test/cve-2026-48710-badhost/codePattern.test.js` — 6 statische Code-Pattern-Tests (Auth-Kontext, INFO-Durchgriff, Scope-Unterdrückung)
 - `test/cve-2026-48710-badhost/integration.test.js` — 4 Integrationstests (End-to-End-Composite-Findings, sauberes Projekt, keine Python-Dateien)
+- `test/trapdoor.test.js` — 40 TrapDoor-Kampagnenerkennungstests (D1–D9: Kampagnenmarker, Payload-Fingerprint, Publisher-Blocklist, Gist-Exfil, KI-Vergiftung, Lockname, Krypto-Primitive, XOR-Key, Credential-Validierung)
+- `test/node-ipc.test.js` — 37 node-ipc-Kompromittierungstests (D1–D11: Versions-Blocklist, Tarball-Hash, CJS-Injektion, Payload-Hash, DNS-C2-Muster, Bootstrap-Resolver, DNS-TXT-Exfil, Laufzeitauslöser, Temp-Artefakte, unbefugter Publisher, Blastradius)
 - `test/cli.test.js` — Commander-Integrationstests (Hilfe, Version, Scan, Bericht, Fehlerbehandlung)
 
 ### Hilfe benötigt?

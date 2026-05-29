@@ -224,6 +224,8 @@ npm-scan report --pdf             # すべてのスキャン（プレミアム�
 | **ATK-010** | サンドボックス回避／アンチ解析 | 行動 | 🟠 中 | SR-10.3 |
 | **ATK-011** | 推移的伝播（ワーム型横方向拡散） | 行動 | 🔴 高 | SR-11.4 |
 | **CVE-2026-48710** | BadHost — Starlette Host ヘッダーインジェクション認証バイパス (CVE-2026-48710, CVSS 7.0)。Python 依存関係バージョン検出 (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg)、推移的ヒューリスティック (15 の既知ダウンストリームパッケージ：fastapi, vllm, litellm, MCP サーバー等)、auth/middleware コンテキストでの危険な `request.url.path` 使用の静的コードパターンスキャン、`request.scope["path"]` による抑制対応 | 静的 + レジストリ | 🔴 高 / 🟠 中 / ℹ️ 情報 | SR-3.1, SR-5.3 |
+| **TRAPDOOR** | TrapDoor クロスエコシステム攻撃キャンペーン — キャンペーンマーカー P-2024-001、trap-core.js ペイロードフィンガープリント、パブリッシャーブロックリスト asdxzxc、Gist ベースの認証情報流出、AI コンテキストポイズニング（ゼロ幅 Unicode）、暗号資産/DeFi ルアー名、Fernet+ECDH 暗号化、XOR キー cargo-build-helper-2026、STS/GitHub API 認証情報検証 | 静的 + レジストリ | 🟠 中 / 🔴 高 / ⚫ クリティカル | SR-3.1, SR-5.3, SR-7.5 |
+| **NODE_IPC_COMPROMISE** | node-ipc サプライチェーン侵害（2026年5月14日）— バージョンブロックリスト (9.1.6/9.2.3/12.0.1) と安全な固定、tarball SHA-256 検証、CJS ペイロード IIFE インジェクション、非標準ポート DNS C2 パターン、ブートストラップリゾルバー sh.azurestaticprovider.net、DNS TXT 流出ゾーン bt.node.js、setImmediate() ランタイムトリガー、~/nt-*/ ステージングアーティファクト、未承認パブリッシャー atiertant、ロックファイル影響範囲検出と安全な固定推奨 | 静的 + レジストリ | ⚫ クリティカル | SR-3.1, SR-5.3, SR-7.5 |
 
 > **回避型攻撃の捕捉方法：** ATK-009は`process.env.CI`をチェックする、ホスト名をプローブする、または時間ベースのアクティベーションを使用するパッケージを検出します。ATK-010は`debugger`文、`os.hostname()`プローブ、環境フィンガープリンティングをフラグ付けします。ATK-011はピア依存関係グラフをトレースしてワーム型伝播パターンを検出します。  
 > 完全な回避面のドキュメントとPoC例については、[`docs/attack-taxonomy.md`](docs/attack-taxonomy.md)を参照してください。
@@ -545,7 +547,7 @@ npm-scan report --html > report.html
 
 ### 無料版（出荷済み）
 
-- 全11ATK検出器（静的＋行動）+ **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)**
+- 全11ATK検出器（静的＋行動）+ **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)** + **TRAPDOOR**（9ルール）+ **NODE_IPC_COMPROMISE**（11ルール）
 - SBOM出力（CycloneDX + SPDX）
 - HTML、テキスト、コンプライアンスレポート（NIST + EU CRA）
 - ポリシー・アズ・コードエンジン（YAML）
@@ -612,6 +614,8 @@ node --test test/detectors-corpus.test.js
 - `test/cve-2026-48710-badhost/transitive.test.js` — 7の推移的依存関係テスト（Tier 1/2, fastapiバージョンゲーティング, 固定抑制）
 - `test/cve-2026-48710-badhost/codePattern.test.js` — 6の静的コードパターンテスト（authコンテキスト, INFOフォールスルー, scope抑制）
 - `test/cve-2026-48710-badhost/integration.test.js` — 4の統合テスト（エンドツーエンド複合発見項目, クリーンプロジェクト, Pythonファイルなし）
+- `test/trapdoor.test.js` — 40のTrapDoorキャンペーン検出テスト（D1–D9：キャンペーンマーカー、ペイロードフィンガープリント、パブリッシャーブロックリスト、Gist流出、AIポイズニング、ルアー名、暗号プリミティブ、XORキー、認証情報検証）
+- `test/node-ipc.test.js` — 37のnode-ipc侵害検出テスト（D1–D11：バージョンブロックリスト、tarballハッシュ、CJSインジェクション、ペイロードハッシュ、DNS C2パターン、ブートストラップリゾルバー、DNS TXT流出、ランタイムトリガー、一時アーティファクト、未承認パブリッシャー、影響範囲）
 - `test/cli.test.js` — commander統合テスト（ヘルプ、バージョン、スキャン、レポート、エラーハンドリング）
 
 ### ヘルプが必要ですか？
