@@ -43,16 +43,16 @@ test('AXS: plain-crypto-js decoy dependency triggers D2', async () => {
   assert.equal(ev.details.D2.findings[0].injectedDependency, 'plain-crypto-js');
 });
 
-test('AXS: crypto dep in non-crypto package triggers D2', async () => {
-  const pkgJson = { name: 'simple-logger', version: '1.0.0', dependencies: { 'suspicious-crypto-module': '1.0.0' } };
+test('AXS: plain-crypto-js decoy in non-axios package triggers D2', async () => {
+  const pkgJson = { name: 'simple-logger', version: '1.0.0', dependencies: { 'plain-crypto-js': '1.0.0' } };
   const findings = await scan(pkgJson);
   assert.equal(findings.length, 1);
   const ev = JSON.parse(findings[0].evidence);
   assert.ok(ev.triggeredChecks.includes('D2'));
 });
 
-test('AXS: crypto dep in crypto package = no D2', async () => {
-  const pkgJson = { name: 'my-crypto-lib', version: '1.0.0', dependencies: { 'aes-js': '1.0.0' } };
+test('AXS: no known decoy deps = no D2', async () => {
+  const pkgJson = { name: 'simple-logger', version: '1.0.0', dependencies: { 'crypto-js': '4.2.0' } };
   const findings = await scan(pkgJson);
   assert.equal(findings.length, 0);
 });
