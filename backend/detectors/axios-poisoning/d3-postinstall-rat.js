@@ -31,8 +31,8 @@ export function scanPostinstallRAT(pkgJson, files = []) {
     }
   }
 
-  if (activeHooks.length === 0 && code.length === 0) {
-    return { triggered: false, platforms: [], c2Indicators: [], payloadType: null };
+  if (activeHooks.length === 0) {
+    return { triggered: false, platforms: [], c2Indicators: [], payloadType: null, hooks: [], hasBinaryDrop: false };
   }
 
   const combined = code + '\n' + activeHooks.map(h => h.command).join('\n');
