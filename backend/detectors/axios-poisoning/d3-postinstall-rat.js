@@ -69,9 +69,9 @@ export function scanPostinstallRAT(pkgJson, files = []) {
   let payloadType = null;
   if (platforms.length >= 2 && c2Indicators.length > 0 && hasBinaryDrop) {
     payloadType = 'cross_platform_RAT';
-  } else if (c2Indicators.length > 0) {
+  } else if (hasBinaryDrop && c2Indicators.length > 0) {
     payloadType = 'network_backdoor';
-  } else if (platforms.length > 0) {
+  } else if (hasBinaryDrop && platforms.length > 0) {
     payloadType = 'platform_persistence';
   }
 
@@ -83,17 +83,6 @@ export function scanPostinstallRAT(pkgJson, files = []) {
       c2Indicators,
       hooks: activeHooks.map(h => h.hook),
       hasBinaryDrop,
-    };
-  }
-
-  if (activeHooks.length > 0) {
-    return {
-      triggered: true,
-      payloadType: 'suspicious_lifecycle_hook',
-      platforms: ['unknown'],
-      c2Indicators: [],
-      hooks: activeHooks.map(h => h.hook),
-      hasBinaryDrop: false,
     };
   }
 

