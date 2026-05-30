@@ -25,7 +25,21 @@
 
 攻撃者は単純なタイポスクワッティングを超えています。今や彼らは**難読化されたプリインストールフック**、**環境検出の背後に隠れた認証情報窃取ツール**、**時間ベースのアクティベーションによる潜伏バックドア**、そしてピア依存関係を通じて拡散する**ワーム型の推移的伝播**を仕掛けています。
 
-**npm audit**は既知のCVEをチェックします。**Snyk**は脆弱性をスキャンします。**Socket**はパッケージの動作を分析します。しかし、これらは2025年に出現した攻撃——本番環境に到達するまで無害に見える攻撃——のために設計されたものではありません。
+**Megalodonキャンペーン**（2026年）だけでも、偽のGitHub PR、悪意のあるワークフローインジェクション、クラウド認証情報の外部漏洩を介して5,500以上のリポジトリが侵害されました。**@lateos/npm-scan**はこのキャンペーンの痕跡を標準で検出します。
+
+**Mini Shai-Huludワームキャンペーン**（2026年5月）は3つの波でnpmエコシステムを襲いました - TanStack CI/CDハイジャック（6分で84アーティファクト）、AntV/atoolメンテナー侵害（300以上のパッケージに600以上の悪意のあるバージョン）、およびNx Console VS Code拡張機能ポイズニング（CVE-2026-48027）- すべてctf-scramble-v2難読化、CI環境チェック付きデーモン化永続化、制裁対象地域を標的とした地理的キルスイッチ、トークンリカバリのためのGitHub C2 dead-dropチャネルを使用。**@lateos/npm-scan**は2つの検出スイートにわたる10のMini Shai-Huludシグナルすべてを検出します。
+
+増大する攻撃ベクトルは**HuggingFace組織のなりすまし**です。
+
+**TrapDoorキャンペーン**（2026年5月）はnpm、PyPI、Crates.ioにまたがります。
+
+**node-ipc侵害**（2026年5月14日）は期限切れのメンテナーメールドメインを悪用しました。
+
+**大量タイポスクワッティングキャンペーン（vpmdhaj）**（2026年5月）は、`vpmdhaj` npmメンテナーアカウントを武器化し、4時間で14のタイポスクワッティングパッケージを公開しました - プリインストールステイジャー、Bunランタイム乱用、クラウド認証情報の外部漏洩でAWS/CI/CD環境を標的に。**@lateos/npm-scan**はタイポスクワッティングキャンペーンの3つのシグナルすべてを検出します。
+
+**Axiosレジストリポイズニングキャンペーン**（2026年5月）は、npmレジストリのaxiosパッケージメタデータを侵害し、`axios@1.14.1`および`axios@0.30.4`を、クロスプラットフォームRATペイロードを含む注入された依存関係とともに公開しました。**@lateos/npm-scan**は3つのAxiosポイズニングシグナルすべてを検出します。
+
+**npm audit**は既知のCVEをチェックします。**Snyk**は脆弱性をスキャンします。**Socket**はパッケージの動作を分析します。しかし、これらは2025年に出現した攻撃のために設計されたものではありません。
 
 **@lateos/npm-scan**はこの瞬間のために作られました。
 
@@ -43,6 +57,16 @@
 | 条件付きトリガー検出 (ATK-009) | ❌ | ❌ | ❌ | ✅ |
 | サンドボックス回避検出 (ATK-010) | ❌ | ❌ | ❌ | ✅ |
 | 推移的ワーム伝播 (ATK-011) | ❌ | ❌ | ❌ | ✅ |
+| キャンペーン検出 (Megalodon CI/CD) | ❌ | ❌ | ❌ | ✅ |
+| ワームキャンペーン検出 (Mini Shai-Hulud 波1-3) | ❌ | ❌ | ❌ | ✅ |
+| HFモデルリポジトリなりすまし + READMEクローン | ❌ | ❌ | ❌ | ✅ |
+| VS Code拡張機能サプライチェーンスキャン (--vsix) | ❌ | ❌ | ❌ | ✅ |
+| Python脆弱性検出 (CVE-2026-48710 BadHost) | ❌ | ❌ | ❌ | ✅ |
+| クロスエコシステム攻撃検出 (TrapDoor) | ❌ | ❌ | ❌ | ✅ |
+| 期限切れドメインハイジャック検出 (node-ipc) | ❌ | ❌ | ❌ | ✅ |
+| マルウェア難読化検出 (ctf-scramble-v2) | ❌ | ❌ | ❌ | ✅ |
+| 大量タイポスクワッティングキャンペーン (vpmdhaj) | ❌ | ❌ | ❌ | ✅ |
+| レジストリポイズニング検出 (axios偽バージョン) | ❌ | ❌ | ❌ | ✅ |
 | 攻撃分類 (ATKシリーズ) | ❌ | ❌ | ❌ | ✅ |
 | SBOM出力 (CycloneDX + SPDX) | ❌ | ✅ | ❌ | ✅ |
 | NIST 800-161コンプライアンス報告 | ❌ | ❌ | ❌ | ✅ |
@@ -62,6 +86,15 @@
 | 🕵️ | **ヒューリスティック静的解析** | ASTレベルの検査で、正規表現ベースのツールでは見逃す難読化、evalチェーン、環境プロービング、疑わしいライフサイクルスクリプトを捕捉 |
 | 🧠 | **行動検出** | 条件付きトリガー（時間ベース、CI認識）、サンドボックス回避、潜伏アクティベーションパターンを識別 |
 | 🧬 | **ATK攻撃分類** | NIST 800-161マッピング付き11の分類攻撃タイプ——バージョン管理、文書化、PR対応 |
+| 🪱 | **ワームキャンペーン検出** | Mini Shai-Hulud - 2スイートにわたる10のサブチェック：バースト公開、兄弟妥協、SLSAアテステーション不一致、パブリッシャードリフト、IOCマッチ、トークン流出、ctf-scramble-v2難読化、デーモン化永続化、地理的キルスイッチ、GitHub C2 dead-drop |
+| 🧩 | **VSIX拡張スキャン** | `npm-scan scan --vsix` - VS Code Marketplaceサプライチェーン攻撃を検出 |
+| 🐍 | **Python脆弱性検出** | CVE-2026-48710 (BadHost) - Starlette Hostヘッダーインジェクション |
+| 🪤 | **クロスエコシステム攻撃検出** | TrapDoor - 9サブチェック |
+| 📡 | **期限切れドメインハイジャック検出** | node-ipc侵害 - 11サブチェック |
+| ☣️ | **マルウェア難読化検出** | ctf-scramble-v2 - パッケージdist/libを既知のマルウェア難読化パターンについてスキャン、CRITICAL停止条件で即時分析停止 |
+| 🎭 | **大量タイポスクワッティングキャンペーン検出** | vpmdhajメンテナーブロックリストと停止条件、Levenshteンベースのタイポスクワッティング検出、プリインストールステイジャー識別、AWS ECS/Vault/GitHub認証情報流出パターン |
+| ☠️ | **レジストリポイズニング検出** | Axiosバージョンブロックリスト（1.14.1/0.30.4）と停止条件、デコイ依存関係発見（plain-crypto-js）、クロスプラットフォームRATペイロード検出 |
+| 🔏 | **プロvenance監査証跡** | Aureus-Elicitor v1.7フレームワーク - HMAC-SHA256署名付き検出マニフェスト、コンテンツハッシュ検証済み監査証跡、ルールプロvenanceURL、キャンペーンソース属性 |
 | 📦 | **SBOM生成** | CycloneDX 1.5およびSPDX 2.3、発見項目は脆弱性として埋め込み |
 | 🧾 | **コンプライアンス報告** | NIST SP 800-161トレーサビリティマトリックス＋EUサイバーレジリエンス法マッピング（無料） |
 | 🔌 | **SIEMエクスポート** | Splunk CEF、Elastic ECS、Microsoft Sentinel、IBM QRadar形式（プレミアム） |
@@ -226,6 +259,9 @@ npm-scan report --pdf             # すべてのスキャン（プレミアム�
 | **CVE-2026-48710** | BadHost — Starlette Host ヘッダーインジェクション認証バイパス (CVE-2026-48710, CVSS 7.0)。Python 依存関係バージョン検出 (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg)、推移的ヒューリスティック (15 の既知ダウンストリームパッケージ：fastapi, vllm, litellm, MCP サーバー等)、auth/middleware コンテキストでの危険な `request.url.path` 使用の静的コードパターンスキャン、`request.scope["path"]` による抑制対応 | 静的 + レジストリ | 🔴 高 / 🟠 中 / ℹ️ 情報 | SR-3.1, SR-5.3 |
 | **TRAPDOOR** | TrapDoor クロスエコシステム攻撃キャンペーン — キャンペーンマーカー P-2024-001、trap-core.js ペイロードフィンガープリント、パブリッシャーブロックリスト asdxzxc、Gist ベースの認証情報流出、AI コンテキストポイズニング（ゼロ幅 Unicode）、暗号資産/DeFi ルアー名、Fernet+ECDH 暗号化、XOR キー cargo-build-helper-2026、STS/GitHub API 認証情報検証 | 静的 + レジストリ | 🟠 中 / 🔴 高 / ⚫ クリティカル | SR-3.1, SR-5.3, SR-7.5 |
 | **NODE_IPC_COMPROMISE** | node-ipc サプライチェーン侵害（2026年5月14日）— バージョンブロックリスト (9.1.6/9.2.3/12.0.1) と安全な固定、tarball SHA-256 検証、CJS ペイロード IIFE インジェクション、非標準ポート DNS C2 パターン、ブートストラップリゾルバー sh.azurestaticprovider.net、DNS TXT 流出ゾーン bt.node.js、setImmediate() ランタイムトリガー、~/nt-*/ ステージングアーティファクト、未承認パブリッシャー atiertant、ロックファイル影響範囲検出と安全な固定推奨 | 静的 + レジストリ | ⚫ クリティカル | SR-3.1, SR-5.3, SR-7.5 |
+| **MSH_SUPPLEMENT** | Mini Shai-Hulud補足 - ctf-scramble-v2難読化（一致で停止）、デーモン化永続化、地理的キルスイッチ検出（ru_RU/be_BY）、C2 dead-drop指標（OhNoWhatsGoingOnWithGitHub） | 静的＋行動 | ⚫ クリティカル | SR-3.1, SR-7.5, SR-9.2 |
+| **TYPOSQUAT_VPMDHAJ** | 大量タイポスクワッティングキャンペーン（vpmdhaj） - メンテナーブロックリスト（一致で停止）、vpmdhaj-*名前空間プレフィックス検出、Levenshteinタイポスクワッティング、プリインストールステイジャー、クラウド認証情報流出（AWS IMDSv2、ECS、Vault、GitHub） | 静的＋レジストリ | ⚫ クリティカル | SR-2.1, SR-3.1, SR-5.3 |
+| **AXIOS_POISONING** | Axiosレジストリポイズニング - バージョンブロックリスト（1.14.1/0.30.4、一致で停止）、デコイ依存関係インジェクション（plain-crypto-js）、クロスプラットフォームRATペイロード検出（PowerShell、launchd、systemd、DLL、C2） | 静的＋行動 | ⚫ クリティカル | SR-3.1, SR-5.3, SR-7.5 |
 
 > **回避型攻撃の捕捉方法：** ATK-009は`process.env.CI`をチェックする、ホスト名をプローブする、または時間ベースのアクティベーションを使用するパッケージを検出します。ATK-010は`debugger`文、`os.hostname()`プローブ、環境フィンガープリンティングをフラグ付けします。ATK-011はピア依存関係グラフをトレースしてワーム型伝播パターンを検出します。  
 > 完全な回避面のドキュメントとPoC例については、[`docs/attack-taxonomy.md`](docs/attack-taxonomy.md)を参照してください。
@@ -547,7 +583,7 @@ npm-scan report --html > report.html
 
 ### 無料版（出荷済み）
 
-- 全11ATK検出器（静的＋行動）+ **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)** + **TRAPDOOR**（9ルール）+ **NODE_IPC_COMPROMISE**（11ルール）
+- 全11ATK検出器（静的＋行動）+ **MEGALODON**（D1-D6）+ **HF_IMPERSONATION** + **MINI_SHAI_HULUD**（D1-D7、3波、**MSH_SUPPLEMENT** D1-D4含む）+ **VSIX_SCAN**（6検出器）+ **CVE-2026-48710（BadHost）**（3層）+ **TRAPDOOR**（9ルール）+ **NODE_IPC_COMPROMISE**（11ルール）+ **TYPOSQUAT_VPMDHAJ**（3ルール）+ **AXIOS_POISONING**（3ルール）
 - SBOM出力（CycloneDX + SPDX）
 - HTML、テキスト、コンプライアンスレポート（NIST + EU CRA）
 - ポリシー・アズ・コードエンジン（YAML）
@@ -616,6 +652,9 @@ node --test test/detectors-corpus.test.js
 - `test/cve-2026-48710-badhost/integration.test.js` — 4の統合テスト（エンドツーエンド複合発見項目, クリーンプロジェクト, Pythonファイルなし）
 - `test/trapdoor.test.js` — 40のTrapDoorキャンペーン検出テスト（D1–D9：キャンペーンマーカー、ペイロードフィンガープリント、パブリッシャーブロックリスト、Gist流出、AIポイズニング、ルアー名、暗号プリミティブ、XORキー、認証情報検証）
 - `test/node-ipc.test.js` — 37のnode-ipc侵害検出テスト（D1–D11：バージョンブロックリスト、tarballハッシュ、CJSインジェクション、ペイロードハッシュ、DNS C2パターン、ブートストラップリゾルバー、DNS TXT流出、ランタイムトリガー、一時アーティファクト、未承認パブリッシャー、影響範囲）
+- `test/msh-supplement.test.js` — 17 MSH補足テスト（ctf-scramble-v2停止、デーモン化、地理的キルスイッチ、C2 dead-drop）
+- `test/typosquat-vpmdhaj.test.js` — 16タイポスクワッティングキャンペーンテスト（メンテナーブロック、プレフィックス検出、Levenshtein、プリインストールステイジャー、Bunローダー、AWS/ECS/Vault/GitHub認証情報流出）
+- `test/axios-poisoning.test.js` — 13 Axiosポイズニングテスト（バージョンブロックリスト停止、デコイ依存関係、暗号ヒューリスティック、クロスプラットフォームRAT、C2コールバック）
 - `test/cli.test.js` — commander統合テスト（ヘルプ、バージョン、スキャン、レポート、エラーハンドリング）
 
 ### ヘルプが必要ですか？

@@ -15,6 +15,9 @@ import { scan as miniShaiHuludScan } from './mini-shai-hulud/index.js';
 import { scan as badhostScan } from './cve-2026-48710-badhost/index.js';
 import { scan as trapdoorScan } from './trapdoor/index.js';
 import { scan as nodeIpcScan } from './node-ipc-compromise/index.js';
+import { scan as mshSupplementScan } from './msh-supplement/index.js';
+import { scan as typosquatScan } from './typosquat-vpmdhaj/index.js';
+import { scan as axiosPoisoningScan } from './axios-poisoning/index.js';
 
 export async function runAll(pkgJson, files = [], registryMeta = null, allFiles = null) {
   const findings = [];
@@ -35,5 +38,8 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
   findings.push(...await badhostScan(pkgJson, files, registryMeta, allFiles || files));
   findings.push(...await trapdoorScan(pkgJson, files, registryMeta, allFiles || files));
   findings.push(...await nodeIpcScan(pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await mshSupplementScan(pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await typosquatScan(pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await axiosPoisoningScan(pkgJson, files, registryMeta, allFiles || files));
   return findings.sort((a, b) => b.severity.localeCompare(a.severity));
 }

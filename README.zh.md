@@ -25,7 +25,21 @@
 
 攻击者早已超越简单的域名抢注。他们现在投放的是**混淆的预安装钩子**、**隐藏在环境检测背后的凭证窃取器**、**基于时间激活的潜伏后门**，以及通过同级依赖传播的**蠕虫式传递传播**。
 
-**npm audit** 检查已知 CVE。**Snyk** 扫描漏洞。**Socket** 分析包行为。但它们都不是为了应对 2025 年涌现的攻击而设计的——那些在进入生产环境之前看似无害的攻击。
+**Megalodon 活动**（2026 年）仅一次活动就通过虚假 GitHub PR、恶意工作流注入和云凭证外泄，攻陷了 5,500+ 个仓库。**@lateos/npm-scan** 现可开箱即用地检测此活动的痕迹。
+
+**Mini Shai-Hulud 蠕虫活动**（2026 年 5 月）分三波冲击 npm 生态系统——TanStack CI/CD 劫持（6 分钟内 84 个工件）、AntV/atool 维护者账户沦陷（300+ 个包中 600+ 个恶意版本）、以及 Nx Console VS Code 扩展投毒（CVE-2026-48027）——全部使用 ctf-scramble-v2 混淆、带 CI 环境检查的守护化持久化、针对受制裁区域的地理围栏终止开关，以及用于令牌恢复的 GitHub C2 死信通道。**@lateos/npm-scan** 现可检测横跨两个检测套件的全部 10 个 Mini Shai-Hulud 信号。
+
+一个不断增长的攻击向量是 **HuggingFace 组织冒充**。
+
+**TrapDoor 活动**（2026 年 5 月）横跨 npm、PyPI 和 Crates.io。
+
+**node-ipc 沦陷**（2026 年 5 月 14 日）利用了一个过期的维护者邮箱域名。
+
+**大规模域名抢注活动（vpmdhaj）**（2026 年 5 月）武器化了 `vpmdhaj` npm 维护者账户，在 4 小时内发布了 14 个域名抢注包——使用预安装加载器、Bun 运行时滥用和云凭证外泄，瞄准 AWS/CI/CD 环境。**@lateos/npm-scan** 现可检测全部 3 个域名抢注活动信号。
+
+**Axios 注册表投毒活动**（2026 年 5 月）攻陷了 npm 注册表的 axios 包元数据，发布了包含跨平台 RAT 恶意载荷的 `axios@1.14.1` 和 `axios@0.30.4`。**@lateos/npm-scan** 现可检测全部 3 个 Axios 投毒信号。
+
+**npm audit** 检查已知 CVE。**Snyk** 扫描漏洞。**Socket** 分析包行为。但它们都不是为了应对 2025 年涌现的攻击而设计的。
 
 **@lateos/npm-scan** 为此而生。
 
@@ -43,6 +57,16 @@
 | 条件触发器检测 (ATK-009) | ❌ | ❌ | ❌ | ✅ |
 | 沙箱逃逸检测 (ATK-010) | ❌ | ❌ | ❌ | ✅ |
 | 传递性蠕虫传播 (ATK-011) | ❌ | ❌ | ❌ | ✅ |
+| 活动检测 (Megalodon CI/CD) | ❌ | ❌ | ❌ | ✅ |
+| 蠕虫活动检测 (Mini Shai-Hulud 第1-3波) | ❌ | ❌ | ❌ | ✅ |
+| HF 模型仓库冒充 + README 克隆 | ❌ | ❌ | ❌ | ✅ |
+| VS Code 扩展供应链扫描 (--vsix) | ❌ | ❌ | ❌ | ✅ |
+| Python 漏洞检测 (CVE-2026-48710 BadHost) | ❌ | ❌ | ❌ | ✅ |
+| 跨生态系统攻击检测 (TrapDoor) | ❌ | ❌ | ❌ | ✅ |
+| 过期域名劫持检测 (node-ipc) | ❌ | ❌ | ❌ | ✅ |
+| 恶意软件混淆检测 (ctf-scramble-v2) | ❌ | ❌ | ❌ | ✅ |
+| 大规模域名抢注活动 (vpmdhaj 维护者) | ❌ | ❌ | ❌ | ✅ |
+| 注册表投毒检测 (axios 虚假版本) | ❌ | ❌ | ❌ | ✅ |
 | 攻击分类 (ATK 系列) | ❌ | ❌ | ❌ | ✅ |
 | SBOM 输出 (CycloneDX + SPDX) | ❌ | ✅ | ❌ | ✅ |
 | NIST 800-161 合规报告 | ❌ | ❌ | ❌ | ✅ |
@@ -62,6 +86,15 @@
 | 🕵️ | **启发式静态分析** | AST 级别检查捕获混淆、eval 链、环境探测以及基于正则的工具遗漏的可疑生命周期脚本 |
 | 🧠 | **行为检测** | 识别条件触发器（基于时间、CI 感知）、沙箱逃逸和潜伏激活模式 |
 | 🧬 | **ATK 攻击分类** | 11 种分类攻击类型，附带 NIST 800-161 映射——可版本控制、可文档化、可 PR |
+| 🪱 | **蠕虫活动检测** | Mini Shai-Hulud——两个套件中的 10 个子检查：突发发布、兄弟沦陷、SLSA 证明不匹配、发布者漂移、IOC 匹配、令牌外泄、ctf-scramble-v2 混淆、守护化持久化、地理终止开关、GitHub C2 死信 |
+| 🧩 | **VSIX 扩展扫描** | `npm-scan scan --vsix`——检测 VS Code Marketplace 供应链攻击 |
+| 🐍 | **Python 漏洞检测** | CVE-2026-48710 (BadHost)——Starlette Host 头注入 |
+| 🪤 | **跨生态系统攻击检测** | TrapDoor——9 个子检查 |
+| 📡 | **过期域名劫持检测** | node-ipc 沦陷——11 个子检查 |
+| ☣️ | **恶意软件混淆检测** | ctf-scramble-v2——扫描包 dist/lib 中的已知恶意软件混淆模式，以最高严重性 CRITICAL 停止条件立即停止分析 |
+| 🎭 | **大规模域名抢注活动检测** | vpmdhaj 维护者黑名单与停止条件，基于 Levenshtein 的域名抢注检测，预安装加载器识别，AWS ECS/Vault/GitHub 凭证外泄模式 |
+| ☠️ | **注册表投毒检测** | Axios 版本黑名单 (1.14.1/0.30.4) 与停止条件，诱饵依赖发现 (plain-crypto-js)，跨平台 RAT 载荷检测 |
+| 🔏 | **溯源审计追踪** | Aureus-Elicitor v1.7 框架——HMAC-SHA256 签名的检测清单，内容哈希验证的审计追踪，规则溯源 URL，活动来源归属 |
 | 📦 | **SBOM 生成** | CycloneDX 1.5 和 SPDX 2.3，发现项嵌入为漏洞 |
 | 🧾 | **合规报告** | NIST SP 800-161 可追溯性矩阵 + EU 网络弹性法案映射（免费） |
 | 🔌 | **SIEM 导出** | Splunk CEF、Elastic ECS、Microsoft Sentinel、IBM QRadar 格式（高级版） |
@@ -230,6 +263,9 @@ npm-scan report --pdf             # 所有扫描（高级版）
 | **CVE-2026-48710** | BadHost — Starlette Host 头注入认证绕过 (CVE-2026-48710, CVSS 7.0)。Python 依赖版本检测 (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg)，传递性启发式检测 (15 个已知下游包：fastapi, vllm, litellm, MCP 服务器等)，auth/middleware 上下文中危险 `request.url.path` 使用的静态代码模式扫描，支持 `request.scope["path"]` 抑制 | 静态 + 注册表 | 🔴 高 / 🟠 中 / ℹ️ 信息 | SR-3.1, SR-5.3 |
 | **TRAPDOOR** | TrapDoor 跨生态系统攻击活动 — 活动标记 P-2024-001，trap-core.js 载荷指纹，发布者黑名单 asdxzxc，基于 Gist 的凭证窃取，AI 上下文注入（零宽 Unicode），加密/DeFi 诱饵名称，Fernet+ECDH 加密，XOR 密钥 cargo-build-helper-2026，STS/GitHub API 凭证验证 | 静态 + 注册表 | 🟠 中 / 🔴 高 / ⚫ 严重 | SR-3.1, SR-5.3, SR-7.5 |
 | **NODE_IPC_COMPROMISE** | node-ipc 供应链入侵（2026年5月14日）— 版本黑名单 (9.1.6/9.2.3/12.0.1) 及安全锁定，tarball SHA-256 验证，CJS 载荷 IIFE 注入检测，DNS 非标准端口 C2 模式，引导解析器 sh.azurestaticprovider.net，DNS TXT 外泄区域 bt.node.js，setImmediate() 运行时触发，~/nt-*/ 临时制品检测，未授权发布者 atiertant，锁定文件影响范围检测并推荐安全固定版本 | 静态 + 注册表 | ⚫ 严重 | SR-3.1, SR-5.3, SR-7.5 |
+| **MSH_SUPPLEMENT** | Mini Shai-Hulud 补充——ctf-scramble-v2 混淆（匹配即停止），守护化持久化，地理终止开关检测 (ru_RU/be_BY)，C2 死信指标 (OhNoWhatsGoingOnWithGitHub) | 静态 + 行为 | ⚫ 严重 | SR-3.1, SR-7.5, SR-9.2 |
+| **TYPOSQUAT_VPMDHAJ** | 大规模域名抢注活动 (vpmdhaj)——维护者黑名单（匹配即停止），vpmdhaj-* 命名空间前缀检测，Levenshtein 域名抢注匹配，预安装加载器，云凭证外泄 (AWS IMDSv2, ECS, Vault, GitHub) | 静态 + 注册表 | ⚫ 严重 | SR-2.1, SR-3.1, SR-5.3 |
+| **AXIOS_POISONING** | Axios 注册表投毒——版本黑名单 (1.14.1/0.30.4，匹配即停止)，诱饵依赖注入 (plain-crypto-js)，跨平台 RAT 载荷检测 (PowerShell, launchd, systemd, DLL, C2) | 静态 + 行为 | ⚫ 严重 | SR-3.1, SR-5.3, SR-7.5 |
 
 > **如何捕获逃避式攻击：** ATK-009 检测检查 `process.env.CI`、探测主机名或使用时间激活的包。ATK-010 标记 `debugger` 语句、`os.hostname()` 探测和环境指纹采集。ATK-011 追踪同级依赖图以检测蠕虫式传播模式。  
 > 完整逃避面文档和 PoC 示例请参阅 [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md)。
@@ -551,7 +587,7 @@ npm-scan report --html > report.html
 
 ### 免费版（已发布）
 
-- 全部 11 个 ATK 检测器（静态 + 行为）+ **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)** + **TRAPDOOR**（9 条规则）+ **NODE_IPC_COMPROMISE**（11 条规则）
+- 全部 11 个 ATK 检测器 + **MEGALODON** (D1-D6) + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** (D1-D7, 3 波，含 **MSH_SUPPLEMENT** D1-D4) + **VSIX_SCAN** (6 个检测器) + **CVE-2026-48710 (BadHost)** (3 层) + **TRAPDOOR** (9 条规则) + **NODE_IPC_COMPROMISE** (11 条规则) + **TYPOSQUAT_VPMDHAJ** (3 条规则) + **AXIOS_POISONING** (3 条规则)
 - SBOM 输出（CycloneDX + SPDX）
 - HTML、文本和合规报告（NIST + EU CRA）
 - 策略即代码引擎（YAML）
@@ -620,6 +656,9 @@ node --test test/detectors-corpus.test.js
 - `test/cve-2026-48710-badhost/integration.test.js` — 4 个集成测试（端到端复合发现项, 清洁项目, 无 Python 文件）
 - `test/trapdoor.test.js` — 40 个 TrapDoor 活动检测测试（D1–D9：活动标记、载荷指纹、发布者黑名单、Gist 外泄、AI 注入、诱饵名称、加密原语、XOR 密钥、凭证验证）
 - `test/node-ipc.test.js` — 37 个 node-ipc 入侵检测测试（D1–D11：版本黑名单、tarball 哈希、CJS 注入、载荷哈希、DNS C2 模式、引导解析器、DNS TXT 外泄、运行时触发、临时制品、未授权发布者、影响范围）
+- `test/msh-supplement.test.js`——17 个 MSH 补充测试 (ctf-scramble-v2 停止，守护化，地理终止开关，C2 死信)
+- `test/typosquat-vpmdhaj.test.js`——16 个域名抢注活动测试 (维护者阻止，前缀检测，Levenshtein，预安装加载器，Bun 加载器，AWS/ECS/Vault/GitHub 凭证外泄)
+- `test/axios-poisoning.test.js`——13 个 Axios 投毒测试 (版本黑名单停止，诱饵依赖，加密启发式，跨平台 RAT，C2 回调)
 - `test/cli.test.js` — commander 集成测试（帮助、版本、扫描、报告、错误处理）
 
 ### 需要帮助？

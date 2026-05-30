@@ -21,11 +21,25 @@ Statische + verhaltensbasierte Analyse, die erkennt, was npm audit, Snyk und Soc
 
 ## 📌 Das Problem
 
-Die Welle von npm-Lieferkettenangriffen 2025–2026 hat bewiesen, dass herkömmliche Werkzeuge nicht mehr ausreichen.
+Die Welle von npm-Lieferkettenangriffen 2025-2026 hat bewiesen, dass herkömmliche Werkzeuge nicht mehr ausreichen.
 
 Angreifer haben sich längst über einfaches Typosquatting hinausentwickelt. Sie liefern nun **obfuskierte Preinstall-Hooks**, **hinter Umgebungserkennung versteckte Credential-Stealer**, **schlafende Hintertüren mit zeitbasierter Aktivierung** und **wurmartige transitive Verbreitung**, die sich über Peer-Abhängigkeiten ausbreitet.
 
-**npm audit** prüft bekannte CVEs. **Snyk** scannt nach Schwachstellen. **Socket** untersucht das Paketverhalten. Keines dieser Tools wurde für die Angriffsgeneration entwickelt, die 2025 auftrat — Angriffe, die harmlos aussehen, bis sie die Produktion erreichen.
+Die **Megalodon-Kampagne** (2026) kompromittierte allein über 5.500 Repositorys durch gefälschte GitHub-PRs, böswillige Workflow-Injektion und Cloud-Credential-Exfiltration - alles koordiniert durch einen einzelnen Akteur, der die gesamte Kill-Chain automatisierte. **@lateos/npm-scan** erkennt Artefakte dieser Kampagne jetzt standardmäßig.
+
+Die **Mini Shai-Hulud-Wurm-Kampagne** (Mai 2026) traf das npm-Ökosystem in drei Wellen - TanStack CI/CD-Entführung (84 Artefakte in 6 Minuten), AntV/atool-Maintainer-Kompromittierung (600+ bösartige Versionen in 300+ Paketen) und Nx Console VS-Code-Erweiterungsvergiftung (CVE-2026-48027) - alle unter Verwendung von ctf-scramble-v2-Obfuskation, dämonisierter Persistenz mit CI-Umgebungsprüfungen, geografischen Killswitches gegen sanktionierte Regionen und GitHub-C2-Dead-Drop-Kanälen zur Token-Wiederherstellung. **@lateos/npm-scan** erkennt jetzt alle 10 Mini-Shai-Hulud-Signale über zwei Detektor-Suites.
+
+Ein wachsender Angriffsvektor ist die **HuggingFace-Organisations-Identitätsdiebstahl**.
+
+Die **TrapDoor-Kampagne** (Mai 2026) erstreckt sich über npm, PyPI und Crates.io.
+
+Die **node-ipc-Kompromittierung** (14. Mai 2026) nutzte eine abgelaufene Maintainer-E-Mail-Domain aus.
+
+Die **Massen-Typosquatting-Kampagne (vpmdhaj)** (Mai 2026) bewaffnete das npm-Maintainer-Konto `vpmdhaj`, um in einem 4-Stunden-Fenster 14 Typosquatting-Pakete zu veröffentlichen - mit Preinstall-Stagern, Bun-Laufzeitmissbrauch und Cloud-Credential-Exfiltration gegen AWS/CI/CD-Umgebungen. **@lateos/npm-scan** erkennt jetzt alle 3 Typosquatting-Kampagnensignale.
+
+Die **Axios-Registry-Vergiftungskampagne** (Mai 2026) kompromittierte die npm-Registry-Metadaten des Axios-Pakets, um `axios@1.14.1` und `axios@0.30.4` mit injizierten Abhängigkeiten zu veröffentlichen, die plattformübergreifende RAT-Payloads enthielten. **@lateos/npm-scan** erkennt jetzt alle 3 Axios-Vergiftungssignale.
+
+**npm audit** prüft bekannte CVEs. **Snyk** scannt nach Schwachstellen. **Socket** untersucht das Paketverhalten. Keines dieser Tools wurde für die Angriffsgeneration entwickelt, die 2025 auftrat.
 
 **@lateos/npm-scan** wurde für diesen Moment entwickelt.
 
@@ -43,6 +57,16 @@ Angreifer haben sich längst über einfaches Typosquatting hinausentwickelt. Sie
 | Erkennung bedingter Auslöser (ATK-009) | ❌ | ❌ | ❌ | ✅ |
 | Sandbox-Evasion-Erkennung (ATK-010) | ❌ | ❌ | ❌ | ✅ |
 | Transitive Wurmverbreitung (ATK-011) | ❌ | ❌ | ❌ | ✅ |
+| Kampagnenerkennung (Megalodon CI/CD) | ❌ | ❌ | ❌ | ✅ |
+| Wurm-Kampagnenerkennung (Mini Shai-Hulud Welle 1-3) | ❌ | ❌ | ❌ | ✅ |
+| HF-Modell-Repo-Identitätsdiebstahl + README-Klon | ❌ | ❌ | ❌ | ✅ |
+| VS-Code-Erweiterungs-Supply-Chain-Scan (--vsix) | ❌ | ❌ | ❌ | ✅ |
+| Python-Schwachstellenerkennung (CVE-2026-48710 BadHost) | ❌ | ❌ | ❌ | ✅ |
+| Plattformübergreifende Angriffserkennung (TrapDoor) | ❌ | ❌ | ❌ | ✅ |
+| Abgelaufene-Domain-Entführungserkennung (node-ipc) | ❌ | ❌ | ❌ | ✅ |
+| Malware-Obfuskationserkennung (ctf-scramble-v2) | ❌ | ❌ | ❌ | ✅ |
+| Massen-Typosquatting-Kampagne (vpmdhaj-Maintainer) | ❌ | ❌ | ❌ | ✅ |
+| Registry-Vergiftungserkennung (axios-Fake-Versionen) | ❌ | ❌ | ❌ | ✅ |
 | Angriffstaxonomie (ATK-Serie) | ❌ | ❌ | ❌ | ✅ |
 | SBOM-Ausgabe (CycloneDX + SPDX) | ❌ | ✅ | ❌ | ✅ |
 | NIST 800-161-Compliance-Bericht | ❌ | ❌ | ❌ | ✅ |
@@ -62,6 +86,15 @@ Angreifer haben sich längst über einfaches Typosquatting hinausentwickelt. Sie
 | 🕵️ | **Heuristische statische Analyse** | AST-Level-Inspektion erkennt Obfuskation, eval-Ketten, Umgebungsabfragen und verdächtige Lebenszyklus-Skripte, die regex-basierten Tools entgehen |
 | 🧠 | **Verhaltenserkennung** | Identifiziert bedingte Auslöser (zeitbasiert, CI-bewusst), Sandbox-Evasion und schlafende Aktivierungsmuster |
 | 🧬 | **ATK-Angriffstaxonomie** | 11 klassifizierte Angriffstypen mit NIST 800-161-Zuordnungen — versioniert, dokumentiert und PR-fähig |
+| 🪱 | **Wurm-Kampagnenerkennung** | Mini Shai-Hulud - 10 Sub-Checks über 2 Suites: Burst-Publish, Sibling-Kompromittierung, SLSA-Attestierungsabweichung, Publisher-Drift, IOC-Match, Token-Exfil, ctf-scramble-v2-Obfuskation, dämonisierte Persistenz, geografischer Killswitch, GitHub-C2-Dead-Drop |
+| 🧩 | **VSIX-Erweiterungsscan** | `npm-scan scan --vsix` - erkennt VS Code Marketplace Supply-Chain-Angriffe |
+| 🐍 | **Python-Schwachstellenerkennung** | CVE-2026-48710 (BadHost) - Starlette Host-Header-Injection |
+| 🪤 | **Plattformübergreifende Angriffserkennung** | TrapDoor - 9 Sub-Checks |
+| 📡 | **Abgelaufene-Domain-Entführungserkennung** | node-ipc-Kompromittierung - 11 Sub-Checks |
+| ☣️ | **Malware-Obfuskationserkennung** | ctf-scramble-v2 - scannt Paket-dist/lib nach bekannten Malware-Obfuskationsmustern, stoppt Analyse sofort mit CRITICAL-Stoppbedingung |
+| 🎭 | **Massen-Typosquatting-Kampagnenerkennung** | vpmdhaj-Maintainer-Blocklist mit Stoppbedingung, Levenshtein-basierte Typosquatting-Erkennung, Preinstall-Stager-Identifikation, AWS-ECS/Vault/GitHub-Credential-Exfiltrationsmuster |
+| ☠️ | **Registry-Vergiftungserkennung** | Axios-Versions-Blocklist (1.14.1/0.30.4) mit Stoppbedingung, Decoy-Abhängigkeitserkennung (plain-crypto-js), plattformübergreifende RAT-Payload-Erkennung |
+| 🔏 | **Provenance-Prüfpfad** | Aureus-Elicitor v1.7-Framework - HMAC-SHA256-signierte Erkennungsmanifeste, inhaltshash-verifizierte Prüfpfade, Regel-Provenance-URLs, Kampagnenquellenattribution |
 | 📦 | **SBOM-Generierung** | CycloneDX 1.5 und SPDX 2.3 mit eingebetteten Ergebnissen als Schwachstellen |
 | 🧾 | **Compliance-Berichte** | NIST SP 800-161-Rückverfolgbarkeitsmatrix + EU Cyber Resilience Act-Zuordnung (kostenlos) |
 | 🔌 | **SIEM-Export** | Splunk CEF, Elastic ECS, Microsoft Sentinel, IBM QRadar-Formate (Premium) |
@@ -230,6 +263,9 @@ npm-scan report --pdf             # alle Scans (Premium)
 | **CVE-2026-48710** | BadHost — Starlette Authentifizierungs-Bypass via Host-Header-Injection (CVE-2026-48710, CVSS 7.0). Python-Abhängigkeitsversionserkennung (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg), transitive Heuristik (15 bekannte Downstream-Pakete: fastapi, vllm, litellm, MCP-Server, etc.), statische Code-Pattern-Analyse für gefährliche `request.url.path`-Nutzung in Auth/Middleware-Kontexten mit `request.scope["path"]`-Unterdrückung | Statisch + Registry | 🔴 hoch / 🟠 mittel / ℹ️ info | SR-3.1, SR-5.3 |
 | **TRAPDOOR** | TrapDoor plattformübergreifende Angriffskampagne — Kampagnenmarker P-2024-001, trap-core.js-Payload-Fingerprint, Publisher-Blocklist asdxzxc, Gist-basierter Credential-Exfil, KI-Kontextvergiftung (Zero-Width-Unicode), Crypto/DeFi-Locknamen, Fernet+ECDH-Verschlüsselung, XOR-Key cargo-build-helper-2026, STS/GitHub-API-Validierung | Statisch + Registry | 🟠 mittel / 🔴 hoch / ⚫ kritisch | SR-3.1, SR-5.3, SR-7.5 |
 | **NODE_IPC_COMPROMISE** | node-ipc Supply-Chain-Kompromittierung (14. Mai 2026) — Versions-Blocklist (9.1.6/9.2.3/12.0.1) mit sicheren Pins, Tarball-SHA-256-Verifikation, CJS-Payload-IIFE-Injektion, DNS-over-nicht-Standard-Port-C2, Bootstrap-Resolver sh.azurestaticprovider.net, DNS-TXT-Exfiltrationszone bt.node.js, setImmediate()-Laufzeitauslöser, ~/nt-*/ Staging-Artefakte, unbefugter Publisher atiertant, Lockfile-Blastradius | Statisch + Registry | ⚫ kritisch | SR-3.1, SR-5.3, SR-7.5 |
+| **MSH_SUPPLEMENT** | Mini Shai-Hulud-Ergänzung - ctf-scramble-v2-Obfuskation (STOP bei Treffer), dämonisierte Persistenz, geografischer Killswitch (ru_RU/be_BY), C2-Dead-Drop-Indikatoren (OhNoWhatsGoingOnWithGitHub) | Statisch + Verhalten | ⚫ kritisch | SR-3.1, SR-7.5, SR-9.2 |
+| **TYPOSQUAT_VPMDHAJ** | Massen-Typosquatting-Kampagne (vpmdhaj) - Maintainer-Blocklist (STOP bei Treffer), vpmdhaj-*-Namespace-Präfixerkennung, Levenshtein-Typosquatting, Preinstall-Stager, Cloud-Credential-Exfiltration (AWS IMDSv2, ECS, Vault, GitHub) | Statisch + Registry | ⚫ kritisch | SR-2.1, SR-3.1, SR-5.3 |
+| **AXIOS_POISONING** | Axios-Registry-Vergiftung - Versions-Blocklist (1.14.1/0.30.4, STOP bei Treffer), Decoy-Abhängigkeitsinjektion (plain-crypto-js), plattformübergreifende RAT-Payload-Erkennung (PowerShell, launchd, systemd, DLL, C2) | Statisch + Verhalten | ⚫ kritisch | SR-3.1, SR-5.3, SR-7.5 |
 
 > **Wie ausweichende Angriffe erkannt werden:** ATK-009 erkennt Pakete, die `process.env.CI` prüfen, Hostnamen sondieren oder zeitbasierte Aktivierung verwenden. ATK-010 markiert `debugger`-Anweisungen, `os.hostname()`-Sonden und Umgebungs-Fingerprinting. ATK-011 verfolgt Peer-Abhängigkeitsgraphen, um wurmartige Verbreitungsmuster zu erkennen.  
 > Vollständige Dokumentation der Ausweichfläche und PoC-Beispiele finden Sie in [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md).
@@ -551,7 +587,7 @@ Siehe den obigen [Docker-Schnellstart-Abschnitt](#-lateosnpm-scan-überall-mit-d
 
 ### Kostenlose Stufe (ausgeliefert)
 
-- Alle 11 ATK-Detektoren (statisch + verhaltensbasiert) + **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)** + **TRAPDOOR** (9 Regeln) + **NODE_IPC_COMPROMISE** (11 Regeln)
+- Alle 11 ATK-Detektoren (statisch + verhaltensbasiert) + **MEGALODON** (D1-D6) + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** (D1-D7, 3 Wellen, mit **MSH_SUPPLEMENT** D1-D4) + **VSIX_SCAN** (6 Detektoren) + **CVE-2026-48710 (BadHost)** (3 Ebenen) + **TRAPDOOR** (9 Regeln) + **NODE_IPC_COMPROMISE** (11 Regeln) + **TYPOSQUAT_VPMDHAJ** (3 Regeln) + **AXIOS_POISONING** (3 Regeln)
 - SBOM-Ausgabe (CycloneDX + SPDX)
 - HTML-, Text- und Compliance-Berichte (NIST + EU CRA)
 - Policy-as-Code-Engine (YAML)
@@ -620,6 +656,9 @@ node --test test/detectors-corpus.test.js
 - `test/cve-2026-48710-badhost/integration.test.js` — 4 Integrationstests (End-to-End-Composite-Findings, sauberes Projekt, keine Python-Dateien)
 - `test/trapdoor.test.js` — 40 TrapDoor-Kampagnenerkennungstests (D1–D9: Kampagnenmarker, Payload-Fingerprint, Publisher-Blocklist, Gist-Exfil, KI-Vergiftung, Lockname, Krypto-Primitive, XOR-Key, Credential-Validierung)
 - `test/node-ipc.test.js` — 37 node-ipc-Kompromittierungstests (D1–D11: Versions-Blocklist, Tarball-Hash, CJS-Injektion, Payload-Hash, DNS-C2-Muster, Bootstrap-Resolver, DNS-TXT-Exfil, Laufzeitauslöser, Temp-Artefakte, unbefugter Publisher, Blastradius)
+- `test/msh-supplement.test.js` - 17 MSH-Ergänzungstests (ctf-scramble-v2-Stopp, Dämonisierung, geografischer Killswitch, C2-Dead-Drop)
+- `test/typosquat-vpmdhaj.test.js` - 16 Typosquatting-Kampagnentests (Maintainer-Block, Präfixerkennung, Levenshtein, Preinstall-Stager, Bun-Loader, AWS/ECS/Vault/GitHub-Cred-Exfil)
+- `test/axios-poisoning.test.js` - 13 Axios-Vergiftungstests (Versions-Blocklist-Stopp, Decoy-Abhängigkeit, Krypto-Heuristik, plattformübergreifender RAT, C2-Callback)
 - `test/cli.test.js` — Commander-Integrationstests (Hilfe, Version, Scan, Bericht, Fehlerbehandlung)
 
 ### Hilfe benötigt?

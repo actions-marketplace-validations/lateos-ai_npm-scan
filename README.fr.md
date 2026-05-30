@@ -21,11 +21,25 @@ Analyse statique + comportementale qui détecte ce que npm audit, Snyk et Socket
 
 ## 📌 Le problème
 
-La vague d'attaques sur la chaîne d'approvisionnement npm de 2025–2026 a prouvé que les outils traditionnels ne suffisent plus.
+La vague d'attaques sur la chaîne d'approvisionnement npm de 2025-2026 a prouvé que les outils traditionnels ne suffisent plus.
 
 Les attaquants ont dépassé le simple typosquatting. Ils livrent désormais des **hooks de pré-installation obfusqués**, des **voleurs d'identifiants cachés derrière la détection d'environnement**, des **portes dérobées dormantes avec activation temporelle**, et une **propagation transitive de type ver** qui se répand via les dépendances peer.
 
-**npm audit** vérifie les CVE connus. **Snyk** recherche les vulnérabilités. **Socket** analyse le comportement des paquets. Aucun d'eux n'a été conçu pour la génération d'attaques apparue en 2025 — des attaques qui semblent bénignes jusqu'à ce qu'elles atteignent la production.
+La **campagne Megalodon** (2026) a à elle seule compromis plus de 5 500 dépôts via de fausses PR GitHub, l'injection de workflows malveillants et l'exfiltration d'identifiants cloud - le tout coordonné par un seul acteur automatisant l'ensemble de la chaîne de destruction. **@lateos/npm-scan** détecte désormais les artefacts de cette campagne dès la première utilisation.
+
+La **campagne de ver Mini Shai-Hulud** (mai 2026) a frappé l'écosystème npm en trois vagues - détournement CI/CD TanStack (84 artefacts en 6 minutes), compromission du mainteneur AntV/atool (600+ versions malveillantes dans 300+ packages), et empoisonnement de l'extension VS Code Nx Console (CVE-2026-48027) - toutes utilisant l'obfuscation ctf-scramble-v2, la persistance démonisée avec vérifications d'environnement CI, des killswitches géographiques ciblant les régions sanctionnées, et des canaux C2 GitHub dead-drop pour la récupération de jetons. **@lateos/npm-scan** détecte désormais les 10 signaux Mini Shai-Hulud répartis sur deux suites de détection.
+
+Un vecteur d'attaque croissant est **l'usurpation d'organisation HuggingFace** - des packages qui se font passer pour des dépôts de modèles HF légitimes pour tromper les utilisateurs.
+
+La **campagne TrapDoor** (mai 2026) couvre npm, PyPI et Crates.io - 34 packages malveillants, 384+ versions attribuées à un seul éditeur.
+
+La **compromission node-ipc** (14 mai 2026) a utilisé un domaine de maintenance expiré pour détourner l'un des packages les plus dépendus de npm.
+
+La **campagne de typosquattage massif (vpmdhaj)** (mai 2026) a utilisé le compte mainteneur npm `vpmdhaj` pour publier 14 packages typosquattés en 4 heures - ciblant les environnements AWS/CI/CD avec des stagers de pré-installation, un abus du runtime Bun, et l'exfiltration d'identifiants cloud. **@lateos/npm-scan** détecte désormais les 3 signaux de la campagne de typosquattage.
+
+La **campagne d'empoisonnement du registre Axios** (mai 2026) a compromis les métadonnées du package axios pour publier `axios@1.14.1` et `axios@0.30.4` avec des dépendances injectées contenant des RAT multiplateformes. **@lateos/npm-scan** détecte désormais les 3 signaux d'empoisonnement Axios.
+
+**npm audit** vérifie les CVE connus. **Snyk** recherche les vulnérabilités. **Socket** analyse le comportement des paquets. Aucun d'eux n'a été conçu pour la génération d'attaques apparue en 2025.
 
 **@lateos/npm-scan** a été conçu pour ce moment.
 
@@ -34,7 +48,7 @@ Les attaquants ont dépassé le simple typosquatting. Ils livrent désormais des
 ## 🔬 Pourquoi @lateos/npm-scan ?
 
 | Capacité | npm audit | Snyk | Socket | **@lateos/npm-scan** |
-|---|---|---|---|---|
+|---|---|---|---|---|---|
 | Correspondance CVE connus | ✅ | ✅ | ❌ | ✅ |
 | Analyse statique | ❌ | ✅ | ✅ | ✅ |
 | Détection de charges utiles obfusquées | ❌ | ❌ | ❌ | ✅ |
@@ -43,12 +57,22 @@ Les attaquants ont dépassé le simple typosquatting. Ils livrent désormais des
 | Détection de déclencheurs conditionnels (ATK-009) | ❌ | ❌ | ❌ | ✅ |
 | Détection de contournement de sandbox (ATK-010) | ❌ | ❌ | ❌ | ✅ |
 | Propagation transitive de ver (ATK-011) | ❌ | ❌ | ❌ | ✅ |
+| Détection de campagne (Megalodon CI/CD) | ❌ | ❌ | ❌ | ✅ |
+| Détection de campagne de ver (Mini Shai-Hulud Vagues 1-3) | ❌ | ❌ | ❌ | ✅ |
+| Détection d'usurpation HF (dépôt de modèles + clone README) | ❌ | ❌ | ❌ | ✅ |
+| Analyse d'extension VS Code (--vsix) | ❌ | ❌ | ❌ | ✅ |
+| Détection de vulnérabilité Python (CVE-2026-48710 BadHost) | ❌ | ❌ | ❌ | ✅ |
+| Détection d'attaque multi-écosystème (TrapDoor) | ❌ | ❌ | ❌ | ✅ |
+| Détection de détournement de domaine expiré (node-ipc) | ❌ | ❌ | ❌ | ✅ |
+| Détection d'obfuscation de malware (ctf-scramble-v2) | ❌ | ❌ | ❌ | ✅ |
+| Campagne de typosquattage massif (mainteneur vpmdhaj) | ❌ | ❌ | ❌ | ✅ |
+| Détection d'empoisonnement de registre (versions axios) | ❌ | ❌ | ❌ | ✅ |
 | Taxonomie d'attaques (série ATK) | ❌ | ❌ | ❌ | ✅ |
 | Sortie SBOM (CycloneDX + SPDX) | ❌ | ✅ | ❌ | ✅ |
 | Rapport de conformité NIST 800-161 | ❌ | ❌ | ❌ | ✅ |
 | Rapport de conformité EU CRA | ❌ | ❌ | ❌ | ✅ |
 | Export SIEM (CEF / ECS / Sentinel / QRadar) | ❌ | ❌ | ❌ | ✅ |
-| Exécution entièrement locale — aucune télémétrie | ✅ | ❌ | ❌ | ✅ |
+| Exécution entièrement locale - aucune télémétrie | ✅ | ❌ | ❌ | ✅ |
 | Politique en tant que code (listes blanches YAML) | ❌ | ❌ | ❌ | ✅ |
 
 > **La vie privée d'abord.** Toute l'analyse s'effectue sur votre machine. Aucun code ne quitte votre environnement. Aucune télémétrie. Aucune dépendance au cloud.
@@ -61,7 +85,16 @@ Les attaquants ont dépassé le simple typosquatting. Ils livrent désormais des
 |------|---------|-------------|
 | 🕵️ | **Analyse statique heuristique** | L'inspection au niveau AST détecte l'obfuscation, les chaînes eval, le sondage d'environnement et les scripts de cycle de vie suspects que les outils basés sur les regex manquent |
 | 🧠 | **Détection comportementale** | Identifie les déclencheurs conditionnels (temporels, conscients du CI), le contournement de sandbox et les modèles d'activation dormante |
-| 🧬 | **Taxonomie d'attaques ATK** | 11 types d'attaques classifiés avec correspondances NIST 800-161 — versionnés, documentés et PR-ables |
+| 🧬 | **Taxonomie d'attaques ATK** | 11 types d'attaques classifiés avec correspondances NIST 800-161 - versionnés, documentés et PR-ables |
+| 🪱 | **Détection de campagne de ver** | Mini Shai-Hulud - 10 sous-vérifications réparties sur deux suites détectant les bursts de publication, les compromissions de pairs, les anomalies d'attestation SLSA, la dérive d'éditeur, la correspondance IOC, l'exfiltration de jetons, l'obfuscation ctf-scramble-v2, la persistance démonisée, les killswitches géographiques et les canaux C2 GitHub |
+| 🧩 | **Analyse d'extension VSIX** | `npm-scan scan --vsix` - détecte les attaques de la chaîne d'approvisionnement du Marketplace VS Code |
+| 🐍 | **Détection de vulnérabilité Python** | CVE-2026-48710 (BadHost) - injection d'en-tête Host Starlette |
+| 🪤 | **Détection d'attaque multi-écosystème** | TrapDoor - 9 sous-vérifications |
+| 📡 | **Détection de détournement de domaine expiré** | node-ipc - 11 sous-vérifications |
+| ☣️ | **Détection d'obfuscation de malware** | ctf-scramble-v2 - analyse des distributions à la recherche de motifs d'obfuscation de malware connus, arrêt immédiat avec condition d'arrêt de sévérité CRITIQUE |
+| 🎭 | **Détection de campagne de typosquattage massif** | Liste noire du mainteneur vpmdhaj avec condition d'arrêt, détection de typosquattage basée sur Levenshtein, identification de stager de pré-installation, motifs d'exfiltration d'identifiants AWS ECS/Vault/GitHub |
+| ☠️ | **Détection d'empoisonnement de registre** | Liste noire des versions Axios (1.14.1/0.30.4) avec condition d'arrêt, découverte de dépendance leurre (plain-crypto-js), détection de RAT multiplateforme |
+| 🔏 | **Piste d'audit de provenance** | Cadre Aureus-Elicitor v1.7 - manifests de détection signés HMAC-SHA256, pistes d'audit vérifiées par hachage de contenu, URLs de provenance de règle, attribution de source de campagne |
 | 📦 | **Génération SBOM** | CycloneDX 1.5 et SPDX 2.3 avec résultats intégrés comme vulnérabilités |
 | 🧾 | **Rapports de conformité** | Matrice de traçabilité NIST SP 800-161 + cartographie EU Cyber Resilience Act (gratuit) |
 | 🔌 | **Export SIEM** | Formats Splunk CEF, Elastic ECS, Microsoft Sentinel, IBM QRadar (premium) |
@@ -230,6 +263,9 @@ npm-scan report --pdf             # tous les scans (premium)
 | **CVE-2026-48710** | BadHost — contournement d'authentification Starlette par injection d'en-tête Host (CVE-2026-48710, CVSS 7.0). Détection de version de dépendance Python (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg), heuristique transitive (15 paquets aval connus : fastapi, vllm, litellm, serveurs MCP, etc.), analyse statique de code pour `request.url.path` dangereux en contexte auth/middleware avec suppression par `request.scope["path"]` | Statique + Registre | 🔴 élevée / 🟠 moyenne / ℹ️ info | SR-3.1, SR-5.3 |
 | **TRAPDOOR** | Campagne d'attaque multi-écosystème TrapDoor — marqueur de campagne P-2024-001, empreinte de charge utile trap-core.js, liste noire d'éditeur asdxzxc, exfiltration d'identifiants via Gist, empoisonnement de contexte IA (Unicode largeur nulle), noms leurres crypto/DeFi, chiffrement Fernet+ECDH, clé XOR cargo-build-helper-2026, validation d'identifiants STS/API GitHub | Statique + Registre | 🟠 moyenne / 🔴 élevée / ⚫ critique | SR-3.1, SR-5.3, SR-7.5 |
 | **NODE_IPC_COMPROMISE** | Compromission de la chaîne d'approvisionnement node-ipc (14 mai 2026) — liste noire de versions (9.1.6/9.2.3/12.0.1) avec épingle de sécurité, vérification SHA-256 du tarball, injection IIFE de charge utile CJS, DNS sur port non standard, résolveur d'amorçage sh.azurestaticprovider.net, zone d'exfiltration DNS TXT bt.node.js, déclencheur d'exécution setImmediate(), artefacts de staging ~/nt-*/, éditeur non autorisé atiertant, détection du rayon d'impact dans les lockfiles avec recommandations d'épingle | Statique + Registre | ⚫ critique | SR-3.1, SR-5.3, SR-7.5 |
+| **MSH_SUPPLEMENT** | Supplément Mini Shai-Hulud - obfuscation ctf-scramble-v2 (ARRÊT sur correspondance), persistance de démonisation, détection de killswitch géographique (ru_RU/be_BY), indicateurs C2 dead-drop (OhNoWhatsGoingOnWithGitHub) | Statique + Comportementale | ⚫ critique | SR-3.1, SR-7.5, SR-9.2 |
+| **TYPOSQUAT_VPMDHAJ** | Campagne de typosquattage massif (vpmdhaj) - liste noire de mainteneur (ARRÊT sur correspondance), détection de préfixe d'espace de noms vpmdhaj-*, correspondance Levenshtein, stagers de pré-installation, exfiltration d'identifiants cloud (AWS IMDSv2, ECS, Vault, GitHub) | Statique + Registre | ⚫ critique | SR-2.1, SR-3.1, SR-5.3 |
+| **AXIOS_POISONING** | Empoisonnement du registre Axios - liste noire de versions (1.14.1/0.30.4, ARRÊT sur correspondance), injection de dépendance leurre (plain-crypto-js), détection de RAT multiplateforme (PowerShell, launchd, systemd, DLL, C2) | Statique + Comportementale | ⚫ critique | SR-3.1, SR-5.3, SR-7.5 |
 
 > **Comment les attaques furtives sont détectées :** ATK-009 détecte les paquets qui vérifient `process.env.CI`, sondent les noms d'hôte ou utilisent une activation temporelle. ATK-009 signale les instructions `debugger`, les sondes `os.hostname()` et l'empreinte environnementale. ATK-011 trace les graphes de dépendances peer pour détecter les schémas de propagation de type ver.  
 > Voir [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) pour la documentation complète de la surface d'évasion et des exemples de PoC.
@@ -551,7 +587,7 @@ Voir la [section Démarrage rapide Docker](#-exécutez-lateosnpm-scan-partout-av
 
 ### Niveau gratuit (livré)
 
-- Les 11 détecteurs ATK (statique + comportemental) + **MEGALODON** + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** + **VSIX_SCAN** + **CVE-2026-48710 (BadHost)** + **TRAPDOOR** (9 règles) + **NODE_IPC_COMPROMISE** (11 règles)
+- Les 11 détecteurs ATK + **MEGALODON** (D1-D6) + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** (D1-D7, 3 vagues, avec **MSH_SUPPLEMENT** D1-D4) + **VSIX_SCAN** (6 détecteurs) + **CVE-2026-48710 (BadHost)** (3 couches) + **TRAPDOOR** (9 règles) + **NODE_IPC_COMPROMISE** (11 règles) + **TYPOSQUAT_VPMDHAJ** (3 règles) + **AXIOS_POISONING** (3 règles)
 - Sortie SBOM (CycloneDX + SPDX)
 - Rapports HTML, texte et conformité (NIST + EU CRA)
 - Moteur de politique en tant que code (YAML)
@@ -620,6 +656,9 @@ node --test test/detectors-corpus.test.js
 - `test/cve-2026-48710-badhost/integration.test.js` — 4 tests d'intégration (résultats composites de bout en bout, projet propre, pas de fichiers Python)
 - `test/trapdoor.test.js` — 40 tests de détection de la campagne TrapDoor (D1–D9 : marqueur de campagne, empreinte de charge utile, liste noire d'éditeur, exfiltration Gist, empoisonnement IA, nom leurre, primitives cryptographiques, clé XOR, validation d'identifiants)
 - `test/node-ipc.test.js` — 37 tests de détection de compromission node-ipc (D1–D11 : liste noire de versions, hachage tarball, injection CJS, hachage de charge utile, motif DNS C2, résolveur d'amorçage, exfiltration DNS TXT, déclencheur d'exécution, artefacts temporaires, éditeur non autorisé, rayon d'impact)
+- `test/msh-supplement.test.js` — 17 tests MSH supplement (obfuscation ctf-scramble-v2, démonisation, killswitch géographique, C2 dead-drop)
+- `test/typosquat-vpmdhaj.test.js` — 16 tests campagne typosquattage (blocage mainteneur, détection préfixe, Levenshtein, stagers pré-installation, exfiltration identifiants AWS/ECS/Vault/GitHub)
+- `test/axios-poisoning.test.js` — 13 tests empoisonnement Axios (liste noire versions, dépendance leurre, heuristique crypto, RAT multiplateforme, rappel C2)
 - `test/cli.test.js` — tests d'intégration commander (aide, version, scan, rapport, gestion d'erreurs)
 
 ### Besoin d'aide ?
