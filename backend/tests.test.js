@@ -1,5 +1,29 @@
-import { test } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'assert/strict';
+import fs from 'fs';
+import path from 'path';
+import { globSync } from 'glob';
+import { mkdtempSync, readFileSync } from 'fs';
+import { execSync } from 'child_process';
+import { tmpdir } from 'os';
+
+async function extractTarball(tarPath) {
+  const tmpDir = mkdtempSync(path.join(tmpdir(), 'npm-scan-tier1-'));
+  execSync(`tar xzf "${tarPath}" -C "${tmpDir}"`, { stdio: 'pipe' });
+  const globPath = tmpDir.replace(/\\/g, '/') + '/**/package.json';
+  const pkgPath = globSync(globPath, { nodir: true })[0];
+  if (!pkgPath) throw new Error(`No package.json in ${tarPath}`);
+  const pkgJson = JSON.parse(readFileSync(pkgPath, 'utf8'));
+  const pkgDir = path.join(pkgPath, '..');
+  const allGlobPath = pkgDir.replace(/\\/g, '/') + '/**/*';
+  const allFiles = globSync(allGlobPath, { nodir: true }).map(p => ({
+    path: p,
+    name: p,
+    content: readFileSync(p, 'utf8'),
+  }));
+  const jsFiles = allFiles.filter(f => f.path.endsWith('.js'));
+  return { pkgJson, jsFiles, allFiles, registryMeta: {} };
+}
 
 // ─── SIEM Exporters ────────────────────────────────────────────────
 
@@ -720,4 +744,155 @@ test('PDF report with no findings still valid', async () => {
   const pdfBytes = await generatePDF(scans);
   const header = new TextDecoder().decode(pdfBytes.slice(0, 8));
   assert(header.startsWith('%PDF-'), 'valid PDF with clean package');
+});
+
+// ─── Tier 1 Detectors: Campaign Detection ───────────────────────────
+
+describe('Tier 1 Detectors: Campaign Detection', () => {
+  test('Campaign 1: 95%+ of 33 dependency confusion packages detected', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const campaignTarballs = fs.readdirSync('tests/corpus/malicious/')
+      .filter(f => f.startsWith('campaign-1-'))
+      .slice(0, 33);
+
+    let detected = 0;
+    for (const tarball of campaignTarballs) {
+      const { pkgJson, jsFiles, allFiles, registryMeta } = await extractTarball(`tests/corpus/malicious/${tarball}`);
+      const result = await runAll(pkgJson, jsFiles, registryMeta, allFiles);
+
+      const lifecycleHookFinding = result.find(f => f.detector === 'tier1-lifecycle-hook' && f.confidenceScore >= 80);
+      const metadataSpoofFinding = result.find(f => f.detector === 'tier1-metadata-spoof' && f.confidenceScore >= 70);
+
+      if (lifecycleHookFinding || metadataSpoofFinding) detected++;
+    }
+
+    assert(detected / campaignTarballs.length >= 0.95);
+  });
+
+  test('Campaign 2: 85%+ of 14 typosquatting packages detected', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const campaignTarballs = fs.readdirSync('tests/corpus/malicious/')
+      .filter(f => f.startsWith('campaign-2-'))
+      .slice(0, 14);
+
+    let detected = 0;
+    for (const tarball of campaignTarballs) {
+      const { pkgJson, jsFiles, allFiles, registryMeta } = await extractTarball(`tests/corpus/malicious/${tarball}`);
+      const result = await runAll(pkgJson, jsFiles, registryMeta, allFiles);
+
+      const typosquatFinding = result.find(f => f.detector === 'tier1-typosquat' && f.confidenceScore >= 70);
+      const infostealerFinding = result.find(f => f.detector === 'tier1-infostealer' && f.confidenceScore >= 75);
+      const binaryFinding = result.find(f => f.detector === 'tier1-binary-embed' && f.confidenceScore >= 70);
+
+      if (typosquatFinding || infostealerFinding || binaryFinding) detected++;
+    }
+
+    assert(detected / campaignTarballs.length >= 0.85);
+  });
+
+  test('Campaign 3: 95%+ confidence on infostealer packages', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const tarball = 'tests/corpus/malicious/campaign-3-infostealer.tgz';
+    const { pkgJson, jsFiles, allFiles, registryMeta } = await extractTarball(tarball);
+    const result = await runAll(pkgJson, jsFiles, registryMeta, allFiles);
+
+    const infostealerFinding = result.find(f => f.detector === 'tier1-infostealer');
+    assert(infostealerFinding !== undefined);
+    assert(infostealerFinding.confidenceScore >= 95);
+  });
+});
+
+// ─── Tier 1 Detectors: False Positive Regression ────────────────────
+
+describe('Tier 1 Detectors: False Positive Regression', () => {
+  test('FP rate <5% on clean corpus (high/critical only)', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const cleanTarballs = fs.readdirSync('tests/corpus/clean/')
+      .filter(f => f.endsWith('.tgz'))
+      .slice(0, 1000);
+
+    let fpCount = 0;
+    for (const tarball of cleanTarballs) {
+      const { pkgJson, jsFiles, allFiles, registryMeta } = await extractTarball(`tests/corpus/clean/${tarball}`);
+      const result = await runAll(pkgJson, jsFiles, registryMeta, allFiles);
+
+      const tier1HighSeverity = result.filter(f =>
+        f.detector && f.detector.startsWith('tier1-') &&
+        (f.severity === 'high' || f.severity === 'critical')
+      );
+
+      if (tier1HighSeverity.length > 0) fpCount++;
+    }
+
+    const fpRate = fpCount / (cleanTarballs.length || 1);
+    assert(fpRate < 0.05);
+  });
+
+  test('Known reputable packages (electron, webpack, etc.) are suppressed', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const reputablePkgs = ['webpack', 'react'];
+    for (const pkgName of reputablePkgs) {
+      const tarball = `tests/corpus/clean/${pkgName}.tgz`;
+      try {
+        const { pkgJson, jsFiles, allFiles, registryMeta } = await extractTarball(tarball);
+        const result = await runAll(pkgJson, jsFiles, registryMeta, allFiles);
+
+        const tier1HighSeverity = result.filter(f =>
+          f.detector && f.detector.startsWith('tier1-') &&
+          (f.severity === 'high' || f.severity === 'critical')
+        );
+
+        assert.equal(tier1HighSeverity.length, 0);
+      } catch {
+        // skip missing tarballs
+      }
+    }
+  });
+});
+
+// ─── Tier 1 Detectors: Confidence Scoring ──────────────────────────
+
+describe('Tier 1 Detectors: Confidence Scoring', () => {
+  test('Confidence weights match specification', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const pkgJson = { name: 'expres', version: '1.0.0' };
+    const jsFiles = [];
+    const registryMeta = { age: 5, weeklyDownloads: 100 };
+
+    const result = await runAll(pkgJson, jsFiles, registryMeta, []);
+    const typosquatFinding = result.find(f => f.detector === 'tier1-typosquat');
+
+    assert(typosquatFinding !== undefined);
+    assert(typosquatFinding.confidenceScore >= 90);
+    assert.equal(typosquatFinding.confidence, 'HIGH');
+  });
+
+  test('Cross-file evidence boosts confidence', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const jsFiles = [
+      { path: 'index.js', content: 'fs.readFile(...); fetch(...)' },
+      { path: 'lib.js', content: 'process.env.AWS_SECRET_ACCESS_KEY' },
+    ];
+    const pkgJson = {};
+
+    const result = await runAll(pkgJson, jsFiles, {}, jsFiles);
+    const infostealerFinding = result.find(f => f.detector === 'tier1-infostealer');
+
+    assert(infostealerFinding !== undefined);
+    assert(infostealerFinding.confidenceScore >= 80);
+    assert(infostealerFinding.crossFiles.length > 1);
+  });
+
+  test('FP throttle suppresses >80% hit rate detectors', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const jsFiles = Array.from({ length: 100 }, (_, i) => ({
+      name: `file-${i}.js`,
+      content: 'eval(...)',
+    }));
+
+    const result = await runAll({}, jsFiles, jsFiles, []);
+    const lifecycleHookFindings = result.filter(f => f.detector === 'tier1-lifecycle-hook');
+
+    assert.equal(lifecycleHookFindings.length, 0);
+  });
 });

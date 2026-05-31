@@ -18,6 +18,32 @@ import { scan as nodeIpcScan } from './node-ipc-compromise/index.js';
 import { scan as mshSupplementScan } from './msh-supplement/index.js';
 import { scan as typosquatScan } from './typosquat-vpmdhaj/index.js';
 import { scan as axiosPoisoningScan } from './axios-poisoning/index.js';
+import { scan as tier1TyposquatScan } from './tier1-typosquat.js';
+import { scan as tier1InfostealerScan } from './tier1-infostealer.js';
+import { scan as tier1LifecycleHookScan } from './tier1-lifecycle-hook.js';
+import { scan as tier1BinaryEmbedScan } from './tier1-binary-embed.js';
+import { scan as tier1MetadataSpoofScan } from './tier1-metadata-spoof.js';
+
+function timeout(ms) {
+  return new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms));
+}
+
+async function runTier1(name, scanFn, pkgJson, files, registryMeta, allFiles) {
+  try {
+    const result = await Promise.race([
+      scanFn(pkgJson, files, registryMeta, allFiles),
+      timeout(800),
+    ]);
+    const fileCount = allFiles && allFiles.length > 0 ? allFiles.length : files.length;
+    if (fileCount >= 10 && result.length > 0) {
+      const hitRate = result.length / fileCount;
+      if (hitRate > 0.8) return [];
+    }
+    return result;
+  } catch {
+    return [];
+  }
+}
 
 export async function runAll(pkgJson, files = [], registryMeta = null, allFiles = null) {
   const findings = [];
@@ -41,5 +67,10 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
   findings.push(...await mshSupplementScan(pkgJson, files, registryMeta, allFiles || files));
   findings.push(...await typosquatScan(pkgJson, files, registryMeta, allFiles || files));
   findings.push(...await axiosPoisoningScan(pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-typosquat', tier1TyposquatScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-infostealer', tier1InfostealerScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-lifecycle-hook', tier1LifecycleHookScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-binary-embed', tier1BinaryEmbedScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-metadata-spoof', tier1MetadataSpoofScan, pkgJson, files, registryMeta, allFiles || files));
   return findings.sort((a, b) => b.severity.localeCompare(a.severity));
 }

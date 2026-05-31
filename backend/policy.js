@@ -15,6 +15,16 @@ const KNOWN_REPUTABLE_PACKAGES = new Set([
   'prettier', 'eslint', 'stylelint',
   'socket.io', 'ws',
   'rimraf', 'glob', 'minimatch', 'fs-extra',
+  'electron', 'puppeteer', 'playwright', 'sharp', 'node-canvas',
+  'ffmpeg-static', 'turbo',
+  'react-scripts', '@angular/cli',
+  'gatsby', 'parcel',
+  'tslib', 'core-js', 'regenerator-runtime', 'buffer',
+  'node-gyp', 'node-pre-gyp',
+  'winston', 'uuid', 'moment', 'dotenv', 'pg', 'semver', 'redux', 'redis',
+  'dayjs', 'luxon', 'chalk', 'debug', 'cors', 'helmet', 'multer',
+  'body-parser', 'cheerio', 'bluebird', 'bcrypt', 'commander', 'yargs',
+  'passport', 'jsonwebtoken', 'nodemailer', 'class-validator',
 ]);
 
 function severityIndex(s) {
@@ -55,9 +65,16 @@ function matchesContext(finding, rule) {
   return true;
 }
 
+function matchesKnownReputable(packageName) {
+  if (KNOWN_REPUTABLE_PACKAGES.has(packageName)) return true;
+  const [scope, name] = packageName.split('/');
+  if (scope && name && KNOWN_REPUTABLE_PACKAGES.has(`${scope}/*`)) return true;
+  return false;
+}
+
 function getPackageReputationTier(pkgName) {
   const name = pkgName?.replace(/^@/, '').replace(/\/.*/, '') || '';
-  if (KNOWN_REPUTABLE_PACKAGES.has(name)) return 'trusted';
+  if (matchesKnownReputable(name)) return 'trusted';
   return 'unknown';
 }
 
@@ -173,4 +190,4 @@ function checkFailOn(findings, policy) {
   return findings.some(f => severityIndex(f.severity) >= threshold);
 }
 
-export { loadPolicy, applyPolicy, isAllowed, getPackageReputationTier, matchesContext };
+export { loadPolicy, applyPolicy, isAllowed, getPackageReputationTier, matchesContext, KNOWN_REPUTABLE_PACKAGES };

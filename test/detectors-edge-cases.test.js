@@ -204,3 +204,54 @@ test('detectors: known clean packages produce no high/critical findings', async 
     assert.equal(highCrit.length, 0, `${pkg.name}: unexpected high/crit finding`);
   }
 });
+
+// ─── Tier 1 Detectors: Edge Cases ────────────────────────────────────
+
+test('tier1: empty package returns no tier1 findings', async () => {
+  const findings = await detectors.runAll({});
+  const tier1 = findings.filter(f => f.detector && f.detector.startsWith('tier1-'));
+  assert.equal(tier1.length, 0);
+});
+
+test('tier1: known reputable package suppresses all tier1 detectors', async () => {
+  for (const name of ['electron', 'webpack', 'express']) {
+    const pkg = { name };
+    const findings = await detectors.runAll(pkg);
+    const tier1 = findings.filter(f => f.detector && f.detector.startsWith('tier1-'));
+    assert.equal(tier1.length, 0, `${name}: unexpected tier1 findings`);
+  }
+});
+
+test('tier1: infostealer returns no findings on clean code', async () => {
+  const files = [{ path: 'index.js', content: 'const x = 1; console.log(x);' }];
+  const findings = await detectors.runAll({}, files);
+  const infostealer = findings.filter(f => f.detector === 'tier1-infostealer');
+  assert.equal(infostealer.length, 0);
+});
+
+test('tier1: binary-embed returns no findings with no files', async () => {
+  const findings = await detectors.runAll({});
+  const binary = findings.filter(f => f.detector === 'tier1-binary-embed');
+  assert.equal(binary.length, 0);
+});
+
+test('tier1: metadata-spoof returns no findings on clean metadata', async () => {
+  const pkg = { name: 'test-pkg', version: '1.0.0', repository: { url: 'https://github.com/test/test-pkg' }, homepage: 'https://github.com/test/test-pkg' };
+  const findings = await detectors.runAll(pkg);
+  const metadata = findings.filter(f => f.detector === 'tier1-metadata-spoof');
+  assert.equal(metadata.length, 0);
+});
+
+test('tier1: typosquat returns no findings for clean package name', async () => {
+  const pkg = { name: 'my-unique-package-name-xyz-123' };
+  const findings = await detectors.runAll(pkg);
+  const typosquat = findings.filter(f => f.detector === 'tier1-typosquat');
+  assert.equal(typosquat.length, 0);
+});
+
+test('tier1: lifecycle-hook returns no findings without scripts', async () => {
+  const pkg = { name: 'test' };
+  const findings = await detectors.runAll(pkg);
+  const lifecycle = findings.filter(f => f.detector === 'tier1-lifecycle-hook');
+  assert.equal(lifecycle.length, 0);
+});
