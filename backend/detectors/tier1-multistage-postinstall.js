@@ -1,10 +1,11 @@
 const SCAN_HOOKS = ['preinstall', 'install', 'postinstall', 'prepare'];
 
-const REMOTE_FETCH_RE = /\b(?:fetch|axios\.get|axios\.post|http\.get|https\.get)\(|\b(?:curl|wget)\s/g;
-const BINARY_EXEC_RE = /\b(?:execFile|execFileSync|execSync|exec|spawnSync|spawn)\s*\(/g;
-const DETACHED_RE = /detached\s*:\s*true/g;
+const REMOTE_FETCH_RE = /\b(?:fetch|axios\.get|axios\.post|http\.get|https\.get)\(|\b(?:curl|wget)\s/;
+const BINARY_EXEC_RE = /\b(?:execFile|execFileSync|execSync|exec|spawnSync|spawn)\s*\(/;
+const DETACHED_RE = /detached\s*:\s*true/;
 
 function severityLabel(score) {
+  if (score >= 95) return 'critical';
   if (score >= 80) return 'high';
   if (score >= 60) return 'medium';
   return 'low';
@@ -30,11 +31,8 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     if (!content || typeof content !== 'string') continue;
 
     const hasRemoteFetch = REMOTE_FETCH_RE.test(content);
-    REMOTE_FETCH_RE.lastIndex = 0;
     const hasBinaryExec = BINARY_EXEC_RE.test(content);
-    BINARY_EXEC_RE.lastIndex = 0;
     const hasDetached = DETACHED_RE.test(content);
-    DETACHED_RE.lastIndex = 0;
 
     const signalA = hasRemoteFetch && hasBinaryExec;
     const signalB = hasDetached;
@@ -67,7 +65,7 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       confidence: confidenceLabel(confidenceScore),
       confidenceScore,
       subtype,
-      message: `Multi-stage postinstall detected in "${hookName}" — download + execute pattern`,
+      message: `Multi-stage install hook detected in "${hookName}" — ${subtype}`,
       evidence,
       locations: [{
         file: 'package.json',
