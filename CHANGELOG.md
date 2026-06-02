@@ -8,18 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-## v0.3.1 — June 2, 2026
-
-### Bug Fixes
-- **D6b** `tier1-multistage-postinstall.js`
-  - Removed /g flag from REMOTE_FETCH_RE, BINARY_EXEC_RE, DETACHED_RE —
-    eliminated fragile lastIndex state between hook iterations
-  - Added critical severity tier to severityLabel — Signal A+B findings
-    now consistently report severity: critical / confidence: CRITICAL
-  - Fixed hardcoded "postinstall" in finding message — now reflects
-    whichever hook fired and the subtype string
-
-## v0.3.0 — June 2, 2026
+## v0.18.2 — June 2, 2026
 
 ### New Detectors
 - **D6a** `tier1-version-confusion.js` — Detects dependency confusion via sentinel
@@ -35,6 +24,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **D2** `tier1-infostealer.js` — Added NAMED_SIGNATURES array with early-return
   CRITICAL detection for confirmed malware campaign strings. First entry: Miasma
   campaign identifier (June 2026).
+
+### Bug Fixes
+- **D6b** `tier1-multistage-postinstall.js`
+  - Removed /g flag from REMOTE_FETCH_RE, BINARY_EXEC_RE, DETACHED_RE —
+    eliminated fragile lastIndex state between hook iterations
+  - Added critical severity tier to severityLabel — Signal A+B findings
+    now consistently report severity: critical / confidence: CRITICAL
+  - Fixed hardcoded "postinstall" in finding message — now reflects
+    whichever hook fired and the subtype string
 
 ### Infrastructure
 - Added Detector Registry section to AGENTS.md with calibration notes.
