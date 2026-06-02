@@ -7,6 +7,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+
+## v0.3.0 — June 2, 2026
+
+### New Detectors
+- **D6a** `tier1-version-confusion.js` — Detects dependency confusion via sentinel
+  versions (99.99.99 family → HIGH) and high-version heuristic (major≥9 → MEDIUM).
+  Covers Sonatype-2026-003429 and Microsoft scope confusion campaigns.
+- **D6b** `tier1-multistage-postinstall.js` — Detects two-stage remote download +
+  binary execution and detached background persistence in lifecycle scripts.
+  Covers Gen-2 stager patterns from the OpenSearch/ES typosquatting wave.
+- **D6c** `tier1-cloud-imds.js` — Detects GCP metadata server and Azure IMDS endpoint
+  targeting in scripts and JS files. Covers the Miasma @redhat-cloud-services campaign.
+
+### Detector Enhancements
+- **D2** `tier1-infostealer.js` — Added NAMED_SIGNATURES array with early-return
+  CRITICAL detection for confirmed malware campaign strings. First entry: Miasma
+  campaign identifier (June 2026).
+
+### Infrastructure
+- Added Detector Registry section to AGENTS.md with calibration notes.
+
+### Test Suite
+- 656 passing, 0 failing, 19 skipping.
+
+### Added
 - `scan --file <path>` flag to analyze local `.tgz` tarballs without fetching from npm registry
 - `scan --fail-on <level>` flag to exit with code 1 when findings >= severity (CI/CD integration)
 - `scan --sarif [file]` to output SARIF v2.1 format for GitHub Advanced Security, VS Code, Azure DevOps

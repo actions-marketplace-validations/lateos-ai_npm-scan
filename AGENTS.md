@@ -29,6 +29,26 @@ Run `npm test` (222 tests), `npm run test:coverage` (85%+), `npm run lint`, `npm
 - `deploy/helm/`: Kubernetes Helm chart (enterprise)
 - `docker/`: Multi-arch Docker images (cli, pipeline)
 
+## Detector Registry
+
+### Tier 1 Detectors
+
+| ID | File | Finding ID | Campaign Coverage |
+|---|---|---|---|
+| D1 | `tier1-typosquat.js` | `TIER1-TYPOSQUAT` | Typosquatting, edit-distance spoofing |
+| D2 | `tier1-infostealer.js` | `TIER1-INFOSTEALER` | AI-generated infostealers, GitHub PAT harvesting, named malware signatures |
+| D3 | `tier1-lifecycle-hook.js` | `TIER1-LIFECYCLE-HOOK` | Obfuscated install scripts, env exfiltration |
+| D4 | `tier1-binary-embed.js` | `TIER1-BINARY-EMBED` | Bun runtime abuse, IMDSv2/ECS credential targeting |
+| D5 | `tier1-metadata-spoof.js` | `TIER1-METADATA-SPOOF` | Namespace spoofing, cloned repo URLs, Yandex alias pattern |
+| D6a | `tier1-version-confusion.js` | `TIER1-VERSION-CONFUSION` | Sentinel versions (99.99.99 family), high-version heuristic (major≥9) |
+| D6b | `tier1-multistage-postinstall.js` | `TIER1-MULTISTAGE-POSTINSTALL` | Two-stage download+exec, detached background persistence |
+| D6c | `tier1-cloud-imds.js` | `TIER1-CLOUD-IMDS` | GCP metadata server, Azure IMDS endpoint targeting |
+
+### Calibration Notes
+
+- **D6a heuristic** (`major >= 9 && minor >= 5 && patch >= 5`, `major !== 1`): known FP risk area. Tune confidence thresholds once production scan telemetry is available.
+- **D2 named signatures**: zero-FP string literals for confirmed malware campaigns. Safe to add new entries without score recalibration.
+
 ## Publishing
 - Bump version: `npm version patch && git push origin main --tags`
 - GitHub Actions auto-publishes via `.github/workflows/publish.yml` with Sigstore provenance attestation (on tag push `v*.*.*`)

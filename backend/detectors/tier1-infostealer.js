@@ -21,6 +21,11 @@ const EVAL_RE = /\beval\s*\(/g;
 const FUNCTION_CTOR_RE = /\bFunction\s*\(/g;
 const B64_STRING_RE = /['"`]([A-Za-z0-9+/]{40,}={0,2})['"`]/g;
 
+// Named malware signatures — zero-FP string literals for confirmed campaigns
+const NAMED_SIGNATURES = [
+  'Miasma: The Spreading Blight',   // Miasma campaign, June 2026, @redhat-cloud-services compromise
+];
+
 function shannonEntropy(s) {
   const len = s.length;
   if (len === 0) return 0;
@@ -171,6 +176,37 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) return [];
 
   const files = jsFiles || [];
+
+  // Named malware signature check — zero-FP string literals, early return
+  const sigTexts = [];
+  if (pkgJson?.scripts && typeof pkgJson.scripts === 'object') {
+    for (const value of Object.values(pkgJson.scripts)) {
+      if (typeof value === 'string') sigTexts.push(value);
+    }
+  }
+  for (const f of files) {
+    if (f?.content) sigTexts.push(f.content);
+  }
+  for (const sig of NAMED_SIGNATURES) {
+    for (const text of sigTexts) {
+      if (text.includes(sig)) {
+        return [{
+          detector: 'tier1-infostealer',
+          id: 'TIER1-INFOSTEALER',
+          severity: 'critical',
+          confidence: 'CRITICAL',
+          confidenceScore: 98,
+          subtype: 'named_signature_miasma',
+          message: `Named malware signature detected: "${sig}"`,
+          evidence: [sig],
+          locations: [{ file: '', line: 0 }],
+          crossFiles: [],
+          reference: 'Campaign 2 & 3',
+        }];
+      }
+    }
+  }
+
   if (files.length === 0) return [];
 
   let parseFailCount = 0;

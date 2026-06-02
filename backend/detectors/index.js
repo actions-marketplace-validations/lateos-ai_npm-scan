@@ -23,6 +23,9 @@ import { scan as tier1InfostealerScan } from './tier1-infostealer.js';
 import { scan as tier1LifecycleHookScan } from './tier1-lifecycle-hook.js';
 import { scan as tier1BinaryEmbedScan } from './tier1-binary-embed.js';
 import { scan as tier1MetadataSpoofScan } from './tier1-metadata-spoof.js';
+import { scan as tier1VersionConfusionScan } from './tier1-version-confusion.js';
+import { scan as tier1CloudImdsScan } from './tier1-cloud-imds.js';
+import { scan as tier1MultistagePostinstallScan } from './tier1-multistage-postinstall.js';
 
 function timeout(ms) {
   return new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms));
@@ -72,5 +75,8 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
   findings.push(...await runTier1('tier1-lifecycle-hook', tier1LifecycleHookScan, pkgJson, files, registryMeta, allFiles || files));
   findings.push(...await runTier1('tier1-binary-embed', tier1BinaryEmbedScan, pkgJson, files, registryMeta, allFiles || files));
   findings.push(...await runTier1('tier1-metadata-spoof', tier1MetadataSpoofScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-version-confusion', tier1VersionConfusionScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-cloud-imds', tier1CloudImdsScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-multistage-postinstall', tier1MultistagePostinstallScan, pkgJson, files, registryMeta, allFiles || files));
   return findings.sort((a, b) => b.severity.localeCompare(a.severity));
 }
