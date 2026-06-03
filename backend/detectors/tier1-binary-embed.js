@@ -45,6 +45,23 @@ function isKnownBinaryName(fileName) {
   return BINARY_FILENAMES.includes(base);
 }
 
+const CROSS_PLATFORM_RE = /-(?:linux|darwin|macos|win32|windows|win)-(?:x64|x86|arm64|ia32)\.?(?:exe)?$/i;
+
+function detectCrossPlatformSets(binaries) {
+  const sets = {};
+  for (const bin of binaries) {
+    const base = bin.file.replace(CROSS_PLATFORM_RE, '').split(/[/\\]/).pop();
+    if (!sets[base]) sets[base] = [];
+    sets[base].push(bin.file);
+  }
+  for (const [base, files] of Object.entries(sets)) {
+    if (files.length >= 2) {
+      return { base, files, count: files.length };
+    }
+  }
+  return null;
+}
+
 function isDeclared(pkgJson, fileName) {
   if (!pkgJson) return false;
   const baseName = fileName.split(/[/\\]/).pop();
@@ -113,6 +130,8 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
 
   if (binaries.length === 0) return [];
 
+  const crossPlatformSet = detectCrossPlatformSets(binaries);
+
   const jsCode = (jsFiles || []).map(f => f.content || '').join('\n');
   const invoked = CHILD_PROC_RE.test(jsCode) || FS_CHMOD_RE.test(jsCode);
 
@@ -134,24 +153,29 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     let baseScore;
     let subtype;
 
+    // Cross-platform platform set boost
+    const isCrossPlatform = crossPlatformSet && crossPlatformSet.files.some(f => f === bin.file || f.includes(bin.file) || bin.file.includes(f.replace(/\.exe$/, '')));
+
     if (bin.magic === 'elf_embedded') {
       baseScore = 95;
-      subtype = 'elf_embedded';
+      subtype = isCrossPlatform ? 'cross_platform_elf' : 'elf_embedded';
     } else if (bin.magic === 'pe_embedded') {
       baseScore = 95;
-      subtype = 'pe_embedded';
+      subtype = isCrossPlatform ? 'cross_platform_pe' : 'pe_embedded';
     } else if (bin.magic === 'macho_embedded') {
       baseScore = 95;
-      subtype = 'macho_embedded';
+      subtype = isCrossPlatform ? 'cross_platform_macho' : 'macho_embedded';
     } else if (bin.magic === 'wasm_embedded') {
       baseScore = 60;
-      subtype = 'wasm_embedded';
+      subtype = isCrossPlatform ? 'cross_platform_wasm' : 'wasm_embedded';
     } else {
       baseScore = 60;
-      subtype = 'magic_byte_unknown';
+      subtype = isCrossPlatform ? 'cross_platform_unknown' : 'magic_byte_unknown';
     }
 
     let score = baseScore;
+
+    if (isCrossPlatform) score += 25;
 
     if (bin.inBinDir) score += 15;
 
@@ -179,6 +203,11 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       `path: ${bin.file}`,
       `declared: ${bin.declared}`,
     ];
+    if (isCrossPlatform) {
+      evidence.push(`cross-platform binary set: ${crossPlatformSet.count} variants of "${crossPlatformSet.base}"`);
+      evidence.push(`platform_files: ${crossPlatformSet.files.join(', ')}`);
+    }
+
     if (invoked && invokedFiles.length > 0) {
       evidence.push(`invoked: child_process usage in ${invokedFiles.length} file(s)`);
       evidence.push(`invoked_file: ${invokedFiles[0]}`);

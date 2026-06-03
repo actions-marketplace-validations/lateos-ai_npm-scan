@@ -26,6 +26,9 @@ import { scan as tier1MetadataSpoofScan } from './tier1-metadata-spoof.js';
 import { scan as tier1VersionConfusionScan } from './tier1-version-confusion.js';
 import { scan as tier1CloudImdsScan } from './tier1-cloud-imds.js';
 import { scan as tier1MultistagePostinstallScan } from './tier1-multistage-postinstall.js';
+import { scan as tier1VersionAnomalyScan } from './tier1-version-anomaly.js';
+import { scan as tier1ObfuscationHeuristicsScan } from './tier1-obfuscation-heuristics.js';
+import { scan as tier1SlsaAttestationScan } from './tier1-slsa-attestation.js';
 
 function timeout(ms) {
   return new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms));
@@ -78,5 +81,8 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
   findings.push(...await runTier1('tier1-version-confusion', tier1VersionConfusionScan, pkgJson, files, registryMeta, allFiles || files));
   findings.push(...await runTier1('tier1-cloud-imds', tier1CloudImdsScan, pkgJson, files, registryMeta, allFiles || files));
   findings.push(...await runTier1('tier1-multistage-postinstall', tier1MultistagePostinstallScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-version-anomaly', tier1VersionAnomalyScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-obfuscation-heuristics', tier1ObfuscationHeuristicsScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...await runTier1('tier1-slsa-attestation', tier1SlsaAttestationScan, pkgJson, files, registryMeta, allFiles || files));
   return findings.sort((a, b) => b.severity.localeCompare(a.severity));
 }

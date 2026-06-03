@@ -1,0 +1,219 @@
+{
+  "total_packages": 7,
+  "total_detections": 26,
+  "total_expected": 17,
+  "total_matched": 11,
+  "campaigns": {
+    "CAMPAIGN_1": {
+      "name": "176-Package Dependency Confusion",
+      "total": 3,
+      "detected": 3,
+      "detection_rate": "100.0%",
+      "total_expected": 7,
+      "total_matched": 5,
+      "avg_confidence": 0,
+      "confidences": [],
+      "expected_match_rate": "71.4%"
+    },
+    "CAMPAIGN_2": {
+      "name": "Mini Shai-Hulud (Obfuscated)",
+      "total": 2,
+      "detected": 2,
+      "detection_rate": "100.0%",
+      "total_expected": 5,
+      "total_matched": 3,
+      "avg_confidence": 0,
+      "confidences": [],
+      "expected_match_rate": "60.0%"
+    },
+    "CAMPAIGN_3": {
+      "name": "Bitwarden CLI Impersonation",
+      "total": 2,
+      "detected": 2,
+      "detection_rate": "100.0%",
+      "total_expected": 5,
+      "total_matched": 3,
+      "avg_confidence": 0,
+      "confidences": [],
+      "expected_match_rate": "60.0%"
+    }
+  },
+  "detectors": {
+    "ATK-001": {
+      "total_hits": 4,
+      "expected_count": 0,
+      "avg_confidence": "NaN",
+      "confidences": [
+        null,
+        null,
+        null,
+        null
+      ],
+      "severities": [
+        "high",
+        "high",
+        "high",
+        "high"
+      ],
+      "precision": "0.0%"
+    },
+    "TIER1-LIFECYCLE-HOOK": {
+      "total_hits": 4,
+      "expected_count": 4,
+      "avg_confidence": "92.5",
+      "confidences": [
+        70,
+        100,
+        100,
+        100
+      ],
+      "severities": [
+        "high",
+        "high",
+        "critical",
+        "high"
+      ],
+      "precision": "100.0%"
+    },
+    "TIER1-VERSION-CONFUSION": {
+      "total_hits": 3,
+      "expected_count": 0,
+      "avg_confidence": "71.7",
+      "confidences": [
+        85,
+        65,
+        65
+      ],
+      "severities": [
+        "high",
+        "medium",
+        "medium"
+      ],
+      "precision": "0.0%"
+    },
+    "TIER1-MULTISTAGE-POSTINSTALL": {
+      "total_hits": 1,
+      "expected_count": 0,
+      "avg_confidence": "82.0",
+      "confidences": [
+        82
+      ],
+      "severities": [
+        "high"
+      ],
+      "precision": "0.0%"
+    },
+    "TIER1-VERSION-ANOMALY": {
+      "total_hits": 3,
+      "expected_count": 3,
+      "avg_confidence": "92.0",
+      "confidences": [
+        92,
+        92,
+        92
+      ],
+      "severities": [
+        "critical",
+        "critical",
+        "critical"
+      ],
+      "precision": "100.0%"
+    },
+    "TYPOSQUAT_VPMDHAJ": {
+      "total_hits": 2,
+      "expected_count": 0,
+      "avg_confidence": "NaN",
+      "confidences": [
+        null,
+        null
+      ],
+      "severities": [
+        "critical",
+        "critical"
+      ],
+      "precision": "0.0%"
+    },
+    "TIER1-TYPOSQUAT": {
+      "total_hits": 4,
+      "expected_count": 2,
+      "avg_confidence": "68.8",
+      "confidences": [
+        75,
+        100,
+        50,
+        50
+      ],
+      "severities": [
+        "medium",
+        "high",
+        "low",
+        "low"
+      ],
+      "precision": "50.0%"
+    },
+    "MINI_SHAI_HULUD": {
+      "total_hits": 2,
+      "expected_count": 0,
+      "avg_confidence": "NaN",
+      "confidences": [
+        null,
+        null
+      ],
+      "severities": [
+        "critical",
+        "critical"
+      ],
+      "precision": "0.0%"
+    },
+    "TIER1-OBFUSCATION-HEURISTICS": {
+      "total_hits": 2,
+      "expected_count": 2,
+      "avg_confidence": "80.0",
+      "confidences": [
+        90,
+        70
+      ],
+      "severities": [
+        "critical",
+        "high"
+      ],
+      "precision": "100.0%"
+    },
+    "TRAPDOOR": {
+      "total_hits": 1,
+      "expected_count": 0,
+      "avg_confidence": "NaN",
+      "confidences": [
+        null
+      ],
+      "severities": [
+        "critical"
+      ],
+      "precision": "0.0%"
+    }
+  },
+  "detection_matrix": {
+    "CAMPAIGN_1": {
+      "ATK-001": 2,
+      "TIER1-LIFECYCLE-HOOK": 2,
+      "TIER1-VERSION-CONFUSION": 3,
+      "TIER1-MULTISTAGE-POSTINSTALL": 1,
+      "TIER1-VERSION-ANOMALY": 3,
+      "TYPOSQUAT_VPMDHAJ": 1
+    },
+    "CAMPAIGN_2": {
+      "TIER1-TYPOSQUAT": 2,
+      "MINI_SHAI_HULUD": 2,
+      "TIER1-LIFECYCLE-HOOK": 1,
+      "TIER1-OBFUSCATION-HEURISTICS": 2,
+      "ATK-001": 1
+    },
+    "CAMPAIGN_3": {
+      "TIER1-TYPOSQUAT": 2,
+      "ATK-001": 1,
+      "TIER1-LIFECYCLE-HOOK": 1,
+      "TRAPDOOR": 1,
+      "TYPOSQUAT_VPMDHAJ": 1
+    }
+  }
+}

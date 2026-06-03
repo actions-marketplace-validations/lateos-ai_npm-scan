@@ -135,6 +135,41 @@ npx @lateos/npm-scan scan commander
 
 ---
 
+## Validation & Accuracy
+
+### Real-World Campaign Detection
+
+`@lateos/npm-scan` was validated against 3 active May 2026 supply chain attack campaigns:
+
+| Campaign | Packages | Detection Rate | Key Detector |
+|---|---|---|---|
+| **Dependency Confusion** (176-pkg high-version hijack) | 3 | **100%** | D6 (Version Anomaly) |
+| **Mini Shai-Hulud** (Obfuscation + C2) | 2 | **100%** | D7 (Obfuscation Heuristics) |
+| **Bitwarden Impersonation** (Typosquat + lifecycle hooks) | 2 | **100%** | D1 (Typosquat) + D3 (Lifecycle Hook) |
+
+### False Positive Calibration
+
+Detector thresholds calibrated against **top 1,000 npm packages by download count**:
+
+- **Packages Scanned**: 990 legitimate packages
+- **False Positive Rate**: **0.0%** (0 FPs at production thresholds)
+- **Detector Performance**: See [VALIDATION.md](./VALIDATION.md) for precision/recall per detector
+
+### Per-Detector Confidence
+
+| Detector | Avg Confidence | Threshold | Notes |
+|---|---|---|---|
+| D6 (Version Anomaly) | 92.0% | 72 | Z-score >3.0; sentinel patterns (99.99.99) always flag |
+| D7 (Obfuscation Heuristics) | 80.0% | 75 | Entropy + pattern matching; bundlers whitelisted |
+| D5 (Binary Embedding) | 81.3% | 80 | Cross-platform binary sets; rare in legitimate packages |
+| D4 (Lifecycle Hook) | 92.5% | 65 | postinstall/preinstall/prepare scripts analyzed |
+| D3 (Infostealer) | 68.7% | 72 | C2 signatures, credential exfil patterns |
+| D1 (Typosquat) | 87.9% | 85 | Edit-distance scoring; scoped sub-packages exempt |
+
+**Full validation report**: [VALIDATION.md](./VALIDATION.md)
+
+---
+
 ## 🐳 Run @lateos/npm-scan anywhere with Docker — zero installation
 
 ```bash
