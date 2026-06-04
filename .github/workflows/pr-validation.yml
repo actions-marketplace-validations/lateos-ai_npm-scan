@@ -51,8 +51,8 @@ jobs:
           cache: 'npm'
       
       - run: npm ci
-      - run: npm test -- --coverage
-        name: Run Jest tests
+      - run: npm test
+        name: Run Node tests
 
   validate-detectors:
     name: Detector Validation
