@@ -29,6 +29,10 @@ import { scan as tier1MultistagePostinstallScan } from './tier1-multistage-posti
 import { scan as tier1VersionAnomalyScan } from './tier1-version-anomaly.js';
 import { scan as tier1ObfuscationHeuristicsScan } from './tier1-obfuscation-heuristics.js';
 import { scan as tier1SlsaAttestationScan } from './tier1-slsa-attestation.js';
+import { scan as tier1SelfPropagationScan } from './tier1-self-propagation.js';
+import { scan as tier1EncryptedC2Scan } from './tier1-encrypted-c2.js';
+import { scan as tier1TransitiveDepsScan } from './tier1-transitive-deps.js';
+import { scan as tier1MaintainerCompromiseScan } from './tier1-maintainer-compromise.js';
 
 function timeout(ms) {
   return new Promise((_, reject) =>
@@ -181,6 +185,46 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
     ...(await runTier1(
       'tier1-slsa-attestation',
       tier1SlsaAttestationScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-self-propagation',
+      tier1SelfPropagationScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-encrypted-c2',
+      tier1EncryptedC2Scan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-transitive-deps',
+      tier1TransitiveDepsScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-maintainer-compromise',
+      tier1MaintainerCompromiseScan,
       pkgJson,
       files,
       registryMeta,
