@@ -1,4 +1,4 @@
-﻿name: PR Validation
+name: PR Validation
 
 on:
   pull_request:
@@ -6,78 +6,62 @@ on:
 
 permissions:
   contents: read
-  checks: write
 
 jobs:
   lint:
-    name: Linting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-      
+          node-version: "20"
+          cache: "npm"
       - run: npm ci
       - run: npm run lint
-        name: Run ESLint
 
   format:
-    name: Formatting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-      
+          node-version: "20"
+          cache: "npm"
       - run: npm ci
       - run: npm run format:check
-        name: Check Prettier formatting
 
   test:
-    name: Test Suite
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: ["20", "22"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      
+          cache: "npm"
       - run: npm ci
       - run: npm test
-        name: Run Node tests
 
-  validate-detectors:
-    name: Detector Validation
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-      
+          node-version: "20"
+          cache: "npm"
       - run: npm ci
       - run: npm run validate:campaigns
-        name: Validate against known campaigns
 
   build:
-    name: Build Verification
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
-      
+          node-version: "20"
+          cache: "npm"
       - run: npm ci
       - run: npm pack --dry-run
-        name: Verify npm package can be built
