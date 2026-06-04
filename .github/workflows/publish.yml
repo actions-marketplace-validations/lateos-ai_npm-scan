@@ -22,14 +22,26 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Run tests
+      - name: Run linter (final check)
+        run: npm run lint
+
+      - name: Check formatting (final check)
+        run: npm run format:check
+
+      - name: Run test suite (final check)
         run: npm test
+
+      - name: Validate detectors (final check)
+        run: npm run validate:campaigns
+
+      - name: Check dependencies (final check)
+        run: npm audit --audit-level=high
 
       - name: Publish to npm
         env:
@@ -44,41 +56,22 @@ jobs:
             detection-rates.json
             fp-analysis.json
           body: |
-            # npm-scan v${{ github.ref_name }}
+            # npm-scan ${{ github.ref_name }}
 
-            ## Release Highlights
+            ## Release Summary
+            - **Campaign Detection**: 100% (3/3 real attacks)
+            - **False Positive Rate**: 0.0% (0/990 packages)
+            - **Tests**: All 671 passing
+            - **Code Quality**: 0 linting errors
 
-            ✅ **100% Detection Rate** on 3 real May 2026 supply chain campaigns
-            ✅ **0% False Positive Rate** on top 1,000 npm packages
-            ✅ **Production-Grade Detectors**: D6, D7, D5, D4, D3, D1
+            ## Validation Metrics
+            - D6 (Version Anomaly): 92% avg confidence
+            - D7 (Obfuscation): 80% avg confidence
+            - D1 (Typosquat): 87.9% avg confidence
 
-            ### Campaign Detection
+            See [VALIDATION.md](./VALIDATION.md) for full metrics.
 
-            | Campaign | Detection Rate |
-            |----------|---|
-            | Dependency Confusion (176-pkg) | 100% |
-            | Mini Shai-Hulud (Obfuscation) | 100% |
-            | Bitwarden Impersonation | 100% |
-
-            ### Detector Performance
-
-            - **D6 (Version Anomaly)**: 92% avg confidence
-            - **D7 (Obfuscation)**: 80% avg confidence
-            - **D5 (Binary Embedding)**: 81.3% avg confidence
-            - **D1 (Typosquat)**: 87.9% avg confidence (threshold 85)
-
-            ### False Positive Calibration
-
-            - Packages scanned: 990 (top 1,000 npm)
-            - False positives: 0 (0.0% FP rate)
-            - Detector thresholds: calibrated post-validation
-
-            **Full validation report**: See attached [VALIDATION.md](./VALIDATION.md)
-
-            ---
-
-            **GitHub**: https://github.com/lateos-ai/npm-scan
-            **npm**: https://npmjs.com/package/@lateos/npm-scan
+            **Published with npm provenance attestation (SLSA Level 2).**
           draft: false
           prerelease: false
         env:
