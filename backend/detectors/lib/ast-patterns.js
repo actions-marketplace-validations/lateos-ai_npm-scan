@@ -1,7 +1,10 @@
 const PATTERNS = [
   { id: 'EVAL_USAGE', re: /\beval\s*\(/ },
   { id: 'FUNCTION_CONSTRUCTOR', re: /Function\s*\(/ },
-  { id: 'STRING_REVERSAL_CHAIN', re: /\.split\s*\(\s*['"]\s*['"]\s*\)\s*\.reverse\s*\(\s*\)\s*\.join\s*\(/ },
+  {
+    id: 'STRING_REVERSAL_CHAIN',
+    re: /\.split\s*\(\s*['"]\s*['"]\s*\)\s*\.reverse\s*\(\s*\)\s*\.join\s*\(/,
+  },
   { id: 'XOR_CIPHER', re: /charCodeAt\s*\([^)]*\)\s*\^\s*\w+/ },
   { id: 'BITWISE_LOOP', re: /for\s*\([^;]+;[^;]+\)\s*\{[^}]{20,}\^[^}]*\}/ },
   { id: 'DYNAMIC_REQUIRE', re: /require\s*\(\s*(?:Buffer\.from|atob|decodeURIComponent)/ },

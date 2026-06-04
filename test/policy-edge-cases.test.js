@@ -15,9 +15,7 @@ test('policy: applyPolicy with empty suppress preserves all findings', async () 
 
 test('policy: applyPolicy with empty severity_overrides preserves severities', async () => {
   const { applyPolicy } = await import('../backend/policy.js');
-  const findings = [
-    { id: 'ATK-001', severity: 'high', title: 'A' },
-  ];
+  const findings = [{ id: 'ATK-001', severity: 'high', title: 'A' }];
   const policy = { allow: { packages: [] }, severity_overrides: {}, fail_on: 'none', suppress: [] };
   const result = applyPolicy(findings, 'pkg', policy);
   assert.equal(result.findings[0].severity, 'high');
@@ -113,19 +111,20 @@ test('policy: loadPolicy throws on suppress that is not array', async () => {
 
 test('policy: checkFailOn with critical severity blocks at high threshold', async () => {
   const { applyPolicy } = await import('../backend/policy.js');
-  const findings = [
-    { id: 'ATK-005', atk_id: 'ATK-005', severity: 'critical', title: 'Exfil' },
-  ];
-  const policy = { allow: { packages: [] }, severity_overrides: {}, fail_on: 'critical', suppress: [] };
+  const findings = [{ id: 'ATK-005', atk_id: 'ATK-005', severity: 'critical', title: 'Exfil' }];
+  const policy = {
+    allow: { packages: [] },
+    severity_overrides: {},
+    fail_on: 'critical',
+    suppress: [],
+  };
   const { blocked } = applyPolicy(findings, 'pkg', policy);
   assert.equal(blocked, true);
 });
 
 test('policy: checkFailOn with low does not block at high threshold', async () => {
   const { applyPolicy } = await import('../backend/policy.js');
-  const findings = [
-    { id: 'ATK-007', atk_id: 'ATK-007', severity: 'low', title: 'Typosquat' },
-  ];
+  const findings = [{ id: 'ATK-007', atk_id: 'ATK-007', severity: 'low', title: 'Typosquat' }];
   const policy = { allow: { packages: [] }, severity_overrides: {}, fail_on: 'high', suppress: [] };
   const { blocked } = applyPolicy(findings, 'pkg', policy);
   assert.equal(blocked, false);

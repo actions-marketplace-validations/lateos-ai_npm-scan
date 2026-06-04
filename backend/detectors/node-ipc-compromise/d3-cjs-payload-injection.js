@@ -7,7 +7,7 @@ export function scanCjsPayloadInjection(allFiles) {
   let cjsContent = null;
   let mjsContent = null;
   let cjsPath = null;
-  let mjsPath = null;
+  let _mjsPath = null;
 
   for (const file of allFiles) {
     const path = file.path?.replace(/\\/g, '/') || '';
@@ -17,7 +17,7 @@ export function scanCjsPayloadInjection(allFiles) {
     }
     if (path.endsWith('node-ipc.mjs')) {
       mjsContent = file.content || '';
-      mjsPath = path;
+      _mjsPath = path;
     }
   }
 
@@ -52,19 +52,21 @@ export function scanCjsPayloadInjection(allFiles) {
         matches.push({
           file: cjsPath,
           finding: 'iife-suffix',
-          detail: 'node-ipc.cjs ends with IIFE pattern — potential obfuscated payload appended after module closure',
+          detail:
+            'node-ipc.cjs ends with IIFE pattern — potential obfuscated payload appended after module closure',
         });
       }
     }
   }
 
   if (cjsContent && IIFE_END_PATTERN.test(cjsContent.trim())) {
-    const alreadyReported = matches.some(m => m.finding === 'iife-suffix');
+    const alreadyReported = matches.some((m) => m.finding === 'iife-suffix');
     if (!alreadyReported) {
       matches.push({
         file: cjsPath,
         finding: 'iife-suffix',
-        detail: 'node-ipc.cjs ends with IIFE pattern — potential obfuscated payload appended after module closure',
+        detail:
+          'node-ipc.cjs ends with IIFE pattern — potential obfuscated payload appended after module closure',
       });
     }
   }

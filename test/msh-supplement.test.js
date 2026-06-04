@@ -29,13 +29,25 @@ test('MSH-SUP: ctf-scramble-v3 variant triggers stop condition', async () => {
 
 test('MSH-SUP: clean files produce no findings', async () => {
   const files = [{ path: 'index.js', content: 'module.exports = 42;' }];
-  const findings = await scan({ name: 'clean-pkg', version: '1.0.0', scripts: { test: 'node test.js' } }, files);
+  const findings = await scan(
+    { name: 'clean-pkg', version: '1.0.0', scripts: { test: 'node test.js' } },
+    files
+  );
   assert.equal(findings.length, 0);
 });
 
 test('MSH-SUP: daemonization detection triggers D2', async () => {
-  const files = [{ path: 'install.js', content: `if (!process.env.CI) { require('child_process').spawn('node', ['server.js'], { detached: true }); }` }];
-  const pkgJson = { name: 'evil-pkg', version: '2.0.0', scripts: { postinstall: 'node install.js' } };
+  const files = [
+    {
+      path: 'install.js',
+      content: `if (!process.env.CI) { require('child_process').spawn('node', ['server.js'], { detached: true }); }`,
+    },
+  ];
+  const pkgJson = {
+    name: 'evil-pkg',
+    version: '2.0.0',
+    scripts: { postinstall: 'node install.js' },
+  };
   const findings = await scan(pkgJson, files);
   assert.equal(findings.length, 1);
   const ev = JSON.parse(findings[0].evidence);
@@ -55,7 +67,9 @@ test('MSH-SUP: fork without CI guard triggers D2', async () => {
 });
 
 test('MSH-SUP: systemd persistence triggers D2', async () => {
-  const files = [{ path: 'evil.js', content: 'fs.writeFileSync("/etc/systemd/system/evil.service", "...");' }];
+  const files = [
+    { path: 'evil.js', content: 'fs.writeFileSync("/etc/systemd/system/evil.service", "...");' },
+  ];
   const pkgJson = { name: 'test-pkg', version: '1.0.0', scripts: { postinstall: 'node evil.js' } };
   const findings = await scan(pkgJson, files);
   assert.equal(findings.length, 1);
@@ -65,7 +79,12 @@ test('MSH-SUP: systemd persistence triggers D2', async () => {
 });
 
 test('MSH-SUP: geographic killswitch ru_RU triggers D3', async () => {
-  const files = [{ path: 'index.js', content: `if (process.env.LANG && process.env.LANG.includes('ru_RU')) process.exit(0);` }];
+  const files = [
+    {
+      path: 'index.js',
+      content: `if (process.env.LANG && process.env.LANG.includes('ru_RU')) process.exit(0);`,
+    },
+  ];
   const findings = await scan({ name: 'test-pkg', version: '1.0.0' }, files);
   assert.equal(findings.length, 1);
   const ev = JSON.parse(findings[0].evidence);
@@ -74,7 +93,12 @@ test('MSH-SUP: geographic killswitch ru_RU triggers D3', async () => {
 });
 
 test('MSH-SUP: geographic killswitch Intl.DateTimeFormat triggers D3', async () => {
-  const files = [{ path: 'index.js', content: `const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; if (tz === 'Europe/Minsk') process.exit(0);` }];
+  const files = [
+    {
+      path: 'index.js',
+      content: `const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; if (tz === 'Europe/Minsk') process.exit(0);`,
+    },
+  ];
   const findings = await scan({ name: 'test-pkg', version: '1.0.0' }, files);
   assert.equal(findings.length, 1);
   const ev = JSON.parse(findings[0].evidence);
@@ -82,7 +106,12 @@ test('MSH-SUP: geographic killswitch Intl.DateTimeFormat triggers D3', async () 
 });
 
 test('MSH-SUP: geographic killswitch be_BY triggers D3', async () => {
-  const files = [{ path: 'index.js', content: `if (Intl.DateTimeFormat().resolvedOptions().timeZone.includes('Minsk')) process.exit(0);` }];
+  const files = [
+    {
+      path: 'index.js',
+      content: `if (Intl.DateTimeFormat().resolvedOptions().timeZone.includes('Minsk')) process.exit(0);`,
+    },
+  ];
   const findings = await scan({ name: 'test-pkg', version: '1.0.0' }, files);
   assert.equal(findings.length, 1);
   const ev = JSON.parse(findings[0].evidence);
@@ -91,7 +120,12 @@ test('MSH-SUP: geographic killswitch be_BY triggers D3', async () => {
 });
 
 test('MSH-SUP: locale check without target country = no D3', async () => {
-  const files = [{ path: 'index.js', content: `if (process.env.LANG && process.env.LANG.includes('en_US')) process.exit(0);` }];
+  const files = [
+    {
+      path: 'index.js',
+      content: `if (process.env.LANG && process.env.LANG.includes('en_US')) process.exit(0);`,
+    },
+  ];
   const findings = await scan({ name: 'test-pkg', version: '1.0.0' }, files);
   assert.equal(findings.length, 1);
   const ev = JSON.parse(findings[0].evidence);
@@ -104,22 +138,33 @@ test('MSH-SUP: C2 dead-drop OhNoWhatsGoingOnWithGitHub triggers D4', async () =>
   assert.equal(findings.length, 1);
   const ev = JSON.parse(findings[0].evidence);
   assert.ok(ev.triggeredChecks.includes('D4'));
-  assert.ok(ev.details.D4.matches.some(m => m.type === 'ioc_keyword'));
+  assert.ok(ev.details.D4.matches.some((m) => m.type === 'ioc_keyword'));
 });
 
 test('MSH-SUP: token access + GitHub API triggers D4', async () => {
-  const files = [{ path: 'grab.js', content: `const token = process.env.GITHUB_TOKEN; fetch('https://api.github.com/repos/owner/repo/commits');` }];
+  const files = [
+    {
+      path: 'grab.js',
+      content: `const token = process.env.GITHUB_TOKEN; fetch('https://api.github.com/repos/owner/repo/commits');`,
+    },
+  ];
   const findings = await scan({ name: 'test-pkg', version: '1.0.0' }, files);
   assert.equal(findings.length, 1);
   const ev = JSON.parse(findings[0].evidence);
   assert.ok(ev.triggeredChecks.includes('D4'));
-  assert.ok(ev.details.D4.matches.some(m => m.type === 'token_exfil_github_api'));
+  assert.ok(ev.details.D4.matches.some((m) => m.type === 'token_exfil_github_api'));
 });
 
 test('MSH-SUP: multiple signals trigger at once', async () => {
   const files = [
-    { path: 'a.js', content: `if (process.env.LANG && process.env.LANG.includes('ru_RU')) process.exit(0);` },
-    { path: 'b.js', content: `const token = process.env.GH_TOKEN; fetch('https://api.github.com/graphql');` },
+    {
+      path: 'a.js',
+      content: `if (process.env.LANG && process.env.LANG.includes('ru_RU')) process.exit(0);`,
+    },
+    {
+      path: 'b.js',
+      content: `const token = process.env.GH_TOKEN; fetch('https://api.github.com/graphql');`,
+    },
   ];
   const pkgJson = { name: 'multi-pkg', version: '1.0.0', scripts: { postinstall: 'node a.js' } };
   const findings = await scan(pkgJson, files);
@@ -147,7 +192,9 @@ test('MSH-SUP: clean package with benign code = no findings', async () => {
 });
 
 test('MSH-SUP: spawn without detached flag = no D2 finding', async () => {
-  const files = [{ path: 'index.js', content: 'require("child_process").spawn("node", ["build.js"]);' }];
+  const files = [
+    { path: 'index.js', content: 'require("child_process").spawn("node", ["build.js"]);' },
+  ];
   const pkgJson = { name: 'clean-pkg', version: '1.0.0' };
   const findings = await scan(pkgJson, files);
   assert.equal(findings.length, 0);

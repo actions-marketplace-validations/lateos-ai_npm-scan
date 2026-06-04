@@ -3,7 +3,10 @@ import { MegalodonSignal } from './types.js';
 const CRED_PATTERNS = [
   { pattern: /\bAWS_(SECRET_ACCESS_KEY|ACCESS_KEY_ID|SESSION_TOKEN)\b/, label: 'AWS credential' },
   { pattern: /\bGOOGLE_APPLICATION_CREDENTIALS\b/, label: 'GCP credential' },
-  { pattern: /\bAZURE_(CLIENT_SECRET|TENANT_ID|CLIENT_ID|SUBSCRIPTION_ID)\b/, label: 'Azure credential' },
+  {
+    pattern: /\bAZURE_(CLIENT_SECRET|TENANT_ID|CLIENT_ID|SUBSCRIPTION_ID)\b/,
+    label: 'Azure credential',
+  },
   { pattern: /\bGH_(TOKEN|PAT)\b/, label: 'GitHub PAT' },
   { pattern: /\bGITHUB_TOKEN\b/, label: 'GitHub token' },
   { pattern: /\bNPM_TOKEN\b/, label: 'npm token' },
@@ -15,7 +18,8 @@ const CRED_PATTERNS = [
   { pattern: /\bMONGO_(URI|URL|CONNECTION)\b/, label: 'MongoDB connection' },
 ];
 
-const OUTBOUND_NET_RE = /curl\s+|wget\s+|fetch\s*\(|https?\.request\s*\(|http\.request\s*\(|got\s*\(|axios\s*\.|request\s*\(|node-fetch|\.post\s*\(|\.get\s*\(/i;
+const OUTBOUND_NET_RE =
+  /curl\s+|wget\s+|fetch\s*\(|https?\.request\s*\(|http\.request\s*\(|got\s*\(|axios\s*\.|request\s*\(|node-fetch|\.post\s*\(|\.get\s*\(/i;
 
 const TARGET_EXTENSIONS = ['.sh', '.bash', '.yml', '.yaml', '.js'];
 
@@ -37,7 +41,7 @@ export async function scan(allFiles) {
       const re = new RegExp(cp.pattern.source, 'gi');
       let m;
       while ((m = re.exec(content)) !== null) {
-        if (!matched.some(ex => ex.label === cp.label)) {
+        if (!matched.some((ex) => ex.label === cp.label)) {
           matched.push({ label: cp.label, match: m[0] });
         }
         score += 3;
@@ -50,8 +54,11 @@ export async function scan(allFiles) {
         evidence.push({
           signal: MegalodonSignal.CREDENTIAL_HARVEST,
           file: f.path,
-          excerpt: matched.map(m => m.label).join(', ').slice(0, 120),
-          detail: `Credential env vars (${matched.map(m => m.label).join(', ')}) co-occur with outbound network call (score: ${score})`,
+          excerpt: matched
+            .map((m) => m.label)
+            .join(', ')
+            .slice(0, 120),
+          detail: `Credential env vars (${matched.map((m) => m.label).join(', ')}) co-occur with outbound network call (score: ${score})`,
         });
       }
     }

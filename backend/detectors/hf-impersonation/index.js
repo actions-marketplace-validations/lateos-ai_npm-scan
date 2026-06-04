@@ -2,7 +2,7 @@ import { KNOWN_HF_ORGS } from './known-orgs.js';
 import { jaroWinkler } from './jaro-winkler.js';
 import { simhash, similarity as simhashSimilarity } from './simhash.js';
 
-const HF_URL_PATTERN = /(?:huggingface\.co|hf\.co)\/([^\/\s"'>]+)\/([^\/\s"'>]+)/g;
+const HF_URL_PATTERN = /(?:huggingface\.co|hf\.co)\/([^/\s"'>]+)\/([^/\s"'>]+)/g;
 const FROM_PRETRAINED_PATTERN = /from_pretrained\(\s*["']([^"']+\/[^"']+)["']/g;
 const HUB_DOWNLOAD_SINGLE = /hub\.download\(\s*["']([^"']+\/[^"']+)["']/g;
 const HUB_DOWNLOAD_DOUBLE = /hub\.download\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']/g;
@@ -11,9 +11,15 @@ const LIFECYCLE_SCRIPTS = new Set(['postinstall', 'prepare', 'install']);
 const API_BASE = 'https://huggingface.co';
 
 const SEVERITY_SCORE = { none: 0, low: 1, medium: 2, high: 3, critical: 4 };
-const SEVERITY_LABELS = ['none', 'low', 'medium', 'high', 'critical'];
+const _SEVERITY_LABELS = ['none', 'low', 'medium', 'high', 'critical'];
 
-const HF_ARTIFACT_LIBS = new Set(['transformers', 'diffusers', 'sentence-transformers', 'gguf', 'safetensors']);
+const HF_ARTIFACT_LIBS = new Set([
+  'transformers',
+  'diffusers',
+  'sentence-transformers',
+  'gguf',
+  'safetensors',
+]);
 const SUSPICIOUS_EXTENSIONS = /\.(exe|msi|bat|ps1|dll)$/i;
 
 const _cache = new Map();
@@ -24,12 +30,12 @@ function severityIndex(sev) {
   return SEVERITY_SCORE[sev] || 0;
 }
 
-function maxSeverity(a, b) {
+function _maxSeverity(a, b) {
   return severityIndex(a) >= severityIndex(b) ? a : b;
 }
 
 function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 async function fetchWithCache(url) {
@@ -81,12 +87,16 @@ async function fetchReadme(url) {
       const retryAfter = parseInt(res.headers.get('Retry-After') || '5', 10);
       await sleep(retryAfter * 1000);
       const retryRes = await fetch(url);
-      if (!retryRes.ok) return null;
+      if (!retryRes.ok) {
+        return null;
+      }
       const text = await retryRes.text();
       _cache.set(url, { data: text, fetchedAt: Date.now() });
       return text;
     }
-    if (!res.ok) return null;
+    if (!res.ok) {
+      return null;
+    }
     const text = await res.text();
     _cache.set(url, { data: text, fetchedAt: Date.now() });
     return text;
@@ -115,7 +125,9 @@ function extractHFTuples(pkgJson, allFiles) {
   const scripts = pkgJson?.scripts || {};
   let m;
   for (const [hook, script] of Object.entries(scripts)) {
-    if (typeof script !== 'string') continue;
+    if (typeof script !== 'string') {
+      continue;
+    }
 
     HF_URL_PATTERN.lastIndex = 0;
     while ((m = HF_URL_PATTERN.exec(script)) !== null) {
@@ -152,7 +164,9 @@ function extractHFTuples(pkgJson, allFiles) {
 
   if (allFiles) {
     for (const file of allFiles) {
-      if (!file.path?.match(/\.(js|ts|jsx|tsx|mjs|cjs)$/i)) continue;
+      if (!file.path?.match(/\.(js|ts|jsx|tsx|mjs|cjs)$/i)) {
+        continue;
+      }
       const content = typeof file.content === 'string' ? file.content : '';
 
       HF_URL_PATTERN.lastIndex = 0;
@@ -180,7 +194,15 @@ function extractHFTuples(pkgJson, allFiles) {
   return { tuples, postinstallFetchFlag };
 }
 
-function buildHFOrgSpoofFinding(referencedRepo, org, canonicalOrg, similarityScore, postinstallFetchFlag, tags, hfMeta) {
+function buildHFOrgSpoofFinding(
+  referencedRepo,
+  org,
+  canonicalOrg,
+  similarityScore,
+  postinstallFetchFlag,
+  tags,
+  hfMeta
+) {
   const finding = {
     id: 'HF_ORG_SPOOF',
     severity: 'high',
@@ -207,16 +229,22 @@ function buildHFOrgSpoofFinding(referencedRepo, org, canonicalOrg, similaritySco
 async function runStage2(spoofFindings, orgsToCheck, postinstallFetchFlag) {
   const newFindings = [];
 
-  for (const [referencedRepo, { org, canonicalOrg, similarityScore, finding }] of orgsToCheck) {
+  for (const [
+    referencedRepo,
+    { org, canonicalOrg, similarityScore: _similarityScore, finding: _finding },
+  ] of orgsToCheck) {
     const tags = [];
     let hfMeta = null;
 
     const modelUrl = `${API_BASE}/api/models/${referencedRepo}`;
-    const canonicalUrl = canonicalOrg.org !== org ? `${API_BASE}/api/models/${canonicalOrg.org}/${referencedRepo.split('/')[1]}` : null;
+    const canonicalUrl =
+      canonicalOrg.org !== org
+        ? `${API_BASE}/api/models/${canonicalOrg.org}/${referencedRepo.split('/')[1]}`
+        : null;
     const userUrl = `${API_BASE}/api/users/${org}`;
 
     const spoofedModel = await fetchWithCache(modelUrl);
-    const canonicalModel = canonicalUrl ? await fetchWithCache(canonicalUrl) : null;
+    const _canonicalModel = canonicalUrl ? await fetchWithCache(canonicalUrl) : null;
     const userData = await fetchWithCache(userUrl);
 
     // Org age check for NEW_ORG tag
@@ -235,7 +263,9 @@ async function runStage2(spoofFindings, orgsToCheck, postinstallFetchFlag) {
     // README clone check
     if (canonicalOrg.org !== org) {
       const readmeSpoof = await fetchReadme(`${API_BASE}/${referencedRepo}/resolve/main/README.md`);
-      const readmeCanonical = await fetchReadme(`${API_BASE}/${canonicalOrg.org}/${referencedRepo.split('/')[1]}/resolve/main/README.md`);
+      const readmeCanonical = await fetchReadme(
+        `${API_BASE}/${canonicalOrg.org}/${referencedRepo.split('/')[1]}/resolve/main/README.md`
+      );
 
       if (readmeSpoof && readmeCanonical) {
         const fp1 = simhash(readmeSpoof);
@@ -260,7 +290,9 @@ async function runStage2(spoofFindings, orgsToCheck, postinstallFetchFlag) {
             tags: [],
             ipiClass: 'SUPPLY_CHAIN',
           };
-          if (hfMeta) readmeFinding.hfMeta = hfMeta;
+          if (hfMeta) {
+            readmeFinding.hfMeta = hfMeta;
+          }
           newFindings.push(readmeFinding);
         }
       }
@@ -288,7 +320,9 @@ async function runStage2(spoofFindings, orgsToCheck, postinstallFetchFlag) {
               tags: [],
               ipiClass: 'SUPPLY_CHAIN',
             };
-            if (hfMeta) artifactFinding.hfMeta = hfMeta;
+            if (hfMeta) {
+              artifactFinding.hfMeta = hfMeta;
+            }
             newFindings.push(artifactFinding);
             break;
           }
@@ -297,12 +331,16 @@ async function runStage2(spoofFindings, orgsToCheck, postinstallFetchFlag) {
     }
 
     // Apply NEW_ORG and POSTINSTALL_FETCH tags to all findings for this repo
-    const repoSpoofFindings = spoofFindings.filter(f => f.referencedRepo === referencedRepo);
+    const repoSpoofFindings = spoofFindings.filter((f) => f.referencedRepo === referencedRepo);
     for (const sf of repoSpoofFindings) {
       if (tags.length > 0) {
-        if (!sf.tags) sf.tags = [];
+        if (!sf.tags) {
+          sf.tags = [];
+        }
         for (const t of tags) {
-          if (!sf.tags.includes(t)) sf.tags.push(t);
+          if (!sf.tags.includes(t)) {
+            sf.tags.push(t);
+          }
         }
       }
       if (hfMeta) {
@@ -312,9 +350,13 @@ async function runStage2(spoofFindings, orgsToCheck, postinstallFetchFlag) {
     for (const nf of newFindings) {
       if (nf.referencedRepo === referencedRepo) {
         if (tags.length > 0) {
-          if (!nf.tags) nf.tags = [];
+          if (!nf.tags) {
+            nf.tags = [];
+          }
           for (const t of tags) {
-            if (!nf.tags.includes(t)) nf.tags.push(t);
+            if (!nf.tags.includes(t)) {
+              nf.tags.push(t);
+            }
           }
         }
       }
@@ -326,14 +368,18 @@ async function runStage2(spoofFindings, orgsToCheck, postinstallFetchFlag) {
     const allStage2Findings = [...spoofFindings, ...newFindings];
     const escalatedRepos = new Set();
     for (const f of allStage2Findings) {
-      if (f.referencedRepo) escalatedRepos.add(f.referencedRepo);
+      if (f.referencedRepo) {
+        escalatedRepos.add(f.referencedRepo);
+      }
     }
     for (const f of allStage2Findings) {
       if (escalatedRepos.has(f.referencedRepo)) {
         if (severityIndex(f.severity) < severityIndex('critical')) {
           f.severity = 'critical';
         }
-        if (!f.tags) f.tags = [];
+        if (!f.tags) {
+          f.tags = [];
+        }
         if (!f.tags.includes('POSTINSTALL_ESCALATED')) {
           f.tags.push('POSTINSTALL_ESCALATED');
         }
@@ -344,10 +390,12 @@ async function runStage2(spoofFindings, orgsToCheck, postinstallFetchFlag) {
   return newFindings;
 }
 
-export async function scan(pkgJson, files = [], registryMeta = null, allFiles = null) {
+export async function scan(pkgJson, files = [], _registryMeta = null, allFiles = null) {
   const { tuples, postinstallFetchFlag } = extractHFTuples(pkgJson, allFiles || files);
 
-  if (tuples.size === 0) return [];
+  if (tuples.size === 0) {
+    return [];
+  }
 
   // Stage 1: org spoof detection (local only)
   const spoofFindings = [];
@@ -355,19 +403,34 @@ export async function scan(pkgJson, files = [], registryMeta = null, allFiles = 
 
   for (const tuple of tuples) {
     const parts = tuple.split('/');
-    if (parts.length < 2) continue;
+    if (parts.length < 2) {
+      continue;
+    }
     const org = parts[0];
 
     const canonicalOrg = findClosestOrg(org);
-    if (!canonicalOrg.org) continue;
-    if (org.toLowerCase() === canonicalOrg.org.toLowerCase()) continue;
+    if (!canonicalOrg.org) {
+      continue;
+    }
+    if (org.toLowerCase() === canonicalOrg.org.toLowerCase()) {
+      continue;
+    }
 
-    const finding = buildHFOrgSpoofFinding(tuple, org, canonicalOrg, canonicalOrg.score, postinstallFetchFlag, []);
+    const finding = buildHFOrgSpoofFinding(
+      tuple,
+      org,
+      canonicalOrg,
+      canonicalOrg.score,
+      postinstallFetchFlag,
+      []
+    );
     spoofFindings.push(finding);
     orgsToCheck.push([tuple, { org, canonicalOrg, similarityScore: canonicalOrg.score, finding }]);
   }
 
-  if (spoofFindings.length === 0) return [];
+  if (spoofFindings.length === 0) {
+    return [];
+  }
 
   // Stage 2: network checks
   const stage2Findings = await runStage2(spoofFindings, orgsToCheck, postinstallFetchFlag);

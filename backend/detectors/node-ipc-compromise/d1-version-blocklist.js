@@ -6,9 +6,11 @@ const SAFE_PINS = {
   '12.0.1': '12.0.0',
 };
 
-export function scanVersionBlocklist(pkgJson, registryMeta) {
+export function scanVersionBlocklist(pkgJson, _registryMeta) {
   const pkgName = pkgJson?.name || '';
-  if (pkgName !== 'node-ipc') return { triggered: false };
+  if (pkgName !== 'node-ipc') {
+    return { triggered: false };
+  }
 
   const version = pkgJson?.version || '';
   if (BLOCKED_VERSIONS.has(version)) {

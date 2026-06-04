@@ -1,7 +1,7 @@
 export function generateQRadar(scans) {
   const events = [];
   for (const s of scans) {
-    for (const f of (s.findings || [])) {
+    for (const f of s.findings || []) {
       const atkId = f.atk_id || f.id;
       events.push({
         source: 'npm-scan',
@@ -32,7 +32,7 @@ export function generateQRadar(scans) {
       });
     }
   }
-  return events.map(e => JSON.stringify(e)).join('\n');
+  return events.map((e) => JSON.stringify(e)).join('\n');
 }
 
 const QID_MAP = {

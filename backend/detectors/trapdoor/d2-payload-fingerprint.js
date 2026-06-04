@@ -12,7 +12,7 @@ export function scanPayloadFingerprint(allFiles) {
     }
 
     if (byteSize === 48485) {
-      const alreadyMatched = matches.some(m => m.file === path);
+      const alreadyMatched = matches.some((m) => m.file === path);
       if (!alreadyMatched) {
         matches.push({ file: path, matchType: 'byteSize', byteSize });
       }

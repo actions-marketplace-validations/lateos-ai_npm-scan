@@ -15,7 +15,9 @@ export function scanDnsTxtExfil(allFiles, pkgJson) {
 
   for (const file of allFiles) {
     const path = file.path || '';
-    if (!path.endsWith('.js') && !path.endsWith('.mjs') && !path.endsWith('.cjs')) continue;
+    if (!path.endsWith('.js') && !path.endsWith('.mjs') && !path.endsWith('.cjs')) {
+      continue;
+    }
     sources.push({ file: path, content: file.content || '' });
   }
 

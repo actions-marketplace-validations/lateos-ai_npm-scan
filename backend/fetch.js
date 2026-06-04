@@ -9,19 +9,23 @@ import { pipeline } from 'stream/promises';
 export async function fetchPackage(target, options = {}) {
   const { cacheDir, cacheTTL = 604800, cacheMaxSize = 1000000000 } = options;
   let name, version;
-  
+
   if (target.startsWith('@')) {
     const lastAt = target.lastIndexOf('@');
     name = target.slice(0, lastAt);
     version = target.slice(lastAt + 1);
-    if (!version) version = undefined;
+    if (!version) {
+      version = undefined;
+    }
   } else {
     const idx = target.indexOf('@');
     name = idx > -1 ? target.slice(0, idx) : target;
     version = idx > -1 ? target.slice(idx + 1) : undefined;
   }
-  
-  const endpoint = version ? `/${encodeURIComponent(name)}/${version}` : `/${encodeURIComponent(name)}/latest`;
+
+  const endpoint = version
+    ? `/${encodeURIComponent(name)}/${version}`
+    : `/${encodeURIComponent(name)}/latest`;
 
   if (cacheDir) {
     const cached = getFromCache(cacheDir, target, cacheTTL);
@@ -41,7 +45,9 @@ export async function fetchPackage(target, options = {}) {
   const tarUrl = meta.dist.tarball;
   const tarRes = await fetch(tarUrl);
   const buffer = Buffer.from(await tarRes.arrayBuffer());
-  if (buffer.length > 500 * 1024 * 1024) throw new Error('Tarball too large');
+  if (buffer.length > 500 * 1024 * 1024) {
+    throw new Error('Tarball too large');
+  }
 
   // Save to cache if enabled
   if (cacheDir) {
@@ -55,19 +61,21 @@ export async function fetchPackage(target, options = {}) {
 function getFromCache(cacheDir, target, ttl) {
   const cachePath = path.join(cacheDir, `${target.replace('/', '-')}.tgz`);
   const metaPath = path.join(cacheDir, `${target.replace('/', '-')}.meta.json`);
-  
+
   try {
-    if (!fs.existsSync(cachePath) || !fs.existsSync(metaPath)) return null;
-    
+    if (!fs.existsSync(cachePath) || !fs.existsSync(metaPath)) {
+      return null;
+    }
+
     const meta = JSON.parse(fs.readFileSync(metaPath, 'utf8'));
     const age = (Date.now() - meta.timestamp) / 1000;
-    
+
     if (age > ttl) {
       fs.unlinkSync(cachePath);
       fs.unlinkSync(metaPath);
       return null;
     }
-    
+
     return fs.readFileSync(cachePath);
   } catch {
     return null;
@@ -79,27 +87,27 @@ function saveToCache(cacheDir, target, buffer, ttl, maxSize) {
     if (!fs.existsSync(cacheDir)) {
       fs.mkdirSync(cacheDir, { recursive: true });
     }
-    
+
     // Prune if needed
     pruneCache(cacheDir, maxSize);
-    
+
     const safeName = target.replace('/', '-');
     const cachePath = path.join(cacheDir, `${safeName}.tgz`);
     const metaPath = path.join(cacheDir, `${safeName}.meta.json`);
-    
+
     fs.writeFileSync(cachePath, buffer);
     fs.writeFileSync(metaPath, JSON.stringify({ timestamp: Date.now(), size: buffer.length }));
-  } catch (e) {
+  } catch {
     // Cache write failure - continue without caching
   }
 }
 
 function pruneCache(cacheDir, maxSize) {
   try {
-    const files = fs.readdirSync(cacheDir).filter(f => f.endsWith('.meta.json'));
+    const files = fs.readdirSync(cacheDir).filter((f) => f.endsWith('.meta.json'));
     let totalSize = 0;
     const fileInfos = [];
-    
+
     for (const f of files) {
       const meta = JSON.parse(fs.readFileSync(path.join(cacheDir, f), 'utf8'));
       const tarFile = f.replace('.meta.json', '.tgz');
@@ -107,17 +115,21 @@ function pruneCache(cacheDir, maxSize) {
       totalSize += size;
       fileInfos.push({ tarFile, metaFile: f, timestamp: meta.timestamp, size });
     }
-    
+
     if (totalSize > maxSize) {
       // Sort by oldest first and remove until under limit
       fileInfos.sort((a, b) => a.timestamp - b.timestamp);
       for (const info of fileInfos) {
-        if (totalSize <= maxSize * 0.8) break; // Leave 20% margin
+        if (totalSize <= maxSize * 0.8) {
+          break;
+        } // Leave 20% margin
         try {
           fs.unlinkSync(path.join(cacheDir, info.tarFile));
           fs.unlinkSync(path.join(cacheDir, info.metaFile));
           totalSize -= info.size;
-        } catch {}
+        } catch {
+          /* ignore file errors */
+        }
       }
     }
   } catch {
@@ -135,24 +147,20 @@ async function extractTarball(buffer, tmpDir) {
   fs.mkdirSync(tmpDir, { recursive: true });
 
   const stream = Readable.from(buffer);
-  await pipeline(
-    stream,
-    zlib.createGunzip(),
-    extract({ cwd: tmpDir, strip: 1 })
-  );
+  await pipeline(stream, zlib.createGunzip(), extract({ cwd: tmpDir, strip: 1 }));
 
   const pkgPath = path.join(tmpDir, 'package.json');
   const pkgJsonStr = fs.readFileSync(pkgPath, 'utf8');
   const pkgJson = JSON.parse(pkgJsonStr);
 
-  const jsFiles = walkFiles(tmpDir, '.js').map(p => ({
+  const jsFiles = walkFiles(tmpDir, '.js').map((p) => ({
     path: p,
-    content: fs.readFileSync(p, 'utf8')
+    content: fs.readFileSync(p, 'utf8'),
   }));
 
-  const allFiles = walkFiles(tmpDir, '').map(p => ({
+  const allFiles = walkFiles(tmpDir, '').map((p) => ({
     path: p,
-    content: fs.readFileSync(p, 'utf8')
+    content: fs.readFileSync(p, 'utf8'),
   }));
 
   return { pkgJson, jsFiles, allFiles, tmpDir };

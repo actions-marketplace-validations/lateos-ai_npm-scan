@@ -24,9 +24,10 @@ function resolveSeverity(signals, d4Evidence) {
     maxScore = Math.max(maxScore, SIGNAL_SEVERITY[s] || 0);
   }
 
-  const d4Hint = d4Evidence.find(e => e._severityHint);
+  const d4Hint = d4Evidence.find((e) => e._severityHint);
   if (d4Hint) {
-    const hintScore = d4Hint._severityHint === 'HIGH' ? 4 : d4Hint._severityHint === 'MEDIUM' ? 3 : 0;
+    const hintScore =
+      d4Hint._severityHint === 'HIGH' ? 4 : d4Hint._severityHint === 'MEDIUM' ? 3 : 0;
     maxScore = Math.max(maxScore, hintScore);
   }
 
@@ -45,36 +46,45 @@ export async function scanAll(pkgJson, allFiles = [], registryMeta = {}) {
   const d3Ev = await scanD3(registryMeta);
   allEvidence.push(...d3Ev);
 
-  const velocityResult = d3Ev.length > 0 ? {
-    triggered: true,
-    windowStartISO: d3Ev[0]._windowStartISO || null,
-    versionsInWindow: d3Ev[0].excerpt || '',
-    _allVersions: d3Ev[0]._allVersions || [],
-  } : { triggered: false, versionsInWindow: [], windowStartISO: null };
+  const velocityResult =
+    d3Ev.length > 0
+      ? {
+          triggered: true,
+          windowStartISO: d3Ev[0]._windowStartISO || null,
+          versionsInWindow: d3Ev[0].excerpt || '',
+          _allVersions: d3Ev[0]._allVersions || [],
+        }
+      : { triggered: false, versionsInWindow: [], windowStartISO: null };
 
   const d4Ev = await scanD4(registryMeta, velocityResult);
   allEvidence.push(...d4Ev);
 
-  allEvidence.push(...await scanD5(registryMeta));
-  allEvidence.push(...await scanD6(pkgJson, registryMeta));
+  allEvidence.push(...(await scanD5(registryMeta)));
+  allEvidence.push(...(await scanD6(pkgJson, registryMeta)));
 
-  const signals = [...new Set(allEvidence.map(e => e.signal).filter(Boolean))];
+  const signals = [...new Set(allEvidence.map((e) => e.signal).filter(Boolean))];
 
-  if (signals.length === 0) return [];
+  if (signals.length === 0) {
+    return [];
+  }
 
   const severity = resolveSeverity(signals, d4Ev);
 
-  const cleaned = allEvidence.map(({ _windowStartISO, _allVersions, _severityHint, ...rest }) => rest);
+  const cleaned = allEvidence.map(
+    ({ _windowStartISO, _allVersions, _severityHint, ...rest }) => rest
+  );
 
-  return [{
-    id: 'MEGALODON',
-    severity,
-    title: 'Megalodon CI/CD attack campaign',
-    description: `${signals.length} signal(s): ${signals.join(', ')}`,
-    evidence: JSON.stringify({
-      campaign: 'MEGALODON',
-      signals,
-      evidence: cleaned,
-    }),
-  }];
+  return [
+    {
+      id: 'MEGALODON',
+      severity,
+      title: 'Megalodon CI/CD attack campaign',
+      description: `${signals.length} signal(s): ${signals.join(', ')}`,
+      evidence: JSON.stringify({
+        campaign: 'MEGALODON',
+        signals,
+        evidence: cleaned,
+      }),
+    },
+  ];
 }

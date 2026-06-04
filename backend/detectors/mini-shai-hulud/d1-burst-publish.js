@@ -10,7 +10,9 @@ export async function checkBurstPublish(registryMeta, config = {}) {
     .filter(([, ts]) => !Number.isNaN(ts))
     .sort((a, b) => a[1] - b[1]);
 
-  if (entries.length === 0) return { triggered: false };
+  if (entries.length === 0) {
+    return { triggered: false };
+  }
 
   const windowMs = windowMinutes * 60 * 1000;
 

@@ -23,8 +23,8 @@ test('db: saveScan with findings stores them', async () => {
   const id = await saveScan('multi-find', '1.0.0', findings);
   const stored = await getFindings(id);
   assert.equal(stored.length, 2);
-  assert(stored.some(f => f.atk_id === 'ATK-001'));
-  assert(stored.some(f => f.severity === 'medium'));
+  assert(stored.some((f) => f.atk_id === 'ATK-001'));
+  assert(stored.some((f) => f.severity === 'medium'));
   await close();
 });
 
@@ -41,7 +41,7 @@ test('db: getRecentScans returns scans in descending ID order', async () => {
   const id1 = await saveScan('first', '1.0.0', []);
   const id2 = await saveScan('second', '2.0.0', []);
   const recent = await getRecentScans(10);
-  const ids = recent.map(s => s.id);
+  const ids = recent.map((s) => s.id);
   assert(ids.includes(id1), `id1=${id1} should be in [${ids}]`);
   assert(ids.includes(id2), `id2=${id2} should be in [${ids}]`);
   await close();

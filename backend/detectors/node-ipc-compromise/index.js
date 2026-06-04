@@ -28,7 +28,9 @@ const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low', 'info', 'none'];
 
 function highestSeverity(severities) {
   for (const s of SEVERITY_ORDER) {
-    if (severities.includes(s)) return s;
+    if (severities.includes(s)) {
+      return s;
+    }
   }
   return 'none';
 }
@@ -42,7 +44,9 @@ function buildRemediation(triggered) {
     lines.push('PRESERVE ~/nt-*/ artifacts for incident response');
   }
   if (triggered.includes('D5') || triggered.includes('D6') || triggered.includes('D7')) {
-    lines.push('Review DNS egress logs for sh.azurestaticprovider.net and 37.16.75.69 post May 14, 2026');
+    lines.push(
+      'Review DNS egress logs for sh.azurestaticprovider.net and 37.16.75.69 post May 14, 2026'
+    );
   }
   lines.push('Rotate all CI/CD secrets and OIDC tokens');
   lines.push('Audit maintainer email domain expiry for all critical dependencies');
@@ -70,24 +74,26 @@ export async function scan(pkgJson, files = [], registryMeta = null, allFiles = 
     .filter(([_, r]) => r.triggered)
     .map(([id]) => id);
 
-  if (triggered.length === 0) return [];
+  if (triggered.length === 0) {
+    return [];
+  }
 
-  const severity = highestSeverity(triggered.map(id => RULE_SEVERITY[id]));
+  const severity = highestSeverity(triggered.map((id) => RULE_SEVERITY[id]));
 
   const evidence = {
     campaign: 'NODE_IPC_COMPROMISE',
     triggeredRules: triggered,
-    details: Object.fromEntries(
-      Object.entries(results).filter(([_, r]) => r.triggered)
-    ),
+    details: Object.fromEntries(Object.entries(results).filter(([_, r]) => r.triggered)),
   };
 
-  return [{
-    id: 'NODE_IPC_COMPROMISE',
-    severity,
-    title: 'node-ipc supply chain compromise (May 14, 2026)',
-    description: `${triggered.length} signal(s): ${triggered.join(', ')}`,
-    evidence: JSON.stringify(evidence),
-    mitigation: buildRemediation(triggered),
-  }];
+  return [
+    {
+      id: 'NODE_IPC_COMPROMISE',
+      severity,
+      title: 'node-ipc supply chain compromise (May 14, 2026)',
+      description: `${triggered.length} signal(s): ${triggered.join(', ')}`,
+      evidence: JSON.stringify(evidence),
+      mitigation: buildRemediation(triggered),
+    },
+  ];
 }

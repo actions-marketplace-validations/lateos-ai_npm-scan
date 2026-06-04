@@ -1,38 +1,52 @@
 import { test } from 'node:test';
 import assert from 'assert/strict';
 import { loadPolicy, applyPolicy, isAllowed } from '../backend/policy.js';
-import { writeFileSync, unlinkSync, mkdirSync, rmSync } from 'fs';
-import { join } from 'path';
+import {
+  writeFileSync,
+  unlinkSync as _unlinkSync,
+  mkdirSync as _mkdirSync,
+  rmSync as _rmSync,
+} from 'fs';
+import { join as _join } from 'path';
 
 test('policy: loadPolicy accepts YAML suppress array', async () => {
-  writeFileSync('/tmp/policy-suppress.yaml', `
+  writeFileSync(
+    '/tmp/policy-suppress.yaml',
+    `
 allow:
   packages: []
 suppress:
   - atk_id: ATK-001
     package: lodash
     reason: known safe
-`);
+`
+  );
   const p = loadPolicy('/tmp/policy-suppress.yaml');
   assert.equal(p.suppress.length, 1);
   assert.equal(p.suppress[0].atk_id, 'ATK-001');
 });
 
 test('policy: loadPolicy accepts JSON suppress array', async () => {
-  writeFileSync('/tmp/policy-suppress.json', JSON.stringify({
-    allow: { packages: ['lodash'] },
-    suppress: [{ atk_id: 'ATK-007', package: 'reakt', reason: 'test' }],
-    fail_on: 'none'
-  }));
+  writeFileSync(
+    '/tmp/policy-suppress.json',
+    JSON.stringify({
+      allow: { packages: ['lodash'] },
+      suppress: [{ atk_id: 'ATK-007', package: 'reakt', reason: 'test' }],
+      fail_on: 'none',
+    })
+  );
   const p = loadPolicy('/tmp/policy-suppress.json');
   assert.equal(p.suppress.length, 1);
 });
 
 test('policy: loadPolicy rejects suppress without atk_id', async () => {
-  writeFileSync('/tmp/policy-no-atk.yaml', `
+  writeFileSync(
+    '/tmp/policy-no-atk.yaml',
+    `
 suppress:
   - package: lodash
-`);
+`
+  );
   try {
     loadPolicy('/tmp/policy-no-atk.yaml');
     assert.fail('should throw');
@@ -42,10 +56,13 @@ suppress:
 });
 
 test('policy: loadPolicy rejects invalid severity in override', async () => {
-  writeFileSync('/tmp/policy-bad-sev.yaml', `
+  writeFileSync(
+    '/tmp/policy-bad-sev.yaml',
+    `
 severity_overrides:
   ATK-001: invalid-severity
-`);
+`
+  );
   try {
     loadPolicy('/tmp/policy-bad-sev.yaml');
     assert.fail('should throw');
@@ -103,16 +120,19 @@ test('policy: applyPolicy with no suppress preserves findings', async () => {
 });
 
 test('policy: applyPolicy suppresses matching atk_id+package', async () => {
-  writeFileSync('/tmp/policy-sup2.yaml', `
+  writeFileSync(
+    '/tmp/policy-sup2.yaml',
+    `
 suppress:
   - atk_id: ATK-007
     package: reakt
     reason: test
-`);
+`
+  );
   const p = loadPolicy('/tmp/policy-sup2.yaml');
   const findings = [
     { id: 'ATK-007', severity: 'high', title: 'typosquat', description: 'reakt' },
-    { id: 'ATK-001', severity: 'medium', title: 'preinstall' }
+    { id: 'ATK-001', severity: 'medium', title: 'preinstall' },
   ];
   const r = applyPolicy(findings, 'reakt', p);
   assert.equal(r.findings.length, 1);
@@ -120,12 +140,15 @@ suppress:
 });
 
 test('policy: applyPolicy suppresses matching atk_id with wildcard package', async () => {
-  writeFileSync('/tmp/policy-sup3.yaml', `
+  writeFileSync(
+    '/tmp/policy-sup3.yaml',
+    `
 suppress:
   - atk_id: ATK-007
     package: "*"
     reason: test
-`);
+`
+  );
   const p = loadPolicy('/tmp/policy-sup3.yaml');
   const findings = [{ id: 'ATK-007', severity: 'high', title: 'typosquat' }];
   const r = applyPolicy(findings, 'any-package', p);
@@ -133,10 +156,13 @@ suppress:
 });
 
 test('policy: applyPolicy overrides severity', async () => {
-  writeFileSync('/tmp/policy-ovr.yaml', `
+  writeFileSync(
+    '/tmp/policy-ovr.yaml',
+    `
 severity_overrides:
   ATK-001: low
-`);
+`
+  );
   const p = loadPolicy('/tmp/policy-ovr.yaml');
   const findings = [{ id: 'ATK-001', severity: 'high', title: 'preinstall' }];
   const r = applyPolicy(findings, 'test', p);
@@ -165,9 +191,12 @@ test('policy: isAllowed matches full package name', async () => {
 });
 
 test('policy: isAllowed matches scoped package name', async () => {
-  writeFileSync('/tmp/policy-scope.json', JSON.stringify({
-    allow: { packages: ['@babel/core'] }
-  }));
+  writeFileSync(
+    '/tmp/policy-scope.json',
+    JSON.stringify({
+      allow: { packages: ['@babel/core'] },
+    })
+  );
   const p = loadPolicy('/tmp/policy-scope.json');
   assert(isAllowed('@babel/core', p));
 });
@@ -179,11 +208,14 @@ test('policy: isAllowed returns false on empty allowlist', async () => {
 });
 
 test('policy: applyPolicy with atk_id finding uses atk_id field', async () => {
-  writeFileSync('/tmp/policy-atkid.yaml', `
+  writeFileSync(
+    '/tmp/policy-atkid.yaml',
+    `
 suppress:
   - atk_id: ATK-007
     package: "*"
-`);
+`
+  );
   const p = loadPolicy('/tmp/policy-atkid.yaml');
   const findings = [{ atk_id: 'ATK-007', id: 'ATK-007', severity: 'high', title: 'typosquat' }];
   const r = applyPolicy(findings, 'pkg', p);
@@ -191,18 +223,25 @@ suppress:
 });
 
 test('policy: loadPolicy sanitizes suppress with missing reason', async () => {
-  writeFileSync('/tmp/policy-no-reason.yaml', `
+  writeFileSync(
+    '/tmp/policy-no-reason.yaml',
+    `
 suppress:
   - atk_id: ATK-001
     package: lodash
-`);
+`
+  );
   const p = loadPolicy('/tmp/policy-no-reason.yaml');
   assert.equal(p.suppress[0].reason, '');
 });
 
 test('policy: applyPolicy severity_override with _severityOverridden flag', async () => {
   const findings = [{ id: 'ATK-001', severity: 'high', title: 'preinstall' }];
-  const r = applyPolicy(findings, 'test', { suppress: [], severity_overrides: { 'ATK-001': 'info' }, fail_on: 'none' });
+  const r = applyPolicy(findings, 'test', {
+    suppress: [],
+    severity_overrides: { 'ATK-001': 'info' },
+    fail_on: 'none',
+  });
   assert(r.findings[0]._severityOverridden);
   assert.equal(r.findings[0].severity, 'info');
 });

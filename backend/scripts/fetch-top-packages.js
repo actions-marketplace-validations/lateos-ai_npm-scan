@@ -26,7 +26,9 @@ async function fetchTopPackages(limit = 1000) {
       const data = await response.json();
 
       for (const result of data.results || []) {
-        if (packages.length >= limit) break;
+        if (packages.length >= limit) {
+          break;
+        }
         packages.push({
           name: result.package.name,
           version: result.package.version,
@@ -34,12 +36,14 @@ async function fetchTopPackages(limit = 1000) {
           keywords: result.package.keywords || [],
           publisher: result.package.publisher ? result.package.publisher.username : null,
           date: result.package.date,
-          score: result.score ? {
-            final: result.score.final,
-            quality: result.score.detail?.quality,
-            popularity: result.score.detail?.popularity,
-            maintenance: result.score.detail?.maintenance,
-          } : null,
+          score: result.score
+            ? {
+                final: result.score.final,
+                quality: result.score.detail?.quality,
+                popularity: result.score.detail?.popularity,
+                maintenance: result.score.detail?.maintenance,
+              }
+            : null,
         });
       }
 
@@ -48,10 +52,12 @@ async function fetchTopPackages(limit = 1000) {
       console.error(`[ERROR] Failed page ${page + 1}: ${err.message}`);
     }
 
-    if (packages.length >= limit) break;
+    if (packages.length >= limit) {
+      break;
+    }
 
     if (page < numPages - 1) {
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 2000));
     }
   }
 
@@ -61,7 +67,7 @@ async function fetchTopPackages(limit = 1000) {
   }
 
   const outPath = resolve('top-packages.jsonl');
-  const lines = packages.map(pkg => JSON.stringify(pkg)).join('\n') + '\n';
+  const lines = packages.map((pkg) => JSON.stringify(pkg)).join('\n') + '\n';
   writeFileSync(outPath, lines, 'utf-8');
   console.log(`\n[INFO] Written ${packages.length} packages to ${outPath}`);
   return packages;
@@ -69,37 +75,177 @@ async function fetchTopPackages(limit = 1000) {
 
 async function fallbackList(limit) {
   const knownTop = [
-    'lodash', 'chalk', 'react', 'express', 'commander', 'axios', 'moment',
-    'webpack', 'eslint', 'typescript', 'prettier', 'babel', 'next', 'vue',
-    'angular', 'redux', 'jest', 'mocha', 'chai', 'sinon', 'nodemon',
-    'debug', 'async', 'request', 'colors', 'mkdirp', 'fs-extra', 'glob',
-    'yargs', 'minimist', 'uuid', 'date-fns', 'crypto-js', 'jsonwebtoken',
-    'passport', 'socket.io', 'ws', 'graphql', 'apollo', 'prisma',
-    'mongoose', 'pg', 'mysql2', 'redis', 'sequelize', 'typeorm',
-    'dotenv', 'cross-env', 'rimraf', 'semver', 'rimraf', 'tar',
-    'inquirer', 'ora', 'listr', 'conf', 'env-paths', 'find-up',
-    'p-locate', 'locate-path', 'path-exists', 'y18n', 'yallist',
-    'minipass', 'minizlib', 'supports-color', 'has-flag', 'wrap-ansi',
-    'string-width', 'strip-ansi', 'ansi-regex', 'is-fullwidth-code-point',
-    'emoji-regex', 'cliui', 'escalade', 'get-caller-file', 'require-directory',
-    'npm', 'node-fetch', 'got', 'phin', 'undici', 'make-fetch-happen',
-    'cacache', 'ssri', 'unique-filename', 'unique-slug', 'imurmurhash',
-    'signal-exit', 'which', 'isexe', 'minimatch', 'brace-expansion',
-    'balanced-match', 'concat-map', 'lru-cache', 'yallist', 'semver',
-    'json5', 'tslib', 'source-map', 'source-map-js', 'ms', 'mime',
-    'cookie', 'express-session', 'body-parser', 'cors', 'helmet',
-    'morgan', 'compression', 'serve-static', 'send', 'fresh',
-    'etag', 'parseurl', 'utils-merge', 'methods', 'array-flatten',
-    'qs', 'merge-descriptors', 'path-to-regexp', 'iconv-lite',
-    'raw-body', 'on-finished', 'ee-first', 'inherits', 'depd',
-    'http-errors', 'statuses', 'setprototypeof', 'toidentifier',
-    'content-type', 'negotiator', 'accepts', 'type-is', 'vary',
-    'encodeurl', 'escape-html', 'destroy', 'bytes', 'unpipe',
-    'finalhandler', 'media-typer', 'http-proxy', 'http-proxy-middleware',
-    'morgan', 'connect', 'pino', 'winston', 'bunyan', 'log4js',
-    'nanoid', 'uid', 'ulid', 'cuid', 'shortid', 'uuidv4', 'uuidv7',
-    'bcrypt', 'bcryptjs', 'argon2', 'scrypt', 'pbkdf2', 'crypto',
-    'node-forge', 'pkijs', 'asn1js', 'jsrsasign', 'jose', 'jwk',
+    'lodash',
+    'chalk',
+    'react',
+    'express',
+    'commander',
+    'axios',
+    'moment',
+    'webpack',
+    'eslint',
+    'typescript',
+    'prettier',
+    'babel',
+    'next',
+    'vue',
+    'angular',
+    'redux',
+    'jest',
+    'mocha',
+    'chai',
+    'sinon',
+    'nodemon',
+    'debug',
+    'async',
+    'request',
+    'colors',
+    'mkdirp',
+    'fs-extra',
+    'glob',
+    'yargs',
+    'minimist',
+    'uuid',
+    'date-fns',
+    'crypto-js',
+    'jsonwebtoken',
+    'passport',
+    'socket.io',
+    'ws',
+    'graphql',
+    'apollo',
+    'prisma',
+    'mongoose',
+    'pg',
+    'mysql2',
+    'redis',
+    'sequelize',
+    'typeorm',
+    'dotenv',
+    'cross-env',
+    'rimraf',
+    'semver',
+    'rimraf',
+    'tar',
+    'inquirer',
+    'ora',
+    'listr',
+    'conf',
+    'env-paths',
+    'find-up',
+    'p-locate',
+    'locate-path',
+    'path-exists',
+    'y18n',
+    'yallist',
+    'minipass',
+    'minizlib',
+    'supports-color',
+    'has-flag',
+    'wrap-ansi',
+    'string-width',
+    'strip-ansi',
+    'ansi-regex',
+    'is-fullwidth-code-point',
+    'emoji-regex',
+    'cliui',
+    'escalade',
+    'get-caller-file',
+    'require-directory',
+    'npm',
+    'node-fetch',
+    'got',
+    'phin',
+    'undici',
+    'make-fetch-happen',
+    'cacache',
+    'ssri',
+    'unique-filename',
+    'unique-slug',
+    'imurmurhash',
+    'signal-exit',
+    'which',
+    'isexe',
+    'minimatch',
+    'brace-expansion',
+    'balanced-match',
+    'concat-map',
+    'lru-cache',
+    'yallist',
+    'semver',
+    'json5',
+    'tslib',
+    'source-map',
+    'source-map-js',
+    'ms',
+    'mime',
+    'cookie',
+    'express-session',
+    'body-parser',
+    'cors',
+    'helmet',
+    'morgan',
+    'compression',
+    'serve-static',
+    'send',
+    'fresh',
+    'etag',
+    'parseurl',
+    'utils-merge',
+    'methods',
+    'array-flatten',
+    'qs',
+    'merge-descriptors',
+    'path-to-regexp',
+    'iconv-lite',
+    'raw-body',
+    'on-finished',
+    'ee-first',
+    'inherits',
+    'depd',
+    'http-errors',
+    'statuses',
+    'setprototypeof',
+    'toidentifier',
+    'content-type',
+    'negotiator',
+    'accepts',
+    'type-is',
+    'vary',
+    'encodeurl',
+    'escape-html',
+    'destroy',
+    'bytes',
+    'unpipe',
+    'finalhandler',
+    'media-typer',
+    'http-proxy',
+    'http-proxy-middleware',
+    'morgan',
+    'connect',
+    'pino',
+    'winston',
+    'bunyan',
+    'log4js',
+    'nanoid',
+    'uid',
+    'ulid',
+    'cuid',
+    'shortid',
+    'uuidv4',
+    'uuidv7',
+    'bcrypt',
+    'bcryptjs',
+    'argon2',
+    'scrypt',
+    'pbkdf2',
+    'crypto',
+    'node-forge',
+    'pkijs',
+    'asn1js',
+    'jsrsasign',
+    'jose',
+    'jwk',
   ];
   const pkgs = knownTop.slice(0, limit).map((name, i) => ({
     name,
@@ -113,17 +259,19 @@ async function fallbackList(limit) {
   console.log(`[FALLBACK] Using ${pkgs.length} known top packages`);
 
   const outPath = resolve('top-packages.jsonl');
-  const lines = pkgs.map(pkg => JSON.stringify(pkg)).join('\n') + '\n';
+  const lines = pkgs.map((pkg) => JSON.stringify(pkg)).join('\n') + '\n';
   writeFileSync(outPath, lines, 'utf-8');
   console.log(`[INFO] Written ${pkgs.length} packages to ${outPath}`);
   return pkgs;
 }
 
 const limit = parseInt(process.argv[2]) || 1000;
-fetchTopPackages(limit).then(pkgs => {
-  console.log(`[DONE] ${pkgs.length} packages fetched`);
-  process.exit(0);
-}).catch(err => {
-  console.error(`[FATAL] ${err.message}`);
-  process.exit(1);
-});
+fetchTopPackages(limit)
+  .then((pkgs) => {
+    console.log(`[DONE] ${pkgs.length} packages fetched`);
+    process.exit(0);
+  })
+  .catch((err) => {
+    console.error(`[FATAL] ${err.message}`);
+    process.exit(1);
+  });

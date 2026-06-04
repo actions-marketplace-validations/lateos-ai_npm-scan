@@ -1,3 +1,3 @@
-export async function scan(registryMeta) {
+export async function scan(_registryMeta) {
   return [];
 }

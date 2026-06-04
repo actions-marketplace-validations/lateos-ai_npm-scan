@@ -3,11 +3,17 @@ import { KNOWN_REPUTABLE_PACKAGES } from '../policy.js';
 const SENTINEL_PATTERNS = new Set(['99.99.99', '11.11.11', '10.10.10']);
 
 function parseVersion(v) {
-  if (!v || typeof v !== 'string') return null;
+  if (!v || typeof v !== 'string') {
+    return null;
+  }
   const parts = v.split('.');
-  if (parts.length !== 3) return null;
+  if (parts.length !== 3) {
+    return null;
+  }
   const [major, minor, patch] = parts.map(Number);
-  if (isNaN(major) || isNaN(minor) || isNaN(patch)) return null;
+  if (isNaN(major) || isNaN(minor) || isNaN(patch)) {
+    return null;
+  }
   return { major, minor, patch, full: v };
 }
 
@@ -17,19 +23,23 @@ function versionScore(v) {
 
 function extractVersions(registryMeta) {
   if (Array.isArray(registryMeta)) {
-    return registryMeta.map(v => parseVersion(v)).filter(Boolean);
+    return registryMeta.map((v) => parseVersion(v)).filter(Boolean);
   }
   if (registryMeta && typeof registryMeta === 'object') {
     const versions = registryMeta.versions || registryMeta.time;
     if (versions && typeof versions === 'object') {
-      return Object.keys(versions).map(v => parseVersion(v)).filter(Boolean);
+      return Object.keys(versions)
+        .map((v) => parseVersion(v))
+        .filter(Boolean);
     }
   }
   return [];
 }
 
 function computeStats(scores) {
-  if (scores.length < 2) return null;
+  if (scores.length < 2) {
+    return null;
+  }
   const mean = scores.reduce((s, v) => s + v, 0) / scores.length;
   const variance = scores.reduce((s, v) => s + (v - mean) ** 2, 0) / scores.length;
   const stddev = Math.sqrt(variance);
@@ -38,7 +48,9 @@ function computeStats(scores) {
 
 export function analyzeAnomaly(packageName, versionStr, versionHistory) {
   const current = parseVersion(versionStr);
-  if (!current) return null;
+  if (!current) {
+    return null;
+  }
 
   const historical = extractVersions(versionHistory);
   const currentScore = versionScore(current);
@@ -79,14 +91,18 @@ export function analyzeAnomaly(packageName, versionStr, versionHistory) {
   }
 
   const stats = computeStats(recentScores);
-  if (!stats) return null;
+  if (!stats) {
+    return null;
+  }
 
   const zScore = stats.stddev > 0 ? (currentScore - stats.mean) / stats.stddev : 0;
-  const baselineMaxVer = historical.find(v => versionScore(v) === stats.max)?.full || 'unknown';
+  const baselineMaxVer = historical.find((v) => versionScore(v) === stats.max)?.full || 'unknown';
   const baselineMeanVal = (stats.mean / 10000).toFixed(1);
   const prevMaxMajor = Math.floor(stats.max / 10000);
-  const isNormalMajorBump = current.major === prevMaxMajor + 1 && current.minor === 0 && current.patch === 0;
-  const isReasonableVersion = current.major <= prevMaxMajor + 2 && current.major >= Math.floor(stats.min / 10000);
+  const isNormalMajorBump =
+    current.major === prevMaxMajor + 1 && current.minor === 0 && current.patch === 0;
+  const isReasonableVersion =
+    current.major <= prevMaxMajor + 2 && current.major >= Math.floor(stats.min / 10000);
   const ratio = stats.max > 0 ? currentScore / stats.max : 0;
 
   let flagged = false;
@@ -126,7 +142,9 @@ export function analyzeAnomaly(packageName, versionStr, versionHistory) {
     reason = `Version ${versionStr} has z-score ${zScore.toFixed(1)} and is outside expected version range`;
   }
 
-  if (!flagged) return null;
+  if (!flagged) {
+    return null;
+  }
 
   return {
     flagged,
@@ -141,47 +159,65 @@ export function analyzeAnomaly(packageName, versionStr, versionHistory) {
 }
 
 function severityLabel(sc) {
-  if (sc >= 90) return 'critical';
-  if (sc >= 70) return 'high';
-  if (sc >= 50) return 'medium';
+  if (sc >= 90) {
+    return 'critical';
+  }
+  if (sc >= 70) {
+    return 'high';
+  }
+  if (sc >= 50) {
+    return 'medium';
+  }
   return 'low';
 }
 
 function confidenceLabel(sc) {
-  if (sc >= 80) return 'HIGH';
-  if (sc >= 60) return 'MEDIUM';
+  if (sc >= 80) {
+    return 'HIGH';
+  }
+  if (sc >= 60) {
+    return 'MEDIUM';
+  }
   return 'LOW';
 }
 
 export const name = 'tier1-version-anomaly';
 
-export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+export async function scan(pkgJson, jsFiles, registryMeta, _allFiles) {
   const pkgName = pkgJson?.name;
   const version = pkgJson?.version;
 
-  if (!pkgName || !version) return [];
-  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) return [];
+  if (!pkgName || !version) {
+    return [];
+  }
+  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) {
+    return [];
+  }
 
   const result = analyzeAnomaly(pkgName, version, registryMeta);
-  if (!result) return [];
+  if (!result) {
+    return [];
+  }
 
-  return [{
-    detector: 'tier1-version-anomaly',
-    id: 'TIER1-VERSION-ANOMALY',
-    severity: severityLabel(result.confidenceScore),
-    confidence: confidenceLabel(result.confidenceScore),
-    confidenceScore: result.confidenceScore,
-    subtype: result.attackPattern.toLowerCase(),
-    message: `Version anomaly detected in "${pkgName}": ${result.reason}`,
-    evidence: [
-      `version: ${version}`,
-      `baseline_max: ${result.baselineMax}`,
-      `baseline_mean: ${result.baselineMean}`,
-      `z_score: ${result.zScore ?? 'N/A'}`,
-      `attack_pattern: ${result.attackPattern}`,
-    ],
-    crossFiles: [],
-    locations: [{ file: 'package.json', line: 3, column: 10 }],
-    reference: '176-package dependency confusion campaign',
-  }];
+  return [
+    {
+      detector: 'tier1-version-anomaly',
+      id: 'TIER1-VERSION-ANOMALY',
+      severity: severityLabel(result.confidenceScore),
+      confidence: confidenceLabel(result.confidenceScore),
+      confidenceScore: result.confidenceScore,
+      subtype: result.attackPattern.toLowerCase(),
+      message: `Version anomaly detected in "${pkgName}": ${result.reason}`,
+      evidence: [
+        `version: ${version}`,
+        `baseline_max: ${result.baselineMax}`,
+        `baseline_mean: ${result.baselineMean}`,
+        `z_score: ${result.zScore ?? 'N/A'}`,
+        `attack_pattern: ${result.attackPattern}`,
+      ],
+      crossFiles: [],
+      locations: [{ file: 'package.json', line: 3, column: 10 }],
+      reference: '176-package dependency confusion campaign',
+    },
+  ];
 }

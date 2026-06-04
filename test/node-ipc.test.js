@@ -62,7 +62,7 @@ test('D1: does not block non-node-ipc packages', () => {
 // ─── D2: Tarball hash ────────────────────────────────────────────────
 
 test('D2: detects malicious tarball hash (9.1.6)', () => {
-  const content = Buffer.alloc(100);
+  const _content = Buffer.alloc(100);
   const hash = '449e4265979b5fdb2d3446c021af437e815debd66de7da2fe54f1ad93cbcc75e';
   const files = [makeFile('node-ipc-9.1.6.tgz', hash)];
   const result = scanTarballHash(files);
@@ -80,13 +80,10 @@ test('D2: does not trigger on non-tarball files', () => {
 test('D3: detects CJS > ESM size anomaly', () => {
   const cjsContent = 'x'.repeat(60 * 1024);
   const mjsContent = 'y'.repeat(5 * 1024);
-  const files = [
-    makeFile('node-ipc.cjs', cjsContent),
-    makeFile('node-ipc.mjs', mjsContent),
-  ];
+  const files = [makeFile('node-ipc.cjs', cjsContent), makeFile('node-ipc.mjs', mjsContent)];
   const result = scanCjsPayloadInjection(files);
   assert.equal(result.triggered, true);
-  const hasSizeAnomaly = result.matches.some(m => m.finding === 'size-anomaly');
+  const hasSizeAnomaly = result.matches.some((m) => m.finding === 'size-anomaly');
   assert.equal(hasSizeAnomaly, true);
 });
 
@@ -94,7 +91,7 @@ test('D3: detects IIFE suffix in CJS', () => {
   const files = [makeFile('node-ipc.cjs', 'module.exports={};(function(){var x=1})();')];
   const result = scanCjsPayloadInjection(files);
   assert.equal(result.triggered, true);
-  const hasIIFE = result.matches.some(m => m.finding === 'iife-suffix');
+  const hasIIFE = result.matches.some((m) => m.finding === 'iife-suffix');
   assert.equal(hasIIFE, true);
 });
 
@@ -110,7 +107,12 @@ test('D3: does not trigger on clean CJS/ESM', () => {
 // ─── D4: Injected payload hash ───────────────────────────────────────
 
 test('D4: detects known payload hash string in file', () => {
-  const files = [makeFile('node-ipc.cjs', 'module.exports={};/*3427a90c8cb9af764445448648176e120ebc6af0a538158340cf6220de4d01b7*/')];
+  const files = [
+    makeFile(
+      'node-ipc.cjs',
+      'module.exports={};/*3427a90c8cb9af764445448648176e120ebc6af0a538158340cf6220de4d01b7*/'
+    ),
+  ];
   const result = scanInjectedPayloadHash(files);
   assert.equal(result.triggered, true);
   assert.equal(result.matches[0].finding, 'hash-string-present');
@@ -123,7 +125,9 @@ test('D4: does not trigger on clean CJS', () => {
 });
 
 test('D4: does not trigger on non-CJS files', () => {
-  const files = [makeFile('index.js', '3427a90c8cb9af764445448648176e120ebc6af0a538158340cf6220de4d01b7')];
+  const files = [
+    makeFile('index.js', '3427a90c8cb9af764445448648176e120ebc6af0a538158340cf6220de4d01b7'),
+  ];
   const result = scanInjectedPayloadHash(files);
   assert.equal(result.triggered, false);
 });
@@ -131,7 +135,12 @@ test('D4: does not trigger on non-CJS files', () => {
 // ─── D5: DNS C2 pattern ──────────────────────────────────────────────
 
 test('D5: detects custom DNS resolver with setServers and resolveTxt', () => {
-  const files = [makeFile('index.js', 'const resolver = new dns.promises.Resolver(); resolver.setServers(["37.16.75.69"]); resolver.resolveTxt("test");')];
+  const files = [
+    makeFile(
+      'index.js',
+      'const resolver = new dns.promises.Resolver(); resolver.setServers(["37.16.75.69"]); resolver.resolveTxt("test");'
+    ),
+  ];
   const result = scanDnsC2Pattern(files, cleanPkg);
   assert.equal(result.triggered, true);
   assert.equal(result.matches[0].customResolverIP, '37.16.75.69');
@@ -139,7 +148,12 @@ test('D5: detects custom DNS resolver with setServers and resolveTxt', () => {
 });
 
 test('D5: does not flag public resolvers', () => {
-  const files = [makeFile('index.js', 'const resolver = new dns.promises.Resolver(); resolver.setServers(["1.1.1.1"]);')];
+  const files = [
+    makeFile(
+      'index.js',
+      'const resolver = new dns.promises.Resolver(); resolver.setServers(["1.1.1.1"]);'
+    ),
+  ];
   const result = scanDnsC2Pattern(files, cleanPkg);
   assert.equal(result.triggered, false);
 });
@@ -249,7 +263,12 @@ test('D10: does not flag clean publisher', () => {
 // ─── D11: Blast radius lockfile detection ────────────────────────────
 
 test('D11: detects node-ipc 9.1.6 in package-lock.json', () => {
-  const files = [makeFile('package-lock.json', JSON.stringify({ packages: { 'node_modules/node-ipc': { version: '9.1.6' } } }))];
+  const files = [
+    makeFile(
+      'package-lock.json',
+      JSON.stringify({ packages: { 'node_modules/node-ipc': { version: '9.1.6' } } })
+    ),
+  ];
   const result = scanBlastRadius(files);
   assert.equal(result.triggered, true);
   assert.equal(result.matches[0].compromisedVersion, '9.1.6');
@@ -265,7 +284,12 @@ test('D11: detects node-ipc 12.0.1 in yarn.lock', () => {
 });
 
 test('D11: does not trigger on clean lockfiles', () => {
-  const files = [makeFile('package-lock.json', JSON.stringify({ packages: { 'node_modules/node-ipc': { version: '9.1.5' } } }))];
+  const files = [
+    makeFile(
+      'package-lock.json',
+      JSON.stringify({ packages: { 'node_modules/node-ipc': { version: '9.1.5' } } })
+    ),
+  ];
   const result = scanBlastRadius(files);
   assert.equal(result.triggered, false);
 });
@@ -306,7 +330,11 @@ test('NODE_IPC: remediation includes pin recommendation', async () => {
 });
 
 test('NODE_IPC: multiple rules trigger simultaneously', async () => {
-  const pkg = { name: 'node-ipc', version: '9.2.3', scripts: { postinstall: 'curl http://example.com' } };
+  const pkg = {
+    name: 'node-ipc',
+    version: '9.2.3',
+    scripts: { postinstall: 'curl http://example.com' },
+  };
   const meta = {
     time: { '9.2.3': '2026-05-14T00:00:00.000Z' },
     versions: { '9.2.3': { _npmUser: { name: 'atiertant' } } },

@@ -7,7 +7,8 @@ const CRON_PERSIST_RE = /crontab\s+-[ei]|@reboot\s+|@daily\s+|@hourly\s+/;
 const DLL_LOAD_RE = /LoadLibrary|dlopen|LoadLibraryEx|lib\.(?:LoadLibrary|dlopen)/;
 const PROCESS_INJECT_RE = /CreateRemoteThread|VirtualAllocEx|WriteProcessMemory|NtCreateThreadEx/;
 const NET_CALLBACK_RE = /(?:https?:\/\/|wss?:\/\/|ws:\/\/)(?:[^\s'"]*\.[^\s'"]{2,})/;
-const BINARY_DROP_RE = /(?:fs\.writeFileSync|writeFile|writeFileSync)\s*\([^)]*(?:\.exe|\.dll|\.bin|\.bat|\.ps1)/;
+const BINARY_DROP_RE =
+  /(?:fs\.writeFileSync|writeFile|writeFileSync)\s*\([^)]*(?:\.exe|\.dll|\.bin|\.bat|\.ps1)/;
 
 const SUSPICIOUS_HOOK_PATTERNS = [
   /curl|wget|fetch|https?:\/\//,
@@ -22,7 +23,7 @@ const SUSPICIOUS_HOOK_PATTERNS = [
 
 export function scanPostinstallRAT(pkgJson, files = []) {
   const scripts = pkgJson?.scripts || {};
-  const code = files.map(f => f.content || '').join('\n');
+  const code = files.map((f) => f.content || '').join('\n');
 
   const activeHooks = [];
   for (const hook of SUSPICIOUS_HOOKS) {
@@ -32,39 +33,76 @@ export function scanPostinstallRAT(pkgJson, files = []) {
   }
 
   if (activeHooks.length === 0) {
-    return { triggered: false, platforms: [], c2Indicators: [], payloadType: null, hooks: [], hasBinaryDrop: false };
+    return {
+      triggered: false,
+      platforms: [],
+      c2Indicators: [],
+      payloadType: null,
+      hooks: [],
+      hasBinaryDrop: false,
+    };
   }
 
-  const combined = code + '\n' + activeHooks.map(h => h.command).join('\n');
+  const combined = code + '\n' + activeHooks.map((h) => h.command).join('\n');
 
-  const hasSuspiciousCode = SUSPICIOUS_HOOK_PATTERNS.some(p => p.test(combined));
+  const hasSuspiciousCode = SUSPICIOUS_HOOK_PATTERNS.some((p) => p.test(combined));
 
   if (activeHooks.length > 0 && !hasSuspiciousCode) {
-    return { triggered: false, platforms: [], c2Indicators: [], payloadType: null, hooks: [], hasBinaryDrop: false };
+    return {
+      triggered: false,
+      platforms: [],
+      c2Indicators: [],
+      payloadType: null,
+      hooks: [],
+      hasBinaryDrop: false,
+    };
   }
 
   const platforms = [];
   let c2Indicators = [];
   let hasBinaryDrop = false;
 
-  if (POWERSHELL_RE.test(combined)) platforms.push('windows');
-  if (LAUNCHD_RE.test(combined)) platforms.push('macos');
-  if (SYSTEMD_SERVICE_RE.test(combined) || CRON_PERSIST_RE.test(combined)) platforms.push('linux');
-  if (TEMP_DIR_RE.test(combined) && (POWERSHELL_RE.test(combined) || BINARY_DROP_RE.test(combined))) {
-    if (!platforms.includes('windows')) platforms.push('windows');
-    if (!platforms.includes('linux')) platforms.push('linux');
-    if (!platforms.includes('macos')) platforms.push('macos');
+  if (POWERSHELL_RE.test(combined)) {
+    platforms.push('windows');
+  }
+  if (LAUNCHD_RE.test(combined)) {
+    platforms.push('macos');
+  }
+  if (SYSTEMD_SERVICE_RE.test(combined) || CRON_PERSIST_RE.test(combined)) {
+    platforms.push('linux');
+  }
+  if (
+    TEMP_DIR_RE.test(combined) &&
+    (POWERSHELL_RE.test(combined) || BINARY_DROP_RE.test(combined))
+  ) {
+    if (!platforms.includes('windows')) {
+      platforms.push('windows');
+    }
+    if (!platforms.includes('linux')) {
+      platforms.push('linux');
+    }
+    if (!platforms.includes('macos')) {
+      platforms.push('macos');
+    }
   }
 
-  if (DLL_LOAD_RE.test(combined)) platforms.push('windows');
-  if (PROCESS_INJECT_RE.test(combined)) platforms.push('windows');
+  if (DLL_LOAD_RE.test(combined)) {
+    platforms.push('windows');
+  }
+  if (PROCESS_INJECT_RE.test(combined)) {
+    platforms.push('windows');
+  }
 
   if (NET_CALLBACK_RE.test(combined)) {
     const urls = combined.match(NET_CALLBACK_RE);
-    c2Indicators = urls ? [...new Set(urls.map(u => u.replace(/['")]/g, '')))] : ['Network callback to external server'];
+    c2Indicators = urls
+      ? [...new Set(urls.map((u) => u.replace(/['")]/g, '')))]
+      : ['Network callback to external server'];
   }
 
-  if (BINARY_DROP_RE.test(combined)) hasBinaryDrop = true;
+  if (BINARY_DROP_RE.test(combined)) {
+    hasBinaryDrop = true;
+  }
 
   let payloadType = null;
   if (platforms.length >= 2 && c2Indicators.length > 0 && hasBinaryDrop) {
@@ -81,10 +119,17 @@ export function scanPostinstallRAT(pkgJson, files = []) {
       payloadType,
       platforms: [...new Set(platforms)],
       c2Indicators,
-      hooks: activeHooks.map(h => h.hook),
+      hooks: activeHooks.map((h) => h.hook),
       hasBinaryDrop,
     };
   }
 
-  return { triggered: false, platforms: [], c2Indicators: [], payloadType: null, hooks: [], hasBinaryDrop: false };
+  return {
+    triggered: false,
+    platforms: [],
+    c2Indicators: [],
+    payloadType: null,
+    hooks: [],
+    hasBinaryDrop: false,
+  };
 }

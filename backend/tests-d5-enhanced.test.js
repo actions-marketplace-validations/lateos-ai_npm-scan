@@ -11,10 +11,10 @@ describe('D5: Binary Embed Enhancement', () => {
     ];
     const pkg = { name: 'suspicious-pkg', version: '1.0.0' };
     const findings = await detectors.runAll(pkg, [], null, allFiles);
-    const matches = findings.filter(f => f.id === 'TIER1-BINARY-EMBED');
+    const matches = findings.filter((f) => f.id === 'TIER1-BINARY-EMBED');
     assert(matches.length > 0, 'Expected TIER1-BINARY-EMBED finding');
-    const hasCrossPlatform = matches.some(m =>
-      m.evidence.some(e => e.includes('cross-platform')),
+    const hasCrossPlatform = matches.some((m) =>
+      m.evidence.some((e) => e.includes('cross-platform'))
     );
     assert(hasCrossPlatform, 'Expected cross-platform binary set evidence');
   });
@@ -26,20 +26,21 @@ describe('D5: Binary Embed Enhancement', () => {
     ];
     const pkg = { name: 'suspicious-pkg', version: '1.0.0' };
     const findings = await detectors.runAll(pkg, [], null, allFiles);
-    const matches = findings.filter(f => f.id === 'TIER1-BINARY-EMBED');
-    const hasHighScore = matches.some(m => m.confidenceScore > 85);
-    assert(hasHighScore, `No finding with confidenceScore > 85; scores: ${matches.map(m => m.confidenceScore).join(', ')}`);
+    const matches = findings.filter((f) => f.id === 'TIER1-BINARY-EMBED');
+    const hasHighScore = matches.some((m) => m.confidenceScore > 85);
+    assert(
+      hasHighScore,
+      `No finding with confidenceScore > 85; scores: ${matches.map((m) => m.confidenceScore).join(', ')}`
+    );
   });
 
   test('D5: single binary not flagged as cross-platform', async () => {
-    const allFiles = [
-      { path: 'bin/agent-linux-x64', content: String.fromCharCode(0x7f) + 'ELF' },
-    ];
+    const allFiles = [{ path: 'bin/agent-linux-x64', content: String.fromCharCode(0x7f) + 'ELF' }];
     const pkg = { name: 'normal-pkg', version: '1.0.0' };
     const findings = await detectors.runAll(pkg, [], null, allFiles);
-    const matches = findings.filter(f => f.id === 'TIER1-BINARY-EMBED');
-    const hasPlatformLabel = matches.some(m =>
-      m.evidence.some(e => e.includes('cross-platform')),
+    const matches = findings.filter((f) => f.id === 'TIER1-BINARY-EMBED');
+    const hasPlatformLabel = matches.some((m) =>
+      m.evidence.some((e) => e.includes('cross-platform'))
     );
     assert(!hasPlatformLabel, 'Single binary should not be flagged as cross-platform');
   });

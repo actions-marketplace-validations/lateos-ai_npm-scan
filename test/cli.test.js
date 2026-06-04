@@ -29,7 +29,10 @@ test('CLI: scan with no target exits with error', async () => {
 test('CLI: scan non-existent package shows 404 error', async () => {
   const { execSync } = await import('child_process');
   try {
-    execSync('node cli/cli.js scan this-package-does-not-exist-12345', { encoding: 'utf8', stdio: 'pipe' });
+    execSync('node cli/cli.js scan this-package-does-not-exist-12345', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+    });
     assert.fail('Should have thrown');
   } catch (e) {
     assert(e.stderr.includes('not found'), `expected 404 error, got: ${e.stderr}`);
@@ -52,13 +55,19 @@ test('CLI: scan-lockfile --help mentions yarn/pnpm options', async () => {
 
 test('CLI: scan-lockfile with custom path works', async () => {
   const { execSync } = await import('child_process');
-  const out = execSync('node cli/cli.js scan-lockfile -f tests/corpus/malicious/shai-hulud-lock.json', { encoding: 'utf8', timeout: 5000 });
+  const out = execSync(
+    'node cli/cli.js scan-lockfile -f tests/corpus/malicious/shai-hulud-lock.json',
+    { encoding: 'utf8', timeout: 5000 }
+  );
   assert(out.includes('findings') || out.includes('totalDependencies') || out.includes('scanId'));
 });
 
 test('CLI: scan-lockfile parses yarn.lock', async () => {
   const { execSync } = await import('child_process');
-  const out = execSync('node cli/cli.js scan-lockfile -f test/fixtures/lockfiles/yarn.lock --silent', { encoding: 'utf8', timeout: 5000 });
+  const out = execSync(
+    'node cli/cli.js scan-lockfile -f test/fixtures/lockfiles/yarn.lock --silent',
+    { encoding: 'utf8', timeout: 5000 }
+  );
   const data = JSON.parse(out);
   assert(data.totalDependencies > 0, `expected packages, got ${data.totalDependencies}`);
   assert(data.lockfileVersion === 2, `expected v2, got ${data.lockfileVersion}`);
@@ -66,7 +75,10 @@ test('CLI: scan-lockfile parses yarn.lock', async () => {
 
 test('CLI: scan-lockfile parses pnpm-lock.yaml', async () => {
   const { execSync } = await import('child_process');
-  const out = execSync('node cli/cli.js scan-lockfile -f test/fixtures/lockfiles/pnpm-lock.yaml --pnpm --silent', { encoding: 'utf8', timeout: 5000 });
+  const out = execSync(
+    'node cli/cli.js scan-lockfile -f test/fixtures/lockfiles/pnpm-lock.yaml --pnpm --silent',
+    { encoding: 'utf8', timeout: 5000 }
+  );
   const data = JSON.parse(out);
   assert(data.totalDependencies > 0, `expected packages, got ${data.totalDependencies}`);
   assert(Number(data.lockfileVersion) === 6, `expected v6, got ${data.lockfileVersion}`);
@@ -74,14 +86,20 @@ test('CLI: scan-lockfile parses pnpm-lock.yaml', async () => {
 
 test('CLI: scan-lockfile auto-detects yarn.lock', async () => {
   const { execSync } = await import('child_process');
-  const out = execSync('node cli/cli.js scan-lockfile -f test/fixtures/lockfiles/yarn.lock --silent', { encoding: 'utf8', timeout: 5000 });
+  const out = execSync(
+    'node cli/cli.js scan-lockfile -f test/fixtures/lockfiles/yarn.lock --silent',
+    { encoding: 'utf8', timeout: 5000 }
+  );
   const data = JSON.parse(out);
   assert(data.totalDependencies > 0, 'auto-detect yarn should parse');
 });
 
 test('CLI: scan-lockfile auto-detects pnpm-lock.yaml', async () => {
   const { execSync } = await import('child_process');
-  const out = execSync('node cli/cli.js scan-lockfile -f test/fixtures/lockfiles/pnpm-lock.yaml --silent', { encoding: 'utf8', timeout: 5000 });
+  const out = execSync(
+    'node cli/cli.js scan-lockfile -f test/fixtures/lockfiles/pnpm-lock.yaml --silent',
+    { encoding: 'utf8', timeout: 5000 }
+  );
   const data = JSON.parse(out);
   assert(data.totalDependencies > 0, 'auto-detect pnpm should parse');
 });

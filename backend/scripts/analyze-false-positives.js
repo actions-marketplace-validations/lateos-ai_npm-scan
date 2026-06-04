@@ -20,7 +20,7 @@ function analyzeFalsePositives(fpFile) {
   }
 
   const text = readFileSync(absPath, 'utf-8');
-  const lines = text.split('\n').filter(l => l.trim());
+  const lines = text.split('\n').filter((l) => l.trim());
 
   for (const line of lines) {
     const fp = JSON.parse(line);
@@ -63,13 +63,14 @@ function analyzeFalsePositives(fpFile) {
   }
 
   for (const [detectorName, stats] of Object.entries(analysis.detectors)) {
-    stats.avg_confidence = stats.confidences.length > 0
-      ? (stats.confidences.reduce((a, b) => a + b, 0) / stats.confidences.length).toFixed(1)
-      : '0.0';
+    stats.avg_confidence =
+      stats.confidences.length > 0
+        ? (stats.confidences.reduce((a, b) => a + b, 0) / stats.confidences.length).toFixed(1)
+        : '0.0';
     stats.unique_package_count = stats.unique_packages.size;
     delete stats.unique_packages;
 
-    const fpShare = (stats.fp_count / analysis.total_fps * 100).toFixed(1);
+    const fpShare = ((stats.fp_count / analysis.total_fps) * 100).toFixed(1);
 
     if (stats.fp_count >= 5) {
       analysis.high_fp_detectors.push(detectorName);
@@ -114,10 +115,13 @@ for (const [name, stats] of Object.entries(analysis.detectors).sort(
   (a, b) => b[1].fp_count - a[1].fp_count
 )) {
   const dName = name.padEnd(32).slice(0, 32);
-  const examples = stats.examples.slice(0, 2).map(e => e.package).join(', ');
+  const examples = stats.examples
+    .slice(0, 2)
+    .map((e) => e.package)
+    .join(', ');
   console.log(
     `${dName} ${String(stats.fp_count).padStart(4)} ${String(stats.unique_package_count).padStart(11)} ` +
-    `${stats.avg_confidence.padStart(7)}  ${examples}`
+      `${stats.avg_confidence.padStart(7)}  ${examples}`
   );
 }
 
@@ -125,7 +129,9 @@ if (analysis.recommendations.length > 0) {
   console.log('\n=== RECOMMENDATIONS ===');
   for (const rec of analysis.recommendations) {
     console.log(`\n${rec.detector}:`);
-    console.log(`  FPs: ${rec.fp_count} (${rec.share_of_total_fps} of total) across ${rec.unique_packages} unique packages`);
+    console.log(
+      `  FPs: ${rec.fp_count} (${rec.share_of_total_fps} of total) across ${rec.unique_packages} unique packages`
+    );
     console.log(`  Avg confidence: ${rec.avg_confidence}`);
     console.log(`  Severity breakdown: ${JSON.stringify(rec.severity_distribution)}`);
     console.log(`  Suggestion: ${rec.suggested_action}`);

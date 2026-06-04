@@ -1,24 +1,40 @@
-export async function checkSlsaMismatch(packageName, version, burstWindow, timeMap = {}, config = {}) {
-  if (!burstWindow?.triggered) return { triggered: false };
+export async function checkSlsaMismatch(
+  packageName,
+  version,
+  burstWindow,
+  timeMap = {},
+  _config = {}
+) {
+  if (!burstWindow?.triggered) {
+    return { triggered: false };
+  }
 
   const anomalies = [];
   const publishTime = timeMap?.[version];
-  if (!publishTime) return { triggered: false };
+  if (!publishTime) {
+    return { triggered: false };
+  }
 
   try {
     const url = `https://registry.npmjs.org/-/npm/v1/attestations/${encodeURIComponent(packageName)}/${encodeURIComponent(version)}`;
     const res = await fetch(url);
-    if (!res.ok) return { triggered: false };
+    if (!res.ok) {
+      return { triggered: false };
+    }
 
     const data = await res.json();
     const attestations = data?.attestations || [];
-    if (attestations.length === 0) return { triggered: false };
+    if (attestations.length === 0) {
+      return { triggered: false };
+    }
 
     const publishMs = new Date(publishTime).getTime();
-    if (Number.isNaN(publishMs)) return { triggered: false };
+    if (Number.isNaN(publishMs)) {
+      return { triggered: false };
+    }
 
     // Check if this is the first-ever attested version for this package
-    const allVersions = Object.keys(timeMap).filter(v => v !== 'created' && v !== 'modified');
+    const allVersions = Object.keys(timeMap).filter((v) => v !== 'created' && v !== 'modified');
     const currentIdx = allVersions.indexOf(version);
     let prevHadAttestation = false;
 
@@ -49,7 +65,7 @@ export async function checkSlsaMismatch(packageName, version, burstWindow, timeM
       const ts = att?.timestamp;
       if (ts) {
         const attMs = new Date(ts).getTime();
-        if (!Number.isNaN(attMs) && attMs >= publishMs && (attMs - publishMs) < 60000) {
+        if (!Number.isNaN(attMs) && attMs >= publishMs && attMs - publishMs < 60000) {
           const gapMs = attMs - publishMs;
           anomalies.push(`Sub-60s attestation gap for ${version}: ${gapMs}ms`);
         }
@@ -57,8 +73,12 @@ export async function checkSlsaMismatch(packageName, version, burstWindow, timeM
 
       const builderId = att?.predicate?.runDetails?.builder?.id;
       if (builderId) {
-        const knownPrefixes = ['https://github.com/', 'https://gitlab.com/', 'https://circleci.com/'];
-        const isKnown = knownPrefixes.some(p => builderId.startsWith(p));
+        const knownPrefixes = [
+          'https://github.com/',
+          'https://gitlab.com/',
+          'https://circleci.com/',
+        ];
+        const isKnown = knownPrefixes.some((p) => builderId.startsWith(p));
         if (!isKnown) {
           anomalies.push(`Unrecognized builder ID for ${version}: ${builderId}`);
         }

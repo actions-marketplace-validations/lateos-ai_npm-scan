@@ -1,10 +1,13 @@
-const GITHUB_COMMIT_SHA_PATTERN = /api\.github\.com\/repos\/[^/]+\/[^/]+\/git\/commits\/[a-f0-9]{40}/;
+const GITHUB_COMMIT_SHA_PATTERN =
+  /api\.github\.com\/repos\/[^/]+\/[^/]+\/git\/commits\/[a-f0-9]{40}/;
 const NPX_GIT_URL_PATTERN = /npx\s+.*github\.com.*#[a-f0-9]{8,}/;
 const MCP_KEYWORDS = ['mcp', 'model-context-protocol', 'claude', 'setup', 'init'];
-const EXTERNAL_FETCH_PATTERN = /(?:https?:\/\/)[^\s"')\]]+(?:\.com|\.io|\.org|\.dev|\.app|\.net)[^\s"')\]]*/;
-const NON_NPMJS_FETCH = /(?:fetch|curl|wget)\s*\(?\s*["']https?:\/\/(?!(?:.*npmjs\.org|.*npm\.js\.org|.*github\.com))[^"']+/;
+const _EXTERNAL_FETCH_PATTERN =
+  /(?:https?:\/\/)[^\s"')\]]+(?:\.com|\.io|\.org|\.dev|\.app|\.net)[^\s"')\]]*/;
+const NON_NPMJS_FETCH =
+  /(?:fetch|curl|wget)\s*\(?\s*["']https?:\/\/(?!(?:.*npmjs\.org|.*npm\.js\.org|.*github\.com))[^"']+/;
 const BUN_PATTERNS = [/bun\s+install/, /install\s+.*bun/, /\bbunx\b/, /\.bun\/bin\//];
-const NPX_GIT_SHORT = /npx\s+.*github\.com.*#[a-f0-9]{8,}/;
+const _NPX_GIT_SHORT = /npx\s+.*github\.com.*#[a-f0-9]{8,}/;
 
 export async function checkOrphanCommitFetch(extensionFiles = []) {
   const signals = [];
@@ -12,7 +15,9 @@ export async function checkOrphanCommitFetch(extensionFiles = []) {
 
   for (const file of extensionFiles) {
     const content = typeof file.content === 'string' ? file.content : '';
-    if (!content) continue;
+    if (!content) {
+      continue;
+    }
     const path = file.path || '';
 
     if (GITHUB_COMMIT_SHA_PATTERN.test(content)) {
@@ -39,8 +44,7 @@ export async function checkOrphanCommitFetch(extensionFiles = []) {
       }
     }
 
-    const hasMCPKeywords = MCP_KEYWORDS.some(kw =>
-        new RegExp(`\\b${kw}\\b`, 'i').test(content));
+    const hasMCPKeywords = MCP_KEYWORDS.some((kw) => new RegExp(`\\b${kw}\\b`, 'i').test(content));
     const hasExternalFetch = NON_NPMJS_FETCH.test(content);
 
     if (hasMCPKeywords && hasExternalFetch) {

@@ -3,8 +3,10 @@ const C2_PATTERNS = [/ddjidd564\.github\.io/i, /gist\.github\.com/i];
 
 function scanContent(content, filePath) {
   const matches = [];
-  const hasC2 = C2_PATTERNS.some(p => p.test(content));
-  if (!hasC2) return matches;
+  const hasC2 = C2_PATTERNS.some((p) => p.test(content));
+  if (!hasC2) {
+    return matches;
+  }
 
   const hasCredPath = CRED_PATH_PATTERNS.test(content);
   if (hasCredPath) {

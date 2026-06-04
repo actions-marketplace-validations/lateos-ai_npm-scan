@@ -1,8 +1,6 @@
 import { test } from 'node:test';
 import assert from 'assert/strict';
-import {
-  generateSARIF, generateCSV, generateSTIG, calculateRiskScore
-} from '../backend/report.js';
+import { generateSARIF, generateCSV, generateSTIG, calculateRiskScore } from '../backend/report.js';
 
 test('report: generateSARIF with no findings', async () => {
   const scan = { package_name: 'test', version: '1.0.0', findings: [] };
@@ -18,10 +16,15 @@ test('report: generateCSV with empty scans', async () => {
 });
 
 test('report: generateCSV with findings', async () => {
-  const scans = [{
-    package_name: 'test', version: '1.0.0',
-    findings: [{ id: 'ATK-001', severity: 'high', title: 'pre', description: 'test, desc', evidence: '' }]
-  }];
+  const scans = [
+    {
+      package_name: 'test',
+      version: '1.0.0',
+      findings: [
+        { id: 'ATK-001', severity: 'high', title: 'pre', description: 'test, desc', evidence: '' },
+      ],
+    },
+  ];
   const csv = generateCSV(scans);
   assert(csv.includes('ATK-001'));
   assert(!csv.includes('test, desc'));
@@ -33,32 +36,42 @@ test('report: generateCSV null scans handled', async () => {
 });
 
 test('report: generateSTIG maps all 11 ATK IDs', async () => {
-  const stig = generateSTIG([{
-    package_name: 'test', version: '1.0.0', findings: []
-  }]);
+  const stig = generateSTIG([
+    {
+      package_name: 'test',
+      version: '1.0.0',
+      findings: [],
+    },
+  ]);
   assert(stig.includes('SRG-APP-000141'));
   assert(stig.includes('SRG-APP-000151'));
   assert(stig.includes('COMPLETE'));
 });
 
 test('report: generateSTIG with findings marks NOT APPLICABLE', async () => {
-  const scans = [{
-    package_name: 'test', version: '1.0.0',
-    findings: [{ id: 'ATK-001', severity: 'high', title: 'preinstall' }]
-  }];
+  const scans = [
+    {
+      package_name: 'test',
+      version: '1.0.0',
+      findings: [{ id: 'ATK-001', severity: 'high', title: 'preinstall' }],
+    },
+  ];
   const stig = generateSTIG(scans);
   assert(stig.includes('NOT APPLICABLE'));
   assert(stig.includes('HIGH: preinstall'));
 });
 
 test('report: generateSTIG lists multiple findings', async () => {
-  const scans = [{
-    package_name: 'test', version: '1.0.0',
-    findings: [
-      { id: 'ATK-001', severity: 'high', title: 'preinstall' },
-      { id: 'ATK-007', severity: 'high', title: 'typosquat' }
-    ]
-  }];
+  const scans = [
+    {
+      package_name: 'test',
+      version: '1.0.0',
+      findings: [
+        { id: 'ATK-001', severity: 'high', title: 'preinstall' },
+        { id: 'ATK-007', severity: 'high', title: 'typosquat' },
+      ],
+    },
+  ];
   const stig = generateSTIG(scans);
   assert(stig.includes('HIGH: preinstall'));
 });
@@ -75,7 +88,9 @@ test('report: calculateRiskScore computes correctly', async () => {
 
 test('report: calculateRiskScore caps at 10', async () => {
   const findings = [];
-  for (let i = 0; i < 20; i++) findings.push({ severity: 'critical' });
+  for (let i = 0; i < 20; i++) {
+    findings.push({ severity: 'critical' });
+  }
   const score = calculateRiskScore(findings, 1);
   assert.equal(score, '10.0');
 });
@@ -87,13 +102,14 @@ test('report: calculateRiskScore averages by totalPackages', async () => {
 
 test('report: generateSARIF maps all severity levels', async () => {
   const scan = {
-    package_name: 'test', version: '1.0.0',
+    package_name: 'test',
+    version: '1.0.0',
     findings: [
       { id: 'ATK-001', severity: 'critical', description: 'c', title: 'c' },
       { id: 'ATK-002', severity: 'high', description: 'h', title: 'h' },
       { id: 'ATK-003', severity: 'medium', description: 'm', title: 'm' },
       { id: 'ATK-004', severity: 'low', description: 'l', title: 'l' },
-    ]
+    ],
   };
   const sarif = JSON.parse(generateSARIF(scan));
   assert.equal(sarif.runs[0].results[0].level, 'error');

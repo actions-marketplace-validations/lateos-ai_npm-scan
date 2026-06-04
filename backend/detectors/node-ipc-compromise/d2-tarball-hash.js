@@ -11,7 +11,9 @@ export function scanTarballHash(allFiles) {
 
   for (const file of allFiles) {
     const path = file.path || '';
-    if (!path.endsWith('.tgz') && !path.endsWith('.tar.gz')) continue;
+    if (!path.endsWith('.tgz') && !path.endsWith('.tar.gz')) {
+      continue;
+    }
 
     const content = file.content || '';
     const hash = createHash('sha256').update(content, 'utf8').digest('hex');
@@ -20,9 +22,12 @@ export function scanTarballHash(allFiles) {
       matches.push({
         file: path,
         sha256: hash,
-        version: hash === '449e4265979b5fdb2d3446c021af437e815debd66de7da2fe54f1ad93cbcc75e'
-          ? '9.1.6' : hash === 'c2f4dc64aec4631540a568e88932b61daebbfb7e8281b812fa01b7215f9be9ea'
-          ? '9.2.3' : '12.0.1',
+        version:
+          hash === '449e4265979b5fdb2d3446c021af437e815debd66de7da2fe54f1ad93cbcc75e'
+            ? '9.1.6'
+            : hash === 'c2f4dc64aec4631540a568e88932b61daebbfb7e8281b812fa01b7215f9be9ea'
+              ? '9.2.3'
+              : '12.0.1',
       });
     }
   }

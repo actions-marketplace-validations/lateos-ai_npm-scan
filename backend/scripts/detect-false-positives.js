@@ -18,7 +18,7 @@ async function detectFalsePositives(topPackagesFile, confidenceThreshold = 70) {
   }
 
   const text = readFileSync(absPath, 'utf-8');
-  const lines = text.split('\n').filter(l => l.trim());
+  const lines = text.split('\n').filter((l) => l.trim());
   console.log(`[INFO] Loaded ${lines.length} packages from ${topPackagesFile}`);
 
   const falsePositives = [];
@@ -48,8 +48,12 @@ async function detectFalsePositives(topPackagesFile, confidenceThreshold = 70) {
       const findings = await runAll(pkgJson, [], null, []);
 
       for (const detection of findings) {
-        if (detection.confidenceScore < confidenceThreshold) continue;
-        if (whitelistedDetectors && whitelistedDetectors.has(detection.id)) continue;
+        if (detection.confidenceScore < confidenceThreshold) {
+          continue;
+        }
+        if (whitelistedDetectors && whitelistedDetectors.has(detection.id)) {
+          continue;
+        }
 
         falsePositives.push({
           package: pkgName,
@@ -64,7 +68,9 @@ async function detectFalsePositives(topPackagesFile, confidenceThreshold = 70) {
         });
 
         if (falsePositives.length <= 10) {
-          console.log(`[FLAG] ${pkgName}@${pkg.version}: ${detection.id} (${detection.confidenceScore}%)`);
+          console.log(
+            `[FLAG] ${pkgName}@${pkg.version}: ${detection.id} (${detection.confidenceScore}%)`
+          );
         }
       }
     } catch (err) {
@@ -73,12 +79,14 @@ async function detectFalsePositives(topPackagesFile, confidenceThreshold = 70) {
   }
 
   const outPath = resolve('false-positives.jsonl');
-  const outputData = falsePositives.map(fp => JSON.stringify(fp)).join('\n') + '\n';
+  const outputData = falsePositives.map((fp) => JSON.stringify(fp)).join('\n') + '\n';
   writeFileSync(outPath, outputData, 'utf-8');
 
   const scannedCount = count - skipped;
   console.log(`\n[SUMMARY] Scanned ${scannedCount} packages (skipped ${skipped} whitelisted)`);
-  console.log(`[SUMMARY] Found ${falsePositives.length} potential false positives (${(falsePositives.length / scannedCount * 100).toFixed(1)}% FP rate)`);
+  console.log(
+    `[SUMMARY] Found ${falsePositives.length} potential false positives (${((falsePositives.length / scannedCount) * 100).toFixed(1)}% FP rate)`
+  );
   console.log(`[INFO] Written to ${outPath}`);
 
   return falsePositives;
@@ -87,7 +95,9 @@ async function detectFalsePositives(topPackagesFile, confidenceThreshold = 70) {
 const topPackagesFile = process.argv[2] || 'top-packages.jsonl';
 const confidenceThreshold = parseInt(process.argv[3]) || 70;
 
-detectFalsePositives(topPackagesFile, confidenceThreshold).then(() => process.exit(0)).catch(err => {
-  console.error(`[FATAL] ${err.message}`);
-  process.exit(1);
-});
+detectFalsePositives(topPackagesFile, confidenceThreshold)
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(`[FATAL] ${err.message}`);
+    process.exit(1);
+  });

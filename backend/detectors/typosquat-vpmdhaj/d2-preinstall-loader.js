@@ -1,8 +1,8 @@
 const SUSPICIOUS_HOOKS = ['preinstall'];
-const LOADER_SCRIPTS = ['setup.mjs', 'loader.js', 'stager.js', 'init.mjs'];
+const _LOADER_SCRIPTS = ['setup.mjs', 'loader.js', 'stager.js', 'init.mjs'];
 const BUN_RUN_RE = /\bbun\s+run\b/;
 const NODE_SETUP_RE = /\bnode\s+(setup\.mjs|init\.mjs|loader\.js|stager\.js)\b/;
-const PREINSTALL_STAGER_RE = /preinstall\s*[:=]/;
+const _PREINSTALL_STAGER_RE = /preinstall\s*[:=]/;
 
 export function scanPreinstallLoader(pkgJson) {
   const scripts = pkgJson?.scripts || {};
@@ -10,7 +10,9 @@ export function scanPreinstallLoader(pkgJson) {
 
   for (const hook of SUSPICIOUS_HOOKS) {
     const cmd = scripts[hook];
-    if (!cmd) continue;
+    if (!cmd) {
+      continue;
+    }
 
     const details = { hookType: hook, hookCommand: cmd };
 

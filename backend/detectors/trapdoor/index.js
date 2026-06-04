@@ -24,7 +24,9 @@ const SEVERITY_ORDER = ['critical', 'high', 'medium', 'low', 'info', 'none'];
 
 function highestSeverity(severities) {
   for (const s of SEVERITY_ORDER) {
-    if (severities.includes(s)) return s;
+    if (severities.includes(s)) {
+      return s;
+    }
   }
   return 'none';
 }
@@ -48,16 +50,16 @@ export async function scan(pkgJson, files = [], registryMeta = null, allFiles = 
     .filter(([_, r]) => r.triggered)
     .map(([id]) => id);
 
-  if (triggered.length === 0) return [];
+  if (triggered.length === 0) {
+    return [];
+  }
 
-  const severity = highestSeverity(triggered.map(id => RULE_SEVERITY[id]));
+  const severity = highestSeverity(triggered.map((id) => RULE_SEVERITY[id]));
 
   const evidence = {
     campaign: 'TRAPDOOR',
     triggeredRules: triggered,
-    details: Object.fromEntries(
-      Object.entries(results).filter(([_, r]) => r.triggered)
-    ),
+    details: Object.fromEntries(Object.entries(results).filter(([_, r]) => r.triggered)),
     iocSummary: {
       publisher: 'asdxzxc',
       c2Domain: 'ddjidd564.github.io',
@@ -66,12 +68,15 @@ export async function scan(pkgJson, files = [], registryMeta = null, allFiles = 
     },
   };
 
-  return [{
-    id: 'TRAPDOOR',
-    severity,
-    title: 'TrapDoor cross-ecosystem supply chain attack campaign',
-    description: `${triggered.length} signal(s): ${triggered.join(', ')}`,
-    evidence: JSON.stringify(evidence),
-    mitigation: 'Block install immediately. Revoke any npm tokens associated with this package. Rotate CI/CD secrets. Audit for postinstall scripts accessing credentials. Check for AI config poisoning (.cursorrules/CLAUDE.md). Verify all package versions from publisher asdxzxc. If confirmed compromise, follow incident response procedures per SECURITY.md.',
-  }];
+  return [
+    {
+      id: 'TRAPDOOR',
+      severity,
+      title: 'TrapDoor cross-ecosystem supply chain attack campaign',
+      description: `${triggered.length} signal(s): ${triggered.join(', ')}`,
+      evidence: JSON.stringify(evidence),
+      mitigation:
+        'Block install immediately. Revoke any npm tokens associated with this package. Rotate CI/CD secrets. Audit for postinstall scripts accessing credentials. Check for AI config poisoning (.cursorrules/CLAUDE.md). Verify all package versions from publisher asdxzxc. If confirmed compromise, follow incident response procedures per SECURITY.md.',
+    },
+  ];
 }

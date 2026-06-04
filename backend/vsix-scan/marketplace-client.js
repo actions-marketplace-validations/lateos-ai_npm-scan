@@ -7,7 +7,7 @@ const RATE_LIMIT_MS = 6000;
 let _lastFetchTime = 0;
 
 function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
+  return new Promise((r) => setTimeout(r, ms));
 }
 
 async function rateLimitedFetch(url) {
@@ -44,20 +44,22 @@ async function rateLimitedFetch(url) {
   }
 }
 
-function parseExtensionId(id) {
+function _parseExtensionId(id) {
   const parts = id.split('.');
-  if (parts.length < 2) throw new Error(`Invalid extension ID: ${id}`);
+  if (parts.length < 2) {
+    throw new Error(`Invalid extension ID: ${id}`);
+  }
   return { publisherId: parts[0], extensionName: parts.slice(1).join('.') };
 }
 
 export async function getExtensionMetadata(publisherId, extensionName) {
   const url = `${MARKETPLACE_API}/extensionquery`;
   const body = {
-    filters: [{
-      criteria: [
-        { filterType: 8, value: `${publisherId}.${extensionName}` },
-      ],
-    }],
+    filters: [
+      {
+        criteria: [{ filterType: 8, value: `${publisherId}.${extensionName}` }],
+      },
+    ],
     flags: 914,
   };
 
@@ -77,13 +79,23 @@ export async function getExtensionMetadata(publisherId, extensionName) {
   try {
     res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json;api-version=3.0-preview.1' },
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json;api-version=3.0-preview.1',
+      },
       body: JSON.stringify(body),
     });
     if (res.status === 429) {
       const retryAfter = parseInt(res.headers.get('Retry-After') || '10', 10);
       await sleep(retryAfter * 1000);
-      res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json;api-version=3.0-preview.1' }, body: JSON.stringify(body) });
+      res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json;api-version=3.0-preview.1',
+        },
+        body: JSON.stringify(body),
+      });
     }
     if (!res.ok) {
       console.debug(`Marketplace API warning: ${url} returned ${res.status}`);
@@ -100,12 +112,14 @@ export async function getExtensionMetadata(publisherId, extensionName) {
 
 export async function getVersionHistory(publisherId, extensionName) {
   const data = await getExtensionMetadata(publisherId, extensionName);
-  if (!data?.results?.[0]?.extensions?.[0]) return [];
+  if (!data?.results?.[0]?.extensions?.[0]) {
+    return [];
+  }
 
   const extension = data.results[0].extensions[0];
   const versions = extension.versions || [];
 
-  return versions.map(v => ({
+  return versions.map((v) => ({
     version: v.version,
     publishedAt: v.lastUpdated || v.publishedDate,
     publishedBy: extension.publisher?.publisherName || publisherId,
@@ -126,7 +140,9 @@ export async function getOpenVsxMetadata(namespace, name) {
 
 export async function getOpenVsxVersionHistory(namespace, name) {
   const data = await getOpenVsxMetadata(namespace, name);
-  if (!data) return [];
+  if (!data) {
+    return [];
+  }
   const versions = data.allVersions || {};
   const files = data.files || {};
 

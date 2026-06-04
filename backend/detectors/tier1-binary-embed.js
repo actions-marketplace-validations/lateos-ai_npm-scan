@@ -8,36 +8,49 @@ const CHILD_PROC_RE = /\b(?:spawn|exec|execSync|spawnSync|fork)\s*\(/g;
 const FS_CHMOD_RE = /fs\.chmod\s*\(/g;
 
 function detectMagicBytes(content) {
-  if (!content || content.length < 4) return null;
+  if (!content || content.length < 4) {
+    return null;
+  }
 
   const c0 = content.charCodeAt(0);
   const c1 = content.charCodeAt(1);
   const c2 = content.charCodeAt(2);
   const c3 = content.charCodeAt(3);
 
-  if (c0 === 0x7f && content.slice(1, 4) === 'ELF') return 'elf_embedded';
-  if (c0 === 0x4d && c1 === 0x5a) return 'pe_embedded';
-  if (c0 === 0x00 && content.slice(1, 4) === 'asm') return 'wasm_embedded';
+  if (c0 === 0x7f && content.slice(1, 4) === 'ELF') {
+    return 'elf_embedded';
+  }
+  if (c0 === 0x4d && c1 === 0x5a) {
+    return 'pe_embedded';
+  }
+  if (c0 === 0x00 && content.slice(1, 4) === 'asm') {
+    return 'wasm_embedded';
+  }
 
-  const machO = (c0 === 0xfe && c1 === 0xed && c2 === 0xfa && (c3 === 0xce || c3 === 0xcf)) ||
+  const machO =
+    (c0 === 0xfe && c1 === 0xed && c2 === 0xfa && (c3 === 0xce || c3 === 0xcf)) ||
     (c0 === 0xce && c1 === 0xfa && c2 === 0xed && (c3 === 0xfe || c3 === 0xcf)) ||
     (c0 === 0xcf && c1 === 0xfa && c2 === 0xed && c3 === 0xfe);
-  if (machO) return 'macho_embedded';
+  if (machO) {
+    return 'macho_embedded';
+  }
 
   const universal = c0 === 0xca && c1 === 0xfe && c2 === 0xba && c3 === 0xbe;
-  if (universal) return 'macho_embedded';
+  if (universal) {
+    return 'macho_embedded';
+  }
 
   return null;
 }
 
 function isInBinaryDir(filePath) {
   const normalized = filePath.replace(/\\/g, '/');
-  return BINARY_DIRS.some(dir => normalized.includes(`/${dir}`) || normalized.startsWith(dir));
+  return BINARY_DIRS.some((dir) => normalized.includes(`/${dir}`) || normalized.startsWith(dir));
 }
 
 function hasBinaryExt(filePath) {
   const lower = filePath.toLowerCase();
-  return BINARY_EXTS.some(ext => lower.endsWith(ext));
+  return BINARY_EXTS.some((ext) => lower.endsWith(ext));
 }
 
 function isKnownBinaryName(fileName) {
@@ -45,13 +58,16 @@ function isKnownBinaryName(fileName) {
   return BINARY_FILENAMES.includes(base);
 }
 
-const CROSS_PLATFORM_RE = /-(?:linux|darwin|macos|win32|windows|win)-(?:x64|x86|arm64|ia32)\.?(?:exe)?$/i;
+const CROSS_PLATFORM_RE =
+  /-(?:linux|darwin|macos|win32|windows|win)-(?:x64|x86|arm64|ia32)\.?(?:exe)?$/i;
 
 function detectCrossPlatformSets(binaries) {
   const sets = {};
   for (const bin of binaries) {
     const base = bin.file.replace(CROSS_PLATFORM_RE, '').split(/[/\\]/).pop();
-    if (!sets[base]) sets[base] = [];
+    if (!sets[base]) {
+      sets[base] = [];
+    }
     sets[base].push(bin.file);
   }
   for (const [base, files] of Object.entries(sets)) {
@@ -63,22 +79,39 @@ function detectCrossPlatformSets(binaries) {
 }
 
 function isDeclared(pkgJson, fileName) {
-  if (!pkgJson) return false;
+  if (!pkgJson) {
+    return false;
+  }
   const baseName = fileName.split(/[/\\]/).pop();
 
   if (pkgJson.bin) {
-    if (typeof pkgJson.bin === 'string' && pkgJson.bin === baseName) return true;
-    if (typeof pkgJson.bin === 'object' && Object.values(pkgJson.bin).some(v => v === baseName || v.endsWith(`/${baseName}`))) return true;
-  }
-
-  if (pkgJson.optionalDependencies) {
-    for (const [name, val] of Object.entries(pkgJson.optionalDependencies)) {
-      if (name === baseName) return true;
+    if (typeof pkgJson.bin === 'string' && pkgJson.bin === baseName) {
+      return true;
+    }
+    if (
+      typeof pkgJson.bin === 'object' &&
+      Object.values(pkgJson.bin).some((v) => v === baseName || v.endsWith(`/${baseName}`))
+    ) {
+      return true;
     }
   }
 
-  if (pkgJson.gypfile === true || pkgJson.scripts?.install?.includes('node-gyp') || pkgJson.scripts?.install?.includes('node-pre-gyp')) {
-    if (baseName.endsWith('.node')) return true;
+  if (pkgJson.optionalDependencies) {
+    for (const [name, _val] of Object.entries(pkgJson.optionalDependencies)) {
+      if (name === baseName) {
+        return true;
+      }
+    }
+  }
+
+  if (
+    pkgJson.gypfile === true ||
+    pkgJson.scripts?.install?.includes('node-gyp') ||
+    pkgJson.scripts?.install?.includes('node-pre-gyp')
+  ) {
+    if (baseName.endsWith('.node')) {
+      return true;
+    }
   }
 
   return false;
@@ -88,15 +121,26 @@ export const name = 'tier1-binary-embed';
 
 export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   const pkgName = pkgJson?.name;
-  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) return [];
+  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) {
+    return [];
+  }
 
-  if (!allFiles || allFiles.length === 0) return [];
+  if (!allFiles || allFiles.length === 0) {
+    return [];
+  }
 
-  if (pkgName && (
-    pkgName === 'electron' || pkgName === 'puppeteer' || pkgName === 'sharp' ||
-    pkgName === 'esbuild' || pkgName === 'node-gyp' || pkgName === 'node-pre-gyp' ||
-    pkgName === '@mapbox/node-pre-gyp'
-  )) return [];
+  if (
+    pkgName &&
+    (pkgName === 'electron' ||
+      pkgName === 'puppeteer' ||
+      pkgName === 'sharp' ||
+      pkgName === 'esbuild' ||
+      pkgName === 'node-gyp' ||
+      pkgName === 'node-pre-gyp' ||
+      pkgName === '@mapbox/node-pre-gyp')
+  ) {
+    return [];
+  }
 
   const binaries = [];
 
@@ -128,11 +172,13 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     }
   }
 
-  if (binaries.length === 0) return [];
+  if (binaries.length === 0) {
+    return [];
+  }
 
   const crossPlatformSet = detectCrossPlatformSets(binaries);
 
-  const jsCode = (jsFiles || []).map(f => f.content || '').join('\n');
+  const jsCode = (jsFiles || []).map((f) => f.content || '').join('\n');
   const invoked = CHILD_PROC_RE.test(jsCode) || FS_CHMOD_RE.test(jsCode);
 
   const invokedFiles = [];
@@ -154,7 +200,11 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     let subtype;
 
     // Cross-platform platform set boost
-    const isCrossPlatform = crossPlatformSet && crossPlatformSet.files.some(f => f === bin.file || f.includes(bin.file) || bin.file.includes(f.replace(/\.exe$/, '')));
+    const isCrossPlatform =
+      crossPlatformSet &&
+      crossPlatformSet.files.some(
+        (f) => f === bin.file || f.includes(bin.file) || bin.file.includes(f.replace(/\.exe$/, ''))
+      );
 
     if (bin.magic === 'elf_embedded') {
       baseScore = 95;
@@ -175,26 +225,44 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
 
     let score = baseScore;
 
-    if (isCrossPlatform) score += 25;
+    if (isCrossPlatform) {
+      score += 25;
+    }
 
-    if (bin.inBinDir) score += 15;
+    if (bin.inBinDir) {
+      score += 15;
+    }
 
-    if (!bin.declared) score += 50;
+    if (!bin.declared) {
+      score += 50;
+    }
 
-    if (invoked && invokedFiles.length > 0) score += 25;
+    if (invoked && invokedFiles.length > 0) {
+      score += 25;
+    }
 
     const confidenceScore = Math.max(50, Math.min(100, score));
 
     function severityLabel(sc) {
-      if (sc >= 90) return 'critical';
-      if (sc >= 70) return 'high';
+      if (sc >= 90) {
+        return 'critical';
+      }
+      if (sc >= 70) {
+        return 'high';
+      }
       return 'medium';
     }
 
     function confidenceLabel(sc) {
-      if (sc >= 95) return 'CRITICAL';
-      if (sc >= 80) return 'HIGH';
-      if (sc >= 60) return 'MEDIUM';
+      if (sc >= 95) {
+        return 'CRITICAL';
+      }
+      if (sc >= 80) {
+        return 'HIGH';
+      }
+      if (sc >= 60) {
+        return 'MEDIUM';
+      }
       return 'LOW';
     }
 
@@ -204,7 +272,9 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       `declared: ${bin.declared}`,
     ];
     if (isCrossPlatform) {
-      evidence.push(`cross-platform binary set: ${crossPlatformSet.count} variants of "${crossPlatformSet.base}"`);
+      evidence.push(
+        `cross-platform binary set: ${crossPlatformSet.count} variants of "${crossPlatformSet.base}"`
+      );
       evidence.push(`platform_files: ${crossPlatformSet.files.join(', ')}`);
     }
 
@@ -213,9 +283,7 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       evidence.push(`invoked_file: ${invokedFiles[0]}`);
     }
 
-    const locations = [
-      { file: bin.file, size: bin.size },
-    ];
+    const locations = [{ file: bin.file, size: bin.size }];
 
     if (invokedFiles.length > 0) {
       locations.push({ file: invokedFiles[0], line: 0 });

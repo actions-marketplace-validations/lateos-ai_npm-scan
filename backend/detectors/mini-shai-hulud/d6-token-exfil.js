@@ -14,7 +14,9 @@ const SUSPICIOUS_SCRIPTS = ['preinstall', 'install', 'postinstall', 'prepare'];
 const MAX_SNIPPET_LENGTH = 200;
 
 function truncateSnippet(text) {
-  if (text.length <= MAX_SNIPPET_LENGTH) return text;
+  if (text.length <= MAX_SNIPPET_LENGTH) {
+    return text;
+  }
   return text.slice(0, MAX_SNIPPET_LENGTH - 3) + '...';
 }
 
@@ -24,7 +26,9 @@ export function checkTokenExfil(allFiles, pkgJson) {
 
   for (const hook of SUSPICIOUS_SCRIPTS) {
     const scriptContent = scripts[hook];
-    if (!scriptContent) continue;
+    if (!scriptContent) {
+      continue;
+    }
 
     for (const pattern of EXFIL_PATTERNS) {
       if (pattern.test(scriptContent)) {

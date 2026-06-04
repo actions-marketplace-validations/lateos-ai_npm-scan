@@ -7,8 +7,8 @@ export function scanCryptoPrimitives(allFiles, pkgJson) {
     .map(([hook, content]) => ({ file: `script:${hook}`, content }));
 
   const jsFiles = allFiles
-    .filter(f => f.path?.endsWith('.js') || f.path?.endsWith('.mjs') || f.path?.endsWith('.cjs'))
-    .map(f => ({ file: f.path, content: f.content || '' }));
+    .filter((f) => f.path?.endsWith('.js') || f.path?.endsWith('.mjs') || f.path?.endsWith('.cjs'))
+    .map((f) => ({ file: f.path, content: f.content || '' }));
 
   for (const { file, content } of [...scriptEntries, ...jsFiles]) {
     const hasFernet = /Fernet/i.test(content);

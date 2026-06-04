@@ -2,14 +2,16 @@ import { createHash } from 'crypto';
 
 const INJECTED_PAYLOAD_HASH = '3427a90c8cb9af764445448648176e120ebc6af0a538158340cf6220de4d01b7';
 
-const IIFE_BOUNDARY = /}\)\(\);\s*$/;
+const _IIFE_BOUNDARY = /}\)\(\);\s*$/;
 
 export function scanInjectedPayloadHash(allFiles) {
   const matches = [];
 
   for (const file of allFiles) {
     const path = file.path?.replace(/\\/g, '/') || '';
-    if (!path.endsWith('node-ipc.cjs')) continue;
+    if (!path.endsWith('node-ipc.cjs')) {
+      continue;
+    }
 
     const content = file.content || '';
 

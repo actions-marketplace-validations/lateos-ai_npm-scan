@@ -1,21 +1,29 @@
 export function generateHTML(scans) {
-  const rows = scans.map(s => {
+  const rows = scans.map((s) => {
     const findings = s.findings || [];
     const sevMap = { critical: 5, high: 4, medium: 3, low: 2, info: 1 };
     const worst = findings.reduce((m, f) => Math.max(m, sevMap[f.severity] || 0), 0);
     const worstLabel = ['', 'info', 'low', 'medium', 'high', 'critical'][worst] || 'clean';
-    const color = { critical: '#d73a49', high: '#cb2431', medium: '#f66a0a', low: '#dbab09', clean: '#28a745' }[worstLabel] || '#28a745';
-    const findingRows = findings.map(f =>
-      `<tr><td>${f.atk_id || f.id}</td><td style="color:${color}">${f.severity}</td><td>${f.description || f.title || ''}</td><td>${(f.evidence || '').slice(0, 80)}</td></tr>`
-    ).join('');
+    const color =
+      { critical: '#d73a49', high: '#cb2431', medium: '#f66a0a', low: '#dbab09', clean: '#28a745' }[
+        worstLabel
+      ] || '#28a745';
+    const findingRows = findings
+      .map(
+        (f) =>
+          `<tr><td>${f.atk_id || f.id}</td><td style="color:${color}">${f.severity}</td><td>${f.description || f.title || ''}</td><td>${(f.evidence || '').slice(0, 80)}</td></tr>`
+      )
+      .join('');
     return { name: s.package_name, worstLabel, color, count: findings.length, findingRows };
   });
 
-  const criticalCount = scans.filter(s => s.findings?.some(f => f.severity === 'critical')).length;
-  const highCount = scans.filter(s => s.findings?.some(f => f.severity === 'high')).length;
-  const mediumCount = scans.filter(s => s.findings?.some(f => f.severity === 'medium')).length;
-  const lowCount = scans.filter(s => s.findings?.some(f => f.severity === 'low')).length;
-  const cleanCount = scans.filter(s => !s.findings?.length).length;
+  const criticalCount = scans.filter((s) =>
+    s.findings?.some((f) => f.severity === 'critical')
+  ).length;
+  const highCount = scans.filter((s) => s.findings?.some((f) => f.severity === 'high')).length;
+  const mediumCount = scans.filter((s) => s.findings?.some((f) => f.severity === 'medium')).length;
+  const lowCount = scans.filter((s) => s.findings?.some((f) => f.severity === 'low')).length;
+  const cleanCount = scans.filter((s) => !s.findings?.length).length;
 
   const nistMap = generateNistTable(scans);
 
@@ -59,7 +67,7 @@ th { background: #161b22; font-weight: 600; }
 <h2>Findings</h2>
 <table>
 <thead><tr><th>ATK</th><th>Severity</th><th>Title</th><th>Evidence</th></tr></thead>
-<tbody>${rows.map(r => `<tr><td colspan="4" style="background:#161b22;font-weight:600">${r.name} <span class="badge ${r.worstLabel}">${r.count ? r.worstLabel : 'clean'}</span></td></tr>${r.findingRows}`).join('')}</tbody>
+<tbody>${rows.map((r) => `<tr><td colspan="4" style="background:#161b22;font-weight:600">${r.name} <span class="badge ${r.worstLabel}">${r.count ? r.worstLabel : 'clean'}</span></td></tr>${r.findingRows}`).join('')}</tbody>
 </table>
 
 <h2>NIST SP 800-161 Compliance Summary</h2>
@@ -73,9 +81,11 @@ ${nistMap}
 function getAtkFindings(scans) {
   const map = {};
   for (const s of scans) {
-    for (const f of (s.findings || [])) {
+    for (const f of s.findings || []) {
       const key = f.atk_id || f.id;
-      if (!map[key]) map[key] = [];
+      if (!map[key]) {
+        map[key] = [];
+      }
       map[key].push(f);
     }
   }
@@ -117,7 +127,9 @@ export function generateText(scans) {
     const worst = findings.reduce((m, f) => Math.max(m, sevMap[f.severity] || 0), 0);
     const worstLabel = sevLabel[worst] || 'clean';
 
-    lines.push(`${s.package_name}@${s.version || 'unknown'} \u2500\u2500 ${findings.length} findings (worst: ${worstLabel})`);
+    lines.push(
+      `${s.package_name}@${s.version || 'unknown'} \u2500\u2500 ${findings.length} findings (worst: ${worstLabel})`
+    );
 
     for (const f of findings) {
       const desc = (f.description || f.title || '').slice(0, 80);
@@ -159,41 +171,46 @@ function generateNistTable(scans) {
 
 export function generateSARIF(scan, format = 'json') {
   const findings = scan.findings || [];
-  const runs = [{
-    tool: {
-      driver: {
-        name: 'npm-scan',
-        version: '0.9.7',
-        informationUri: 'https://github.com/lateos-ai/npm-scan',
-        rules: Array.from(new Set(findings.map(f => f.id))).map(id => ({
-          id,
-          name: `ATK-${id.replace('ATK-', '')}`,
-          shortDescription: { text: findings.find(f => f.id === id)?.title || id },
-          fullDescription: { text: findings.find(f => f.id === id)?.description || '' },
-          defaultConfiguration: { enabled: true }
-        }))
-      }
+  const runs = [
+    {
+      tool: {
+        driver: {
+          name: 'npm-scan',
+          version: '0.9.7',
+          informationUri: 'https://github.com/lateos-ai/npm-scan',
+          rules: Array.from(new Set(findings.map((f) => f.id))).map((id) => ({
+            id,
+            name: `ATK-${id.replace('ATK-', '')}`,
+            shortDescription: { text: findings.find((f) => f.id === id)?.title || id },
+            fullDescription: { text: findings.find((f) => f.id === id)?.description || '' },
+            defaultConfiguration: { enabled: true },
+          })),
+        },
+      },
+      results: findings.map((f) => {
+        const severityMap = { critical: 'error', high: 'error', medium: 'warning', low: 'note' };
+        return {
+          ruleId: f.id,
+          level: severityMap[f.severity] || 'note',
+          message: { text: f.description || f.title },
+          locations: [
+            {
+              physicalLocation: {
+                artifactLocation: { uri: f.evidence || 'unknown' },
+                region: { startLine: 1, startColumn: 1 },
+              },
+            },
+          ],
+        };
+      }),
     },
-    results: findings.map(f => {
-      const severityMap = { critical: 'error', high: 'error', medium: 'warning', low: 'note' };
-      return {
-        ruleId: f.id,
-        level: severityMap[f.severity] || 'note',
-        message: { text: f.description || f.title },
-        locations: [{
-          physicalLocation: {
-            artifactLocation: { uri: f.evidence || 'unknown' },
-            region: { startLine: 1, startColumn: 1 }
-          }
-        }]
-      };
-    })
-  }];
+  ];
 
   const sarif = {
     version: '2.1.0',
-    schema: 'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
-    runs
+    schema:
+      'https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json',
+    runs,
   };
 
   return format === 'pretty' ? JSON.stringify(sarif, null, 2) : JSON.stringify(sarif);
@@ -201,17 +218,21 @@ export function generateSARIF(scan, format = 'json') {
 
 export function generateCSV(scans) {
   const headers = 'id,severity,title,description,evidence,package_name,version\n';
-  const rows = (scans || []).flatMap(s => 
-    (s.findings || []).map(f => [
-      f.id,
-      f.severity || '',
-      (f.title || '').replace(/,/g, ';'),
-      (f.description || '').replace(/,/g, ';'),
-      (f.evidence || '').replace(/,/g, ';'),
-      s.package_name || '',
-      s.version || ''
-    ].join(','))
-  ).join('\n');
+  const rows = (scans || [])
+    .flatMap((s) =>
+      (s.findings || []).map((f) =>
+        [
+          f.id,
+          f.severity || '',
+          (f.title || '').replace(/,/g, ';'),
+          (f.description || '').replace(/,/g, ';'),
+          (f.evidence || '').replace(/,/g, ';'),
+          s.package_name || '',
+          s.version || '',
+        ].join(',')
+      )
+    )
+    .join('\n');
   return headers + rows;
 }
 
@@ -222,25 +243,70 @@ export function calculateRiskScore(findings, totalPackages = 1) {
 }
 
 const STIG_MAP = {
-  'SRG-APP-000141': { title: 'Application Malware Detection', atk: 'ATK-001', desc: 'Lifecycle script detection' },
-  'SRG-APP-000142': { title: 'Application Code Obfuscation', atk: 'ATK-002', desc: 'Obfuscated payload detection' },
-  'SRG-APP-000143': { title: 'Credential Harvesting', atk: 'ATK-003', desc: 'Credential exfiltration detection' },
-  'SRG-APP-000144': { title: 'Persistence Mechanisms', atk: 'ATK-004', desc: 'Malicious persistence detection' },
-  'SRG-APP-000145': { title: 'Data Exfiltration', atk: 'ATK-005', desc: 'Network exfiltration detection' },
-  'SRG-APP-000146': { title: 'Dependency Confusion', atk: 'ATK-006', desc: 'Internal package detection' },
-  'SRG-APP-000147': { title: 'Typosquatting', atk: 'ATK-007', desc: 'Malicious package name detection' },
-  'SRG-APP-000148': { title: 'Tarball Tampering', atk: 'ATK-008', desc: 'Modified package detection' },
-  'SRG-APP-000149': { title: 'Dormant Triggers', atk: 'ATK-009', desc: 'Conditional execution detection' },
-  'SRG-APP-000150': { title: 'Sandbox Evasion', atk: 'ATK-010', desc: 'Environment detection evasion' },
-  'SRG-APP-000151': { title: 'Transitive Propagation', atk: 'ATK-011', desc: 'Dependency chain attacks' }
+  'SRG-APP-000141': {
+    title: 'Application Malware Detection',
+    atk: 'ATK-001',
+    desc: 'Lifecycle script detection',
+  },
+  'SRG-APP-000142': {
+    title: 'Application Code Obfuscation',
+    atk: 'ATK-002',
+    desc: 'Obfuscated payload detection',
+  },
+  'SRG-APP-000143': {
+    title: 'Credential Harvesting',
+    atk: 'ATK-003',
+    desc: 'Credential exfiltration detection',
+  },
+  'SRG-APP-000144': {
+    title: 'Persistence Mechanisms',
+    atk: 'ATK-004',
+    desc: 'Malicious persistence detection',
+  },
+  'SRG-APP-000145': {
+    title: 'Data Exfiltration',
+    atk: 'ATK-005',
+    desc: 'Network exfiltration detection',
+  },
+  'SRG-APP-000146': {
+    title: 'Dependency Confusion',
+    atk: 'ATK-006',
+    desc: 'Internal package detection',
+  },
+  'SRG-APP-000147': {
+    title: 'Typosquatting',
+    atk: 'ATK-007',
+    desc: 'Malicious package name detection',
+  },
+  'SRG-APP-000148': {
+    title: 'Tarball Tampering',
+    atk: 'ATK-008',
+    desc: 'Modified package detection',
+  },
+  'SRG-APP-000149': {
+    title: 'Dormant Triggers',
+    atk: 'ATK-009',
+    desc: 'Conditional execution detection',
+  },
+  'SRG-APP-000150': {
+    title: 'Sandbox Evasion',
+    atk: 'ATK-010',
+    desc: 'Environment detection evasion',
+  },
+  'SRG-APP-000151': {
+    title: 'Transitive Propagation',
+    atk: 'ATK-011',
+    desc: 'Dependency chain attacks',
+  },
 };
 
 export function generateSTIG(scans) {
   const rows = [];
   for (const [stigId, info] of Object.entries(STIG_MAP)) {
-    const findings = scans.flatMap(s => (s.findings || []).filter(f => f.id === info.atk));
+    const findings = scans.flatMap((s) => (s.findings || []).filter((f) => f.id === info.atk));
     const status = findings.length > 0 ? 'NOT APPLICABLE' : 'COMPLETE';
-    const findingsList = findings.map(f => `${f.severity.toUpperCase()}: ${f.title}`).join('; ') || 'None';
+    const findingsList =
+      findings.map((f) => `${f.severity.toUpperCase()}: ${f.title}`).join('; ') || 'None';
     rows.push(`| ${stigId} | ${info.title} | ${status} | ${findingsList} |`);
   }
   return `# STIG Compliance Report

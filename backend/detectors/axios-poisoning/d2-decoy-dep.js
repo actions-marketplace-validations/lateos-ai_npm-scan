@@ -1,7 +1,11 @@
 const KNOWN_DECOYS = ['plain-crypto-js'];
 
 export function scanDecoyDependency(pkgJson) {
-  const deps = { ...pkgJson?.dependencies, ...pkgJson?.devDependencies, ...pkgJson?.peerDependencies };
+  const deps = {
+    ...pkgJson?.dependencies,
+    ...pkgJson?.devDependencies,
+    ...pkgJson?.peerDependencies,
+  };
   const findings = [];
 
   for (const depName of KNOWN_DECOYS) {

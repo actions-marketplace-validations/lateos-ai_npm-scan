@@ -16,14 +16,19 @@ function loadFixture(filePath) {
     return [];
   }
   const text = readFileSync(abs, 'utf-8');
-  return text.split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
+  return text
+    .split('\n')
+    .filter((l) => l.trim())
+    .map((l) => JSON.parse(l));
 }
 
 async function fetchNpmMetadata(pkgName, version) {
   try {
     const url = `https://registry.npmjs.org/${encodeURIComponent(pkgName)}/${version}`;
     const response = await fetch(url, { signal: AbortSignal.timeout(5000) });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      return null;
+    }
     return await response.json();
   } catch {
     console.warn(`  [WARN] Registry fetch failed for ${pkgName}@${version}; using fixture data`);
@@ -32,8 +37,12 @@ async function fetchNpmMetadata(pkgName, version) {
 }
 
 function constructRegistryMeta(pkg, liveMeta) {
-  if (liveMeta) return liveMeta;
-  if (pkg.mockRegistryMeta) return pkg.mockRegistryMeta;
+  if (liveMeta) {
+    return liveMeta;
+  }
+  if (pkg.mockRegistryMeta) {
+    return pkg.mockRegistryMeta;
+  }
   return null;
 }
 
@@ -48,9 +57,7 @@ function constructPkgJson(pkg) {
 async function validateDetectors(campaigns, outputFile) {
   const allResults = [];
 
-  const campaignKeys = campaigns === 'all'
-    ? Object.keys(CAMPAIGN_FIXTURES)
-    : [campaigns];
+  const campaignKeys = campaigns === 'all' ? Object.keys(CAMPAIGN_FIXTURES) : [campaigns];
 
   for (const campaignKey of campaignKeys) {
     const fixturePath = CAMPAIGN_FIXTURES[campaignKey];
@@ -71,7 +78,7 @@ async function validateDetectors(campaigns, outputFile) {
 
         const findings = await runAll(pkgJson, [], registryMeta, []);
 
-        const detectedIds = [...new Set(findings.map(f => f.id))];
+        const detectedIds = [...new Set(findings.map((f) => f.id))];
 
         const result = {
           package: pkg.package,
@@ -82,7 +89,7 @@ async function validateDetectors(campaigns, outputFile) {
           expected_detectors: pkg.expected_detectors,
           detected_detectors: detectedIds,
           detection_count: findings.length,
-          detections: findings.map(f => ({
+          detections: findings.map((f) => ({
             id: f.id,
             detector: f.detector,
             severity: f.severity,
@@ -99,7 +106,7 @@ async function validateDetectors(campaigns, outputFile) {
         allResults.push(result);
 
         const expectedCount = pkg.expected_detectors.length;
-        const hitCount = detectedIds.filter(id => pkg.expected_detectors.includes(id)).length;
+        const hitCount = detectedIds.filter((id) => pkg.expected_detectors.includes(id)).length;
         console.log(
           `  ${hitCount > 0 ? '✓' : '✗'} ${pkg.package}@${pkg.version}: ${hitCount}/${expectedCount} expected detectors fired`
         );
@@ -120,12 +127,12 @@ async function validateDetectors(campaigns, outputFile) {
   }
 
   if (outputFile) {
-    const lines = allResults.map(r => JSON.stringify(r)).join('\n') + '\n';
+    const lines = allResults.map((r) => JSON.stringify(r)).join('\n') + '\n';
     writeFileSync(outputFile, lines, 'utf-8');
   }
 
-  const processed = allResults.filter(r => !r.error).length;
-  const errors = allResults.filter(r => r.error).length;
+  const processed = allResults.filter((r) => !r.error).length;
+  const errors = allResults.filter((r) => r.error).length;
   console.log(`\n[SUMMARY] Processed ${processed} packages, ${errors} errors`);
   console.log(`[INFO] Results written to ${outputFile}`);
 
@@ -136,7 +143,9 @@ const args = process.argv.slice(2);
 const campaignArg = args[0] || 'all';
 const outputArg = args[1] ? resolve(args[1]) : resolve('validation-results.jsonl');
 
-validateDetectors(campaignArg, outputArg).then(() => process.exit(0)).catch(err => {
-  console.error(`[ERROR] ${err.message}`);
-  process.exit(1);
-});
+validateDetectors(campaignArg, outputArg)
+  .then(() => process.exit(0))
+  .catch((err) => {
+    console.error(`[ERROR] ${err.message}`);
+    process.exit(1);
+  });

@@ -7,6 +7,6 @@
 
 export const name = 'tier1-slsa-attestation';
 
-export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+export async function scan(_pkgJson, _jsFiles, _registryMeta, _allFiles) {
   return [];
 }

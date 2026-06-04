@@ -16,12 +16,16 @@ export function scanBlastRadius(allFiles) {
 
   for (const file of allFiles) {
     const path = file.path?.replace(/\\/g, '/') || '';
-    const isLockfile = LOCKFILE_PATTERNS.some(p => p.test(path));
-    if (!isLockfile) continue;
+    const isLockfile = LOCKFILE_PATTERNS.some((p) => p.test(path));
+    if (!isLockfile) {
+      continue;
+    }
 
     const content = file.content || '';
     const hasNodeIpc = /\bnode-ipc\b/i.test(content);
-    if (!hasNodeIpc) continue;
+    if (!hasNodeIpc) {
+      continue;
+    }
 
     for (const [badVersion, info] of Object.entries(COMPROMISED_VERSIONS)) {
       const versionInQuotes = `"${badVersion}"`;

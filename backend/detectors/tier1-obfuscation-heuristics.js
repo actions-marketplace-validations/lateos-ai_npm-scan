@@ -6,8 +6,10 @@ const LIFECYCLE_SCRIPTS = ['preinstall', 'install', 'postinstall', 'prepare'];
 const ENTROPY_THRESHOLD = 5.3;
 const PAYLOAD_SIZE_THRESHOLD = 100000;
 
-function analyze(code, label) {
-  if (!code || code.length < 20) return null;
+function analyze(code, _label) {
+  if (!code || code.length < 20) {
+    return null;
+  }
 
   const entropy = shannonEntropy(code);
   const patterns = detectPatterns(code);
@@ -15,7 +17,7 @@ function analyze(code, label) {
   const payloadSize = code.length;
 
   let score = 0;
-  let flags = [];
+  const flags = [];
 
   if (entropy > ENTROPY_THRESHOLD) {
     score += 35;
@@ -43,7 +45,9 @@ function analyze(code, label) {
 
   if (payloadSize > PAYLOAD_SIZE_THRESHOLD) {
     score += 15;
-    flags.push(`Payload size ${payloadSize} bytes exceeds ${PAYLOAD_SIZE_THRESHOLD} byte threshold`);
+    flags.push(
+      `Payload size ${payloadSize} bytes exceeds ${PAYLOAD_SIZE_THRESHOLD} byte threshold`
+    );
   }
 
   if (patterns.includes('XOR_CIPHER') && patterns.length >= 2) {
@@ -58,7 +62,9 @@ function analyze(code, label) {
 
   score = Math.max(0, Math.min(100, score));
 
-  if (score < 40) return null;
+  if (score < 40) {
+    return null;
+  }
 
   return {
     flagged: true,
@@ -73,31 +79,47 @@ function analyze(code, label) {
 }
 
 function severityLabel(sc) {
-  if (sc >= 90) return 'critical';
-  if (sc >= 70) return 'high';
-  if (sc >= 50) return 'medium';
+  if (sc >= 90) {
+    return 'critical';
+  }
+  if (sc >= 70) {
+    return 'high';
+  }
+  if (sc >= 50) {
+    return 'medium';
+  }
   return 'low';
 }
 
 function confidenceLabel(sc) {
-  if (sc >= 80) return 'HIGH';
-  if (sc >= 60) return 'MEDIUM';
+  if (sc >= 80) {
+    return 'HIGH';
+  }
+  if (sc >= 60) {
+    return 'MEDIUM';
+  }
   return 'LOW';
 }
 
 export const name = 'tier1-obfuscation-heuristics';
 
-export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+export async function scan(pkgJson, jsFiles, _registryMeta, _allFiles) {
   const pkgName = pkgJson?.name;
-  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) return [];
+  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) {
+    return [];
+  }
 
   const findings = [];
   const scripts = pkgJson?.scripts || {};
 
   for (const [hookName, scriptContent] of Object.entries(scripts)) {
-    if (!LIFECYCLE_SCRIPTS.includes(hookName)) continue;
+    if (!LIFECYCLE_SCRIPTS.includes(hookName)) {
+      continue;
+    }
     const result = analyze(scriptContent, hookName);
-    if (!result) continue;
+    if (!result) {
+      continue;
+    }
 
     findings.push({
       detector: 'tier1-obfuscation-heuristics',
@@ -123,12 +145,18 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
 
   for (const f of jsFiles || []) {
     const content = f.content || '';
-    if (content.length < 100) continue;
+    if (content.length < 100) {
+      continue;
+    }
 
     const result = analyze(content, f.path || 'unknown.js');
-    if (!result) continue;
+    if (!result) {
+      continue;
+    }
 
-    if (result.confidenceScore < 50) continue;
+    if (result.confidenceScore < 50) {
+      continue;
+    }
 
     findings.push({
       detector: 'tier1-obfuscation-heuristics',

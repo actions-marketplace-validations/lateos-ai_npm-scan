@@ -11,7 +11,8 @@ export default {
   'TIER1-VERSION-ANOMALY': {
     flag_threshold: 72,
     warn_threshold: 60,
-    notes: 'Sentinel patterns (99.99.99/11.11.11/10.10.10) always flag at 92 regardless of threshold',
+    notes:
+      'Sentinel patterns (99.99.99/11.11.11/10.10.10) always flag at 92 regardless of threshold',
   },
   'TIER1-OBFUSCATION-HEURISTICS': {
     flag_threshold: 75,
@@ -21,7 +22,8 @@ export default {
   'TIER1-BINARY-EMBED': {
     flag_threshold: 80,
     warn_threshold: 65,
-    notes: 'High threshold justified; platform-specific binary sets are rare in legitimate packages',
+    notes:
+      'High threshold justified; platform-specific binary sets are rare in legitimate packages',
   },
   'TIER1-LIFECYCLE-HOOK': {
     flag_threshold: 65,
@@ -36,7 +38,8 @@ export default {
   'TIER1-TYPOSQUAT': {
     flag_threshold: 85,
     warn_threshold: 70,
-    notes: 'Calibrated to 85 post-FP analysis on top 1,000 packages; 46 edit-distance=1 FPs eliminated at this threshold',
+    notes:
+      'Calibrated to 85 post-FP analysis on top 1,000 packages; 46 edit-distance=1 FPs eliminated at this threshold',
   },
   'TIER1-METADATA-SPOOF': {
     flag_threshold: 70,

@@ -9,9 +9,20 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const CORPUS_DIR = join(__dirname, '..', 'tests', 'corpus', 'malicious');
 
 const TOP_TYPOS = [
-  'reacct', 'expres', 'axiox', 'chlak', 'vuue', 'typescrip',
-  'momnet', 'uuuid', 'commnder', 'debuge', 'semverr', 'underscoree',
-  'requesst', 'asycn',
+  'reacct',
+  'expres',
+  'axiox',
+  'chlak',
+  'vuue',
+  'typescrip',
+  'momnet',
+  'uuuid',
+  'commnder',
+  'debuge',
+  'semverr',
+  'underscoree',
+  'requesst',
+  'asycn',
 ];
 
 const BINARY_NAMES = ['bun', 'deno', 'go', 'rustc', 'python'];
@@ -42,7 +53,10 @@ function createPeBinary(size = 4096) {
 
 function buildTarball(dir, tmpParent) {
   const tgzPath = join(CORPUS_DIR, `${dir}.tgz`);
-  execSync(`tar czf "${tgzPath}" -C "${tmpParent}" "${dir}"`, { stdio: 'pipe', shell: 'powershell' });
+  execSync(`tar czf "${tgzPath}" -C "${tmpParent}" "${dir}"`, {
+    stdio: 'pipe',
+    shell: 'powershell',
+  });
 }
 
 function createCampaign1Package(n) {
@@ -55,7 +69,7 @@ function createCampaign1Package(n) {
     homepage: 'https://jira.internal/browse/PROJ-123',
     bugs: { url: 'https://docs.internal/issues' },
     scripts: {
-      postinstall: 'node -e "eval(Buffer.from(\'dmFyIHggPSAx\' ,\'base64\').toString())"',
+      postinstall: "node -e \"eval(Buffer.from('dmFyIHggPSAx' ,'base64').toString())\"",
     },
   };
 

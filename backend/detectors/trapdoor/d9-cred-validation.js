@@ -1,7 +1,4 @@
-const CRED_VALIDATION_PATTERNS = [
-  /sts\.amazonaws\.com/i,
-  /api\.github\.com\/user/i,
-];
+const CRED_VALIDATION_PATTERNS = [/sts\.amazonaws\.com/i, /api\.github\.com\/user/i];
 
 export function scanCredValidation(allFiles, pkgJson) {
   const matches = [];
@@ -19,7 +16,9 @@ export function scanCredValidation(allFiles, pkgJson) {
 
   for (const file of allFiles) {
     const path = file.path || '';
-    if (!path.endsWith('.js') && !path.endsWith('.mjs') && !path.endsWith('.cjs')) continue;
+    if (!path.endsWith('.js') && !path.endsWith('.mjs') && !path.endsWith('.cjs')) {
+      continue;
+    }
     const content = file.content || '';
     for (const pattern of CRED_VALIDATION_PATTERNS) {
       if (pattern.test(content)) {

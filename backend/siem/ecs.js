@@ -1,7 +1,7 @@
 export function generateECS(scans) {
   const events = [];
   for (const s of scans) {
-    for (const f of (s.findings || [])) {
+    for (const f of s.findings || []) {
       const atkId = f.atk_id || f.id;
       const sevMap = { critical: 100, high: 80, medium: 50, low: 20 };
       events.push({
@@ -37,5 +37,5 @@ export function generateECS(scans) {
       });
     }
   }
-  return events.map(e => JSON.stringify(e)).join('\n');
+  return events.map((e) => JSON.stringify(e)).join('\n');
 }

@@ -10,7 +10,9 @@ export function scanRuntimeTrigger(allFiles, pkgJson) {
 
   for (const file of allFiles) {
     const path = file.path || '';
-    if (!path.endsWith('.js') && !path.endsWith('.mjs') && !path.endsWith('.cjs')) continue;
+    if (!path.endsWith('.js') && !path.endsWith('.mjs') && !path.endsWith('.cjs')) {
+      continue;
+    }
     sources.push({ file: path, content: file.content || '' });
   }
 
@@ -18,7 +20,8 @@ export function scanRuntimeTrigger(allFiles, pkgJson) {
     if (/\bsetImmediate\s*\(/.test(content)) {
       matches.push({
         file,
-        detail: 'setImmediate() call found — node-ipc malware fires at require() time, not via postinstall',
+        detail:
+          'setImmediate() call found — node-ipc malware fires at require() time, not via postinstall',
       });
     }
   }

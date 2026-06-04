@@ -1,7 +1,12 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 
 const SEV_ORDER = ['critical', 'high', 'medium', 'low'];
-const SEV_COLORS = { critical: rgb(0.8, 0.2, 0.2), high: rgb(0.75, 0.15, 0.15), medium: rgb(0.9, 0.5, 0.1), low: rgb(0.8, 0.7, 0.1) };
+const SEV_COLORS = {
+  critical: rgb(0.8, 0.2, 0.2),
+  high: rgb(0.75, 0.15, 0.15),
+  medium: rgb(0.9, 0.5, 0.1),
+  low: rgb(0.8, 0.7, 0.1),
+};
 
 const NIST_SR_MAP = {
   'ATK-001': { control: 'SR-3.1', title: 'Malicious code detection' },
@@ -29,24 +34,34 @@ function wrapText(text, font, size, maxWidth) {
   for (const word of words) {
     const test = current ? current + ' ' + word : word;
     if (font.widthOfTextAtSize(test, size) > maxWidth) {
-      if (current) lines.push(current);
+      if (current) {
+        lines.push(current);
+      }
       current = word;
     } else {
       current = test;
     }
   }
-  if (current) lines.push(current);
+  if (current) {
+    lines.push(current);
+  }
   return lines;
 }
 
-function drawTableRow(page, font, columns, y, colWidths, fontSize, isHeader) {
+function _drawTableRow(page, font, columns, y, colWidths, fontSize, _isHeader) {
   let x = MARGIN;
   const rowH = fontSize + 6;
   for (let i = 0; i < columns.length; i++) {
     const text = columns[i];
     const lines = wrapText(text, font, fontSize, colWidths[i] - 4);
     for (let j = 0; j < lines.length; j++) {
-      page.drawText(lines[j], { x: x + 2, y: y - (j * fontSize) - 2, size: fontSize, font, color: rgb(0, 0, 0) });
+      page.drawText(lines[j], {
+        x: x + 2,
+        y: y - j * fontSize - 2,
+        size: fontSize,
+        font,
+        color: rgb(0, 0, 0),
+      });
     }
     x += colWidths[i];
   }
@@ -55,7 +70,12 @@ function drawTableRow(page, font, columns, y, colWidths, fontSize, isHeader) {
 
 function drawPageHeader(page, font, text, y) {
   page.drawText(text, { x: MARGIN, y, size: 14, font, color: rgb(0.2, 0.2, 0.2) });
-  page.drawLine({ start: { x: MARGIN, y: y - 4 }, end: { x: PAGE_W - MARGIN, y: y - 4 }, thickness: 1, color: rgb(0.7, 0.7, 0.7) });
+  page.drawLine({
+    start: { x: MARGIN, y: y - 4 },
+    end: { x: PAGE_W - MARGIN, y: y - 4 },
+    thickness: 1,
+    color: rgb(0.7, 0.7, 0.7),
+  });
   return y - 20;
 }
 
@@ -68,8 +88,10 @@ export async function generatePDF(scans) {
   const sevCounts = { critical: 0, high: 0, medium: 0, low: 0 };
   let totalFindings = 0;
   for (const s of scans) {
-    for (const f of (s.findings || [])) {
-      if (sevCounts[f.severity] !== undefined) sevCounts[f.severity]++;
+    for (const f of s.findings || []) {
+      if (sevCounts[f.severity] !== undefined) {
+        sevCounts[f.severity]++;
+      }
       totalFindings++;
     }
   }
@@ -80,20 +102,41 @@ export async function generatePDF(scans) {
 
   page.drawText('npm-scan Report', { x: MARGIN, y, size: 24, font: boldFont, color: rgb(0, 0, 0) });
   y -= 30;
-  page.drawText(`Generated: ${new Date().toISOString()}`, { x: MARGIN, y, size: 10, font, color: rgb(0.4, 0.4, 0.4) });
+  page.drawText(`Generated: ${new Date().toISOString()}`, {
+    x: MARGIN,
+    y,
+    size: 10,
+    font,
+    color: rgb(0.4, 0.4, 0.4),
+  });
   y -= 14;
-  page.drawText(`Version: ${version}  |  Packages scanned: ${scans.length}  |  Total findings: ${totalFindings}`, { x: MARGIN, y, size: 10, font, color: rgb(0.4, 0.4, 0.4) });
+  page.drawText(
+    `Version: ${version}  |  Packages scanned: ${scans.length}  |  Total findings: ${totalFindings}`,
+    { x: MARGIN, y, size: 10, font, color: rgb(0.4, 0.4, 0.4) }
+  );
   y -= 30;
 
   // Severity summary
-  page.drawText('Severity Summary', { x: MARGIN, y, size: 14, font: boldFont, color: rgb(0, 0, 0) });
+  page.drawText('Severity Summary', {
+    x: MARGIN,
+    y,
+    size: 14,
+    font: boldFont,
+    color: rgb(0, 0, 0),
+  });
   y -= 20;
 
   for (const sev of SEV_ORDER) {
     const count = sevCounts[sev] || 0;
     const color = SEV_COLORS[sev] || rgb(0, 0, 0);
     page.drawCircle({ x: MARGIN + 6, y: y - 4, size: 4, color });
-    page.drawText(`${sev}: ${count}`, { x: MARGIN + 16, y: y - 8, size: 11, font, color: rgb(0, 0, 0) });
+    page.drawText(`${sev}: ${count}`, {
+      x: MARGIN + 16,
+      y: y - 8,
+      size: 11,
+      font,
+      color: rgb(0, 0, 0),
+    });
     y -= 18;
   }
 
@@ -102,15 +145,33 @@ export async function generatePDF(scans) {
   // Per-package summary
   for (const s of scans) {
     const findings = s.findings || [];
-    if (y < MARGIN + 60) { page = doc.addPage([PAGE_W, PAGE_H]); y = PAGE_H - MARGIN; }
+    if (y < MARGIN + 60) {
+      page = doc.addPage([PAGE_W, PAGE_H]);
+      y = PAGE_H - MARGIN;
+    }
 
-    page.drawText(`${s.package_name}@${s.version || 'unknown'}`, { x: MARGIN, y, size: 12, font: boldFont, color: rgb(0, 0, 0) });
+    page.drawText(`${s.package_name}@${s.version || 'unknown'}`, {
+      x: MARGIN,
+      y,
+      size: 12,
+      font: boldFont,
+      color: rgb(0, 0, 0),
+    });
     y -= 16;
-    page.drawText(`  ${findings.length} findings`, { x: MARGIN, y, size: 10, font, color: rgb(0.4, 0.4, 0.4) });
+    page.drawText(`  ${findings.length} findings`, {
+      x: MARGIN,
+      y,
+      size: 10,
+      font,
+      color: rgb(0.4, 0.4, 0.4),
+    });
     y -= 14;
 
     for (const f of findings) {
-      if (y < MARGIN + 20) { page = doc.addPage([PAGE_W, PAGE_H]); y = PAGE_H - MARGIN; }
+      if (y < MARGIN + 20) {
+        page = doc.addPage([PAGE_W, PAGE_H]);
+        y = PAGE_H - MARGIN;
+      }
       const sevColor = SEV_COLORS[f.severity] || rgb(0, 0, 0);
       page.drawCircle({ x: MARGIN + 3, y: y + 2, size: 3, color: sevColor });
       const line = `${f.atk_id || f.id}  ${f.severity}  ${(f.description || f.title || '').slice(0, 70)}`;
@@ -136,8 +197,8 @@ export async function generatePDF(scans) {
   }
   y -= 16;
 
-  lineLoop: for (const s of scans) {
-    for (const f of (s.findings || [])) {
+  for (const s of scans) {
+    for (const f of s.findings || []) {
       if (y < MARGIN + 20) {
         page = doc.addPage([PAGE_W, PAGE_H]);
         y = PAGE_H - MARGIN;
@@ -156,10 +217,12 @@ export async function generatePDF(scans) {
       let maxLines = 1;
       for (let i = 0; i < rowData.length; i++) {
         const lines = wrapText(rowData[i], font, 9, colWidths[i] - 4);
-        if (lines.length > maxLines) maxLines = lines.length;
+        if (lines.length > maxLines) {
+          maxLines = lines.length;
+        }
       }
 
-      if (y - (maxLines * 11) < MARGIN) {
+      if (y - maxLines * 11 < MARGIN) {
         page = doc.addPage([PAGE_W, PAGE_H]);
         y = PAGE_H - MARGIN;
         y = drawPageHeader(page, boldFont, 'All Findings (continued)', y);
@@ -172,14 +235,19 @@ export async function generatePDF(scans) {
         const lines = wrapText(rowData[i], font, 9, colWidths[i] - 4);
         for (let j = 0; j < lines.length; j++) {
           const color = i === 1 && SEV_COLORS[f.severity] ? SEV_COLORS[f.severity] : rgb(0, 0, 0);
-          page.drawText(lines[j], { x: x + 2, y: rowY - (j * 11) - 2, size: 9, font, color });
+          page.drawText(lines[j], { x: x + 2, y: rowY - j * 11 - 2, size: 9, font, color });
         }
         x += colWidths[i];
       }
 
       const lineY = rowY + 2;
-      page.drawLine({ start: { x: MARGIN, y: lineY }, end: { x: PAGE_W - MARGIN, y: lineY }, thickness: 0.5, color: rgb(0.85, 0.85, 0.85) });
-      y = rowY - (maxLines * 11) - 4;
+      page.drawLine({
+        start: { x: MARGIN, y: lineY },
+        end: { x: PAGE_W - MARGIN, y: lineY },
+        thickness: 0.5,
+        color: rgb(0.85, 0.85, 0.85),
+      });
+      y = rowY - maxLines * 11 - 4;
     }
   }
 
@@ -200,9 +268,11 @@ export async function generatePDF(scans) {
 
   const atkMap = {};
   for (const s of scans) {
-    for (const f of (s.findings || [])) {
+    for (const f of s.findings || []) {
       const key = f.atk_id || f.id;
-      if (!atkMap[key]) atkMap[key] = [];
+      if (!atkMap[key]) {
+        atkMap[key] = [];
+      }
       atkMap[key].push(f);
     }
   }
@@ -228,16 +298,25 @@ export async function generatePDF(scans) {
       x += rowWidths[i];
     }
 
-    page.drawLine({ start: { x: MARGIN, y: y + 4 }, end: { x: PAGE_W - MARGIN, y: y + 4 }, thickness: 0.5, color: rgb(0.85, 0.85, 0.85) });
+    page.drawLine({
+      start: { x: MARGIN, y: y + 4 },
+      end: { x: PAGE_W - MARGIN, y: y + 4 },
+      thickness: 0.5,
+      color: rgb(0.85, 0.85, 0.85),
+    });
     y -= 18;
   }
 
   // Footer
   const pages = doc.getPages();
   for (const p of pages) {
-    const { width } = p.getSize();
+    const { width: _width } = p.getSize();
     p.drawText(`npm-scan v${version} | Apache-2.0 + Commons Clause`, {
-      x: MARGIN, y: 20, size: 8, font, color: rgb(0.6, 0.6, 0.6),
+      x: MARGIN,
+      y: 20,
+      size: 8,
+      font,
+      color: rgb(0.6, 0.6, 0.6),
     });
   }
 

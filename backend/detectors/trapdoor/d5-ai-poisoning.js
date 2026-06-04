@@ -1,6 +1,6 @@
 const ZERO_WIDTH_RANGES = [
-  [0x200B, 0x200D],
-  [0xFEFF, 0xFEFF],
+  [0x200b, 0x200d],
+  [0xfeff, 0xfeff],
 ];
 
 function isZeroWidthChar(code) {
@@ -14,7 +14,9 @@ export function scanAIPoisoning(allFiles) {
 
   for (const file of allFiles) {
     const path = file.path?.replace(/\\/g, '/') || '';
-    if (!TARGET_FILES.test(path)) continue;
+    if (!TARGET_FILES.test(path)) {
+      continue;
+    }
 
     const content = file.content || '';
     const found = [];

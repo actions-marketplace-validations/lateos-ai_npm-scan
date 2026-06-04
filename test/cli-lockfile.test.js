@@ -16,7 +16,10 @@ test('CLI: scan-lockfile --help shows all options', async () => {
 
 test('CLI: scan-lockfile non-existent file exits with error', async () => {
   try {
-    execSync('node cli/cli.js scan-lockfile -f /nonexistent/lock.json', { encoding: 'utf8', stdio: 'pipe' });
+    execSync('node cli/cli.js scan-lockfile -f /nonexistent/lock.json', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+    });
     assert.fail('should throw');
   } catch (e) {
     assert(e.status !== 0);

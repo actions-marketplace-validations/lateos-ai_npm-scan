@@ -1,4 +1,4 @@
-import { test, mock } from 'node:test';
+import { test, mock as _mock } from 'node:test';
 import assert from 'assert/strict';
 import { vsixScan } from '../../backend/vsix-scan/index.js';
 
@@ -14,12 +14,16 @@ test('VSIX integration: Nx Console 18.95.0 mock fires CRITICAL', async (t) => {
     const urlStr = typeof url === 'string' ? url : '';
     if (urlStr.includes('marketplace.visualstudio.com')) {
       return mockResponse({
-        results: [{
-          extensions: [{
-            publisher: { publisherName: 'nrwl' },
-            versions: [{ version: '18.95.0', lastUpdated: '2026-05-18T12:30:00Z' }],
-          }],
-        }],
+        results: [
+          {
+            extensions: [
+              {
+                publisher: { publisherName: 'nrwl' },
+                versions: [{ version: '18.95.0', lastUpdated: '2026-05-18T12:30:00Z' }],
+              },
+            ],
+          },
+        ],
       });
     }
     if (urlStr.includes('open-vsx.org')) {
@@ -39,7 +43,9 @@ test('VSIX integration: Nx Console 18.95.0 mock fires CRITICAL', async (t) => {
 });
 
 test('VSIX integration: safe version 18.100.0 = clean', async (t) => {
-  t.mock.method(globalThis, 'fetch', async () => { throw new Error('fetch should not be called'); });
+  t.mock.method(globalThis, 'fetch', async () => {
+    throw new Error('fetch should not be called');
+  });
 
   const findings = await vsixScan('nrwl.angular-console', {
     skipNetwork: true,
@@ -52,17 +58,21 @@ test('VSIX integration: safe version 18.100.0 = clean', async (t) => {
 });
 
 test('VSIX integration: extension files with orphan commit patterns fire ORPHAN_COMMIT', async (t) => {
-  t.mock.method(globalThis, 'fetch', async () => { throw new Error('fetch should not be called'); });
+  t.mock.method(globalThis, 'fetch', async () => {
+    throw new Error('fetch should not be called');
+  });
 
   const findings = await vsixScan('nrwl.angular-console', {
     skipNetwork: true,
     marketplaceVersions: [
       { version: '18.95.0', publishedAt: '2026-05-18T12:30:00Z', publishedBy: 'nrwl', flags: [] },
     ],
-    extensionFiles: [{
-      path: 'dist/main.js',
-      content: `npx github.com/nrwl/nx#a1b2c3d4e`,
-    }],
+    extensionFiles: [
+      {
+        path: 'dist/main.js',
+        content: `npx github.com/nrwl/nx#a1b2c3d4e`,
+      },
+    ],
     manifest: { activationEvents: ['onStartupFinished'], main: './dist/main.js' },
   });
 
@@ -72,12 +82,19 @@ test('VSIX integration: extension files with orphan commit patterns fire ORPHAN_
 });
 
 test('VSIX integration: skipNetwork returns empty findings for clean extension', async (t) => {
-  t.mock.method(globalThis, 'fetch', async () => { throw new Error('fetch should not be called'); });
+  t.mock.method(globalThis, 'fetch', async () => {
+    throw new Error('fetch should not be called');
+  });
 
   const findings = await vsixScan('some.clean-extension', {
     skipNetwork: true,
     marketplaceVersions: [
-      { version: '1.0.0', publishedAt: '2026-01-01T00:00:00Z', publishedBy: 'clean-pub', flags: [] },
+      {
+        version: '1.0.0',
+        publishedAt: '2026-01-01T00:00:00Z',
+        publishedBy: 'clean-pub',
+        flags: [],
+      },
     ],
     manifest: { activationEvents: ['onCommand:foo.bar'], main: './dist/main.js' },
   });

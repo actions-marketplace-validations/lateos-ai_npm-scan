@@ -12,7 +12,13 @@ export function signManifest(manifest, key = HMAC_KEY) {
   return createHmac('sha256', key).update(JSON.stringify(manifest)).digest('hex');
 }
 
-export function buildDetectionRule({ ruleId, ruleName, severity, cveReferences = [], campaignName }) {
+export function buildDetectionRule({
+  ruleId,
+  ruleName,
+  severity,
+  cveReferences = [],
+  campaignName,
+}) {
   return {
     rule_id: ruleId,
     rule_name: ruleName,
@@ -41,7 +47,12 @@ export function buildDetectionResult({ triggered, severity, indicators = [] }) {
 
 export function buildAuditTrail({ detectionLogic, ruleProvenanceUrl, campaignSourceUrl }) {
   const contentHash = hashContent(detectionLogic);
-  const manifest = { contentHash, ruleProvenanceUrl, campaignSourceUrl, generatedAt: new Date().toISOString() };
+  const manifest = {
+    contentHash,
+    ruleProvenanceUrl,
+    campaignSourceUrl,
+    generatedAt: new Date().toISOString(),
+  };
   return {
     content_hash: contentHash,
     rule_provenance_url: ruleProvenanceUrl,
@@ -60,7 +71,21 @@ export function buildDetectionRecord({ rule, scanMetadata, detectionResult, audi
   };
 }
 
-export function attachProvenance(evidence, { ruleId, ruleName, severity, campaignName, pkgName, pkgVersion, triggered, indicators, ruleProvenanceUrl, campaignSourceUrl }) {
+export function attachProvenance(
+  evidence,
+  {
+    ruleId,
+    ruleName,
+    severity,
+    campaignName,
+    pkgName,
+    pkgVersion,
+    triggered,
+    indicators,
+    ruleProvenanceUrl,
+    campaignSourceUrl,
+  }
+) {
   const rule = buildDetectionRule({ ruleId, ruleName, severity, campaignName });
   const scanMetadata = buildScanMetadata({
     scannerVersion: '@lateos/npm-scan',

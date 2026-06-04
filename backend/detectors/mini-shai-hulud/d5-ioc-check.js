@@ -11,7 +11,9 @@ const __dirname = dirname(__filename);
 const IOC_PATH = join(__dirname, 'iocs.json');
 
 function loadIOCData() {
-  if (iocsLoaded) return iocsData;
+  if (iocsLoaded) {
+    return iocsData;
+  }
   iocsLoaded = true;
   try {
     iocsData = JSON.parse(readFileSync(IOC_PATH, 'utf8'));
@@ -34,7 +36,9 @@ export function reloadIOCData() {
 
 export async function checkIOC(pkgName, pkgVersion, sha512, publisherAccount, timeMap = {}) {
   const data = loadIOCData();
-  if (!data) return { triggered: false, matches: [] };
+  if (!data) {
+    return { triggered: false, matches: [] };
+  }
 
   const matches = [];
   const allIOCs = [];
@@ -44,7 +48,7 @@ export async function checkIOC(pkgName, pkgVersion, sha512, publisherAccount, ti
   for (const waveKey of Object.keys(data.waves || {})) {
     const wave = data.waves[waveKey];
     const waveNum = waveKey === 'wave1' ? 1 : waveKey === 'wave2' ? 2 : 3;
-    for (const ioc of (wave.iocs || [])) {
+    for (const ioc of wave.iocs || []) {
       allIOCs.push({ ...ioc, wave: waveNum });
     }
   }
@@ -53,7 +57,11 @@ export async function checkIOC(pkgName, pkgVersion, sha512, publisherAccount, ti
     switch (ioc.type) {
       case 'packageName': {
         if (ioc.value === pkgName) {
-          if (!ioc.maliciousVersions || ioc.maliciousVersions.length === 0 || ioc.maliciousVersions.includes(pkgVersion)) {
+          if (
+            !ioc.maliciousVersions ||
+            ioc.maliciousVersions.length === 0 ||
+            ioc.maliciousVersions.includes(pkgVersion)
+          ) {
             matches.push({ type: 'packageName', value: pkgName, wave: ioc.wave });
           }
         }

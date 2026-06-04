@@ -31,7 +31,9 @@ import { scan as tier1ObfuscationHeuristicsScan } from './tier1-obfuscation-heur
 import { scan as tier1SlsaAttestationScan } from './tier1-slsa-attestation.js';
 
 function timeout(ms) {
-  return new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms));
+  return new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms)
+  );
 }
 
 async function runTier1(name, scanFn, pkgJson, files, registryMeta, allFiles) {
@@ -43,7 +45,9 @@ async function runTier1(name, scanFn, pkgJson, files, registryMeta, allFiles) {
     const fileCount = allFiles && allFiles.length > 0 ? allFiles.length : files.length;
     if (fileCount >= 10 && result.length > 0) {
       const hitRate = result.length / fileCount;
-      if (hitRate > 0.8) return [];
+      if (hitRate > 0.8) {
+        return [];
+      }
     }
     return result;
   } catch {
@@ -53,36 +57,135 @@ async function runTier1(name, scanFn, pkgJson, files, registryMeta, allFiles) {
 
 export async function runAll(pkgJson, files = [], registryMeta = null, allFiles = null) {
   const findings = [];
-  findings.push(...await atk001.scan(pkgJson, files));
-  findings.push(...await atk002.scan(pkgJson, files));
-  findings.push(...await atk003.scan(pkgJson, files));
-  findings.push(...await atk004.scan(pkgJson, files));
-  findings.push(...await atk005.scan(pkgJson, files));
-  findings.push(...await atk006.scan(pkgJson, files));
-  findings.push(...await atk007.scan(pkgJson, files));
-  findings.push(...await atk008.scan(pkgJson, files));
-  findings.push(...await atk009.scan(pkgJson, files));
-  findings.push(...await atk010.scan(pkgJson, files));
-  findings.push(...await atk011.scan(pkgJson, files));
-  findings.push(...await megalodonScan(pkgJson, allFiles || files, registryMeta));
-  findings.push(...await hfScan(pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await miniShaiHuludScan(pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await badhostScan(pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await trapdoorScan(pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await nodeIpcScan(pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await mshSupplementScan(pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await typosquatScan(pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await axiosPoisoningScan(pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-typosquat', tier1TyposquatScan, pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-infostealer', tier1InfostealerScan, pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-lifecycle-hook', tier1LifecycleHookScan, pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-binary-embed', tier1BinaryEmbedScan, pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-metadata-spoof', tier1MetadataSpoofScan, pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-version-confusion', tier1VersionConfusionScan, pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-cloud-imds', tier1CloudImdsScan, pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-multistage-postinstall', tier1MultistagePostinstallScan, pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-version-anomaly', tier1VersionAnomalyScan, pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-obfuscation-heuristics', tier1ObfuscationHeuristicsScan, pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await runTier1('tier1-slsa-attestation', tier1SlsaAttestationScan, pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...(await atk001.scan(pkgJson, files)));
+  findings.push(...(await atk002.scan(pkgJson, files)));
+  findings.push(...(await atk003.scan(pkgJson, files)));
+  findings.push(...(await atk004.scan(pkgJson, files)));
+  findings.push(...(await atk005.scan(pkgJson, files)));
+  findings.push(...(await atk006.scan(pkgJson, files)));
+  findings.push(...(await atk007.scan(pkgJson, files)));
+  findings.push(...(await atk008.scan(pkgJson, files)));
+  findings.push(...(await atk009.scan(pkgJson, files)));
+  findings.push(...(await atk010.scan(pkgJson, files)));
+  findings.push(...(await atk011.scan(pkgJson, files)));
+  findings.push(...(await megalodonScan(pkgJson, allFiles || files, registryMeta)));
+  findings.push(...(await hfScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await miniShaiHuludScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await badhostScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await trapdoorScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await nodeIpcScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await mshSupplementScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await typosquatScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await axiosPoisoningScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(
+    ...(await runTier1(
+      'tier1-typosquat',
+      tier1TyposquatScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-infostealer',
+      tier1InfostealerScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-lifecycle-hook',
+      tier1LifecycleHookScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-binary-embed',
+      tier1BinaryEmbedScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-metadata-spoof',
+      tier1MetadataSpoofScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-version-confusion',
+      tier1VersionConfusionScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-cloud-imds',
+      tier1CloudImdsScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-multistage-postinstall',
+      tier1MultistagePostinstallScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-version-anomaly',
+      tier1VersionAnomalyScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-obfuscation-heuristics',
+      tier1ObfuscationHeuristicsScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-slsa-attestation',
+      tier1SlsaAttestationScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
   return findings.sort((a, b) => b.severity.localeCompare(a.severity));
 }

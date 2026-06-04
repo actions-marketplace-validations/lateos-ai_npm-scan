@@ -12,11 +12,13 @@ function scanLocalTarball(tarPath) {
   execSync(`tar xzf "${tarPath}" -C "${tmpDir}"`, { stdio: 'pipe' });
   const globPath = tmpDir.replace(/\\/g, '/') + '/**/package.json';
   const pkgPath = globSync(globPath, { nodir: true })[0];
-  if (!pkgPath) throw new Error(`No package.json in ${tarPath}`);
+  if (!pkgPath) {
+    throw new Error(`No package.json in ${tarPath}`);
+  }
   const pkgJson = JSON.parse(readFileSync(pkgPath, 'utf8'));
   const pkgDir = join(pkgPath, '..');
   const jsGlobPath = pkgDir.replace(/\\/g, '/') + '/**/*.js';
-  const jsFiles = globSync(jsGlobPath, { nodir: true }).map(p => ({
+  const jsFiles = globSync(jsGlobPath, { nodir: true }).map((p) => ({
     path: p,
     content: readFileSync(p, 'utf8'),
   }));
@@ -27,7 +29,26 @@ const MAL_TARS = globSync('tests/corpus/malicious/*.tgz');
 const CLEAN_TARS = globSync('tests/corpus/clean/*.tgz');
 
 const KNOWN_MAL_MISSES = ['mal-obfusc-2'];
-const KNOWN_CLEAN_FPS = ['webpack', 'typescript', 'socket.io', 'sequelize', 'prettier', 'next', 'rimraf', 'minimist', 'glob', 'winston', 'uuid', 'moment', 'dotenv', 'pg', 'semver', 'redux', 'redis', 'async'];
+const KNOWN_CLEAN_FPS = [
+  'webpack',
+  'typescript',
+  'socket.io',
+  'sequelize',
+  'prettier',
+  'next',
+  'rimraf',
+  'minimist',
+  'glob',
+  'winston',
+  'uuid',
+  'moment',
+  'dotenv',
+  'pg',
+  'semver',
+  'redux',
+  'redis',
+  'async',
+];
 
 for (const tar of MAL_TARS) {
   const name = tar.replace(/\\/g, '/').split('/').pop().replace('.tgz', '');
@@ -45,8 +66,12 @@ for (const tar of CLEAN_TARS) {
   runner(`corpus clean: ${name} has no high/critical findings`, async () => {
     const { pkgJson, jsFiles } = scanLocalTarball(tar);
     const findings = await runAll(pkgJson, jsFiles);
-    const highCrit = findings.filter(f => f.severity === 'high' || f.severity === 'critical');
-    assert.equal(highCrit.length, 0, `${name}: unexpected high/crit: ${JSON.stringify(highCrit.map(f => f.id))}`);
+    const highCrit = findings.filter((f) => f.severity === 'high' || f.severity === 'critical');
+    assert.equal(
+      highCrit.length,
+      0,
+      `${name}: unexpected high/crit: ${JSON.stringify(highCrit.map((f) => f.id))}`
+    );
   });
 }
 

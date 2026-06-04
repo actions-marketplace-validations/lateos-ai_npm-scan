@@ -10,7 +10,9 @@ export function scanCampaignMarker(allFiles) {
     const ext = path.includes('.') ? '.' + path.split('.').pop() : '';
 
     const isTarget = TARGET_FILENAMES.has(basename) || TARGET_EXTENSIONS.includes(ext);
-    if (!isTarget) continue;
+    if (!isTarget) {
+      continue;
+    }
 
     if (content.includes('P-2024-001')) {
       matches.push({ file: path });

@@ -1,6 +1,13 @@
 import { KNOWN_REPUTABLE_PACKAGES } from '../policy.js';
 
-const HOOK_NAMES = ['postinstall', 'preinstall', 'install', 'prepare', 'preuninstall', 'postuninstall'];
+const HOOK_NAMES = [
+  'postinstall',
+  'preinstall',
+  'install',
+  'prepare',
+  'preuninstall',
+  'postuninstall',
+];
 
 const CURL_WGET_RE = /\b(?:curl|wget|powershell|bash|sh)\b/i;
 const CHILD_PROC_RE = /\b(?:exec|execSync|spawn|spawnSync|fork)\s*\(/g;
@@ -17,9 +24,13 @@ const REQUIRE_RE = /\brequire\s*\(/g;
 
 function shannonEntropy(s) {
   const len = s.length;
-  if (len === 0) return 0;
+  if (len === 0) {
+    return 0;
+  }
   const freq = {};
-  for (const ch of s) freq[ch] = (freq[ch] || 0) + 1;
+  for (const ch of s) {
+    freq[ch] = (freq[ch] || 0) + 1;
+  }
   let entropy = 0;
   for (const count of Object.values(freq)) {
     const p = count / len;
@@ -29,20 +40,32 @@ function shannonEntropy(s) {
 }
 
 function isObfuscated(content) {
-  if (!content) return false;
+  if (!content) {
+    return false;
+  }
   const noWhitespace = !/\s/.test(content.trim());
   const identifiers = content.match(/\b[a-zA-Z_$][\w$]*\b/g);
   let avgIdLen = 0;
   if (identifiers && identifiers.length > 0) {
     avgIdLen = identifiers.reduce((s, id) => s + id.length, 0) / identifiers.length;
   }
-  if (noWhitespace && identifiers && identifiers.length > 0 && avgIdLen < 3) return true;
-  if (noWhitespace && /^[a-zA-Z_$][\w$]*\([^)]*\)$/.test(content.trim())) return true;
+  if (noWhitespace && identifiers && identifiers.length > 0 && avgIdLen < 3) {
+    return true;
+  }
+  if (noWhitespace && /^[a-zA-Z_$][\w$]*\([^)]*\)$/.test(content.trim())) {
+    return true;
+  }
   HEX_STRING_RE.lastIndex = 0;
-  if (HEX_STRING_RE.test(content)) return true;
+  if (HEX_STRING_RE.test(content)) {
+    return true;
+  }
   B64_RE.lastIndex = 0;
-  if (B64_RE.test(content)) return true;
-  if (shannonEntropy(content) > 5.5) return true;
+  if (B64_RE.test(content)) {
+    return true;
+  }
+  if (shannonEntropy(content) > 5.5) {
+    return true;
+  }
   return false;
 }
 
@@ -58,9 +81,11 @@ function extractUrls(content) {
 
 export const name = 'tier1-lifecycle-hook';
 
-export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+export async function scan(pkgJson, _jsFiles, _registryMeta, _allFiles) {
   const pkgName = pkgJson?.name;
-  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) return [];
+  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) {
+    return [];
+  }
 
   const scripts = pkgJson?.scripts || {};
   const hooks = {};
@@ -71,18 +96,23 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     }
   }
 
-  if (Object.keys(hooks).length === 0) return [];
+  if (Object.keys(hooks).length === 0) {
+    return [];
+  }
 
   const findings = [];
 
   for (const [hookName, scriptContent] of Object.entries(hooks)) {
     const content = typeof scriptContent === 'string' ? scriptContent : '';
-    if (!content) continue;
+    if (!content) {
+      continue;
+    }
 
     const truncated = content.length > 10240 ? content.slice(0, 10240) : content;
 
     const obfuscated = isObfuscated(truncated);
-    const hasEval = EVAL_RE.test(truncated) || FUNCTION_CTOR_RE.test(truncated) || ZERO_EVAL_RE.test(truncated);
+    const hasEval =
+      EVAL_RE.test(truncated) || FUNCTION_CTOR_RE.test(truncated) || ZERO_EVAL_RE.test(truncated);
     const hasNetwork = CURL_WGET_RE.test(truncated) || CHILD_PROC_RE.test(truncated);
     const hasUrls = URL_RE.test(truncated) || IP_RE.test(truncated);
     const urls = extractUrls(truncated);
@@ -111,7 +141,9 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       }
       const domainInfo = hasInternal ? 'internal domain' : 'external URL';
       evidence.push(`patterns: hardcoded ${domainInfo} in hook`);
-      if (urls.length > 0) evidence.push(`target: ${urls[0]}`);
+      if (urls.length > 0) {
+        evidence.push(`target: ${urls[0]}`);
+      }
     }
 
     if (envExfil) {
@@ -143,13 +175,19 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       baseScore = Math.min(100, Math.round(baseScore * 2.5));
     }
 
-    if (baseScore === 0) continue;
+    if (baseScore === 0) {
+      continue;
+    }
 
     const confidenceScore = Math.max(50, Math.min(100, baseScore));
 
     function confidenceLabel(score) {
-      if (score >= 95) return 'CRITICAL';
-      if (score >= 80) return 'HIGH';
+      if (score >= 95) {
+        return 'CRITICAL';
+      }
+      if (score >= 80) {
+        return 'HIGH';
+      }
       return 'MEDIUM';
     }
 
@@ -162,11 +200,13 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       subtype,
       message: `Suspicious lifecycle hook "${hookName}"`,
       evidence,
-      locations: [{
-        file: 'package.json',
-        field: `scripts.${hookName}`,
-        value: content.length > 200 ? `${content.slice(0, 200)}...` : content,
-      }],
+      locations: [
+        {
+          file: 'package.json',
+          field: `scripts.${hookName}`,
+          value: content.length > 200 ? `${content.slice(0, 200)}...` : content,
+        },
+      ],
       crossFiles: [],
       reference: 'Campaign 1',
     });

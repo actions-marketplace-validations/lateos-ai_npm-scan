@@ -1,34 +1,51 @@
 const SCAN_HOOKS = ['preinstall', 'install', 'postinstall', 'prepare'];
 
-const REMOTE_FETCH_RE = /\b(?:fetch|axios\.get|axios\.post|http\.get|https\.get)\(|\b(?:curl|wget)\s/;
+const REMOTE_FETCH_RE =
+  /\b(?:fetch|axios\.get|axios\.post|http\.get|https\.get)\(|\b(?:curl|wget)\s/;
 const BINARY_EXEC_RE = /\b(?:execFile|execFileSync|execSync|exec|spawnSync|spawn)\s*\(/;
 const DETACHED_RE = /detached\s*:\s*true/;
 
 function severityLabel(score) {
-  if (score >= 95) return 'critical';
-  if (score >= 80) return 'high';
-  if (score >= 60) return 'medium';
+  if (score >= 95) {
+    return 'critical';
+  }
+  if (score >= 80) {
+    return 'high';
+  }
+  if (score >= 60) {
+    return 'medium';
+  }
   return 'low';
 }
 
 function confidenceLabel(score) {
-  if (score >= 95) return 'CRITICAL';
-  if (score >= 80) return 'HIGH';
-  if (score >= 60) return 'MEDIUM';
+  if (score >= 95) {
+    return 'CRITICAL';
+  }
+  if (score >= 80) {
+    return 'HIGH';
+  }
+  if (score >= 60) {
+    return 'MEDIUM';
+  }
   return 'LOW';
 }
 
 export const name = 'tier1-multistage-postinstall';
 
-export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+export async function scan(pkgJson, _jsFiles, _registryMeta, _allFiles) {
   const scripts = pkgJson?.scripts;
-  if (!scripts || typeof scripts !== 'object') return [];
+  if (!scripts || typeof scripts !== 'object') {
+    return [];
+  }
 
   const findings = [];
 
   for (const hookName of SCAN_HOOKS) {
     const content = scripts[hookName];
-    if (!content || typeof content !== 'string') continue;
+    if (!content || typeof content !== 'string') {
+      continue;
+    }
 
     const hasRemoteFetch = REMOTE_FETCH_RE.test(content);
     const hasBinaryExec = BINARY_EXEC_RE.test(content);
@@ -37,7 +54,9 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     const signalA = hasRemoteFetch && hasBinaryExec;
     const signalB = hasDetached;
 
-    if (!signalA && !signalB) continue;
+    if (!signalA && !signalB) {
+      continue;
+    }
 
     let confidenceScore;
     let subtype;
@@ -54,9 +73,15 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     }
 
     const evidence = [`hook: ${hookName}`];
-    if (hasRemoteFetch) evidence.push('pattern: remote fetch call');
-    if (hasBinaryExec) evidence.push('pattern: binary execution call');
-    if (hasDetached) evidence.push('pattern: detached background process');
+    if (hasRemoteFetch) {
+      evidence.push('pattern: remote fetch call');
+    }
+    if (hasBinaryExec) {
+      evidence.push('pattern: binary execution call');
+    }
+    if (hasDetached) {
+      evidence.push('pattern: detached background process');
+    }
 
     findings.push({
       detector: 'tier1-multistage-postinstall',
@@ -67,11 +92,13 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       subtype,
       message: `Multi-stage install hook detected in "${hookName}" — ${subtype}`,
       evidence,
-      locations: [{
-        file: 'package.json',
-        field: `scripts.${hookName}`,
-        value: content.length > 200 ? `${content.slice(0, 200)}...` : content,
-      }],
+      locations: [
+        {
+          file: 'package.json',
+          field: `scripts.${hookName}`,
+          value: content.length > 200 ? `${content.slice(0, 200)}...` : content,
+        },
+      ],
       crossFiles: [],
       reference: 'Sonatype-2026-003429',
     });

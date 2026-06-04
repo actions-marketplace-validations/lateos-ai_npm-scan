@@ -20,11 +20,13 @@ async function analyzeValidation(resultsFile) {
   }
 
   const text = readFileSync(absPath, 'utf-8');
-  const lines = text.split('\n').filter(l => l.trim());
+  const lines = text.split('\n').filter((l) => l.trim());
 
   for (const line of lines) {
     const result = JSON.parse(line);
-    if (result.error) continue;
+    if (result.error) {
+      continue;
+    }
 
     stats.total_packages += 1;
     stats.total_detections += result.detection_count;
@@ -47,8 +49,8 @@ async function analyzeValidation(resultsFile) {
     campaign.total += 1;
     campaign.total_expected += result.expected_detectors.length;
 
-    const matched = result.expected_detectors.filter(
-      id => result.detected_detectors.includes(id)
+    const matched = result.expected_detectors.filter((id) =>
+      result.detected_detectors.includes(id)
     );
     campaign.total_matched += matched.length;
     stats.total_expected += result.expected_detectors.length;
@@ -90,22 +92,24 @@ async function analyzeValidation(resultsFile) {
 
   for (const campaignId of Object.keys(stats.campaigns)) {
     const campaign = stats.campaigns[campaignId];
-    campaign.detection_rate = campaign.total > 0
-      ? ((campaign.detected / campaign.total) * 100).toFixed(1) + '%'
-      : '0%';
-    campaign.expected_match_rate = campaign.total_expected > 0
-      ? ((campaign.total_matched / campaign.total_expected) * 100).toFixed(1) + '%'
-      : '0%';
+    campaign.detection_rate =
+      campaign.total > 0 ? ((campaign.detected / campaign.total) * 100).toFixed(1) + '%' : '0%';
+    campaign.expected_match_rate =
+      campaign.total_expected > 0
+        ? ((campaign.total_matched / campaign.total_expected) * 100).toFixed(1) + '%'
+        : '0%';
   }
 
   for (const detectorName of Object.keys(stats.detectors)) {
     const detector = stats.detectors[detectorName];
-    detector.avg_confidence = detector.confidences.length > 0
-      ? (detector.confidences.reduce((a, b) => a + b, 0) / detector.confidences.length).toFixed(1)
-      : '0.0';
-    detector.precision = detector.total_hits > 0
-      ? ((detector.expected_count / detector.total_hits) * 100).toFixed(1) + '%'
-      : '0%';
+    detector.avg_confidence =
+      detector.confidences.length > 0
+        ? (detector.confidences.reduce((a, b) => a + b, 0) / detector.confidences.length).toFixed(1)
+        : '0.0';
+    detector.precision =
+      detector.total_hits > 0
+        ? ((detector.expected_count / detector.total_hits) * 100).toFixed(1) + '%'
+        : '0%';
   }
 
   return stats;
@@ -117,14 +121,16 @@ console.log(`[INFO] Analyzing ${resultsFile}...`);
 const stats = await analyzeValidation(resultsFile);
 
 console.log('\n=== CAMPAIGN DETECTION RATES ===');
-console.log('Campaign                         Packages  Detected  Rate     Expected  Matched  Match%');
+console.log(
+  'Campaign                         Packages  Detected  Rate     Expected  Matched  Match%'
+);
 console.log('─'.repeat(95));
-for (const [id, campaign] of Object.entries(stats.campaigns)) {
+for (const [_id, campaign] of Object.entries(stats.campaigns)) {
   const name = campaign.name.padEnd(33).slice(0, 33);
   console.log(
     `${name} ${String(campaign.total).padStart(8)} ${String(campaign.detected).padStart(9)} ` +
-    `${campaign.detection_rate.padStart(7)} ${String(campaign.total_expected).padStart(9)} ` +
-    `${String(campaign.total_matched).padStart(8)} ${campaign.expected_match_rate.padStart(7)}`
+      `${campaign.detection_rate.padStart(7)} ${String(campaign.total_expected).padStart(9)} ` +
+      `${String(campaign.total_matched).padStart(8)} ${campaign.expected_match_rate.padStart(7)}`
   );
 }
 console.log(`\nTotal: ${stats.total_packages} packages, ${stats.total_detections} detections`);
@@ -138,7 +144,7 @@ for (const [name, detector] of Object.entries(stats.detectors).sort(
   const dName = name.padEnd(32).slice(0, 32);
   console.log(
     `${dName} ${String(detector.total_hits).padStart(5)} ${String(detector.expected_count).padStart(9)} ` +
-    `${detector.precision.padStart(10)} ${detector.avg_confidence.padStart(14)}`
+      `${detector.precision.padStart(10)} ${detector.avg_confidence.padStart(14)}`
   );
 }
 

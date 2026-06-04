@@ -12,16 +12,21 @@ const LURE_PATTERNS = [
 
 export function scanLureName(pkgJson, registryMeta) {
   const pkgName = pkgJson?.name || '';
-  const matchedPattern = LURE_PATTERNS.find(p => p.test(pkgName));
-  if (!matchedPattern) return { triggered: false };
+  const matchedPattern = LURE_PATTERNS.find((p) => p.test(pkgName));
+  if (!matchedPattern) {
+    return { triggered: false };
+  }
 
   const timeMap = registryMeta?.time || {};
-  const versions = Object.keys(timeMap).filter(v => v !== 'created' && v !== 'modified');
-  const firstVersion = versions.length > 0
-    ? versions.sort((a, b) => new Date(timeMap[a]) - new Date(timeMap[b]))[0]
-    : null;
+  const versions = Object.keys(timeMap).filter((v) => v !== 'created' && v !== 'modified');
+  const firstVersion =
+    versions.length > 0
+      ? versions.sort((a, b) => new Date(timeMap[a]) - new Date(timeMap[b]))[0]
+      : null;
 
-  if (!firstVersion) return { triggered: false };
+  if (!firstVersion) {
+    return { triggered: false };
+  }
 
   const firstPubDate = new Date(timeMap[firstVersion]);
   const now = new Date();

@@ -12,7 +12,9 @@ function checkBurstOnTimeMap(timeMap, windowMinutes, threshold) {
     .filter(([, ts]) => !Number.isNaN(ts))
     .sort((a, b) => a[1] - b[1]);
 
-  if (entries.length === 0) return null;
+  if (entries.length === 0) {
+    return null;
+  }
 
   const windowMs = windowMinutes * 60 * 1000;
 
@@ -55,17 +57,23 @@ export async function checkSiblingCompromise(pkgJson, config = {}) {
   for (const name of Object.keys(deps)) {
     if (name.startsWith('@')) {
       const scope = name.split('/')[0];
-      if (!scopedDeps[scope]) scopedDeps[scope] = [];
+      if (!scopedDeps[scope]) {
+        scopedDeps[scope] = [];
+      }
       scopedDeps[scope].push(name);
     }
   }
 
-  if (Object.keys(scopedDeps).length === 0) return { triggered: false };
+  if (Object.keys(scopedDeps).length === 0) {
+    return { triggered: false };
+  }
 
   const results = [];
 
   for (const [scope, packages] of Object.entries(scopedDeps)) {
-    if (packages.length < 2) continue;
+    if (packages.length < 2) {
+      continue;
+    }
 
     const burstSiblings = [];
 
@@ -75,7 +83,9 @@ export async function checkSiblingCompromise(pkgJson, config = {}) {
         try {
           const url = `https://registry.npmjs.org/${encodeURIComponent(pkg)}`;
           const res = await fetch(url);
-          if (!res.ok) continue;
+          if (!res.ok) {
+            continue;
+          }
           const data = await res.json();
           timeData = data.time || {};
           siblingCache.set(pkg, timeData);
@@ -91,19 +101,19 @@ export async function checkSiblingCompromise(pkgJson, config = {}) {
     }
 
     if (burstSiblings.length >= 2) {
-      const windows = burstSiblings.map(s => ({
+      const windows = burstSiblings.map((s) => ({
         start: new Date(s.windowStart).getTime(),
         end: new Date(s.windowEnd).getTime(),
       }));
 
-      const overlapStart = Math.max(...windows.map(w => w.start));
-      const overlapEnd = Math.min(...windows.map(w => w.end));
+      const overlapStart = Math.max(...windows.map((w) => w.start));
+      const overlapEnd = Math.min(...windows.map((w) => w.end));
 
       if (overlapStart < overlapEnd) {
         results.push({
           triggered: true,
           scope,
-          siblingPackages: burstSiblings.map(s => s.name),
+          siblingPackages: burstSiblings.map((s) => s.name),
           windowStart: new Date(overlapStart).toISOString(),
           windowEnd: new Date(overlapEnd).toISOString(),
         });
@@ -111,6 +121,8 @@ export async function checkSiblingCompromise(pkgJson, config = {}) {
     }
   }
 
-  if (results.length === 0) return { triggered: false };
+  if (results.length === 0) {
+    return { triggered: false };
+  }
   return { triggered: true, results };
 }

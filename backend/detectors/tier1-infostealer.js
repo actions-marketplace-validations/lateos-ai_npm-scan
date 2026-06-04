@@ -12,25 +12,29 @@ const NPMJS_DOMAIN_RE = /npmjs\.(?:com|org)/i;
 const AWS_KEY_RE = /AKIA[0-9A-Z]{16}/g;
 const NPM_TOKEN_RE = /npm_[a-zA-Z0-9]{36}/g;
 const GH_TOKEN_RE = /ghp_[a-zA-Z0-9]{30,40}/g;
-const GH_OLD_TOKEN_RE = /gho_[a-zA-Z0-9]{36}/g;
-const GITLAB_TOKEN_RE = /glpat-[a-zA-Z0-9_-]{20,}/g;
+const _GH_OLD_TOKEN_RE = /gho_[a-zA-Z0-9]{36}/g;
+const _GITLAB_TOKEN_RE = /glpat-[a-zA-Z0-9_-]{20,}/g;
 
 const ENV_DUMP_RE = /process\.env\.(?:AWS_[A-Z_]+|NPM_TOKEN|NPM_AUTH_TOKEN|GIT_TOKEN|SSH_KEY)/g;
 
 const EVAL_RE = /\beval\s*\(/g;
 const FUNCTION_CTOR_RE = /\bFunction\s*\(/g;
-const B64_STRING_RE = /['"`]([A-Za-z0-9+/]{40,}={0,2})['"`]/g;
+const _B64_STRING_RE = /['"`]([A-Za-z0-9+/]{40,}={0,2})['"`]/g;
 
 // Named malware signatures — zero-FP string literals for confirmed campaigns
 const NAMED_SIGNATURES = [
-  'Miasma: The Spreading Blight',   // Miasma campaign, June 2026, @redhat-cloud-services compromise
+  'Miasma: The Spreading Blight', // Miasma campaign, June 2026, @redhat-cloud-services compromise
 ];
 
 function shannonEntropy(s) {
   const len = s.length;
-  if (len === 0) return 0;
+  if (len === 0) {
+    return 0;
+  }
   const freq = {};
-  for (const ch of s) freq[ch] = (freq[ch] || 0) + 1;
+  for (const ch of s) {
+    freq[ch] = (freq[ch] || 0) + 1;
+  }
   let entropy = 0;
   for (const count of Object.values(freq)) {
     const p = count / len;
@@ -43,7 +47,9 @@ function isMinified(content) {
   const identifiers = content.match(/\b[a-zA-Z_$][\w$]*\b/g);
   if (identifiers && identifiers.length > 0) {
     const avgLen = identifiers.reduce((s, id) => s + id.length, 0) / identifiers.length;
-    if (avgLen < 3) return true;
+    if (avgLen < 3) {
+      return true;
+    }
   }
   return shannonEntropy(content) > 5.5;
 }
@@ -94,9 +100,12 @@ function patternMatcher(f, content) {
     isObfuscated: false,
   };
 
-  if (!content) return result;
+  if (!content) {
+    return result;
+  }
 
-  result.isObfuscated = isMinified(content) || EVAL_RE.test(content) || FUNCTION_CTOR_RE.test(content);
+  result.isObfuscated =
+    isMinified(content) || EVAL_RE.test(content) || FUNCTION_CTOR_RE.test(content);
 
   FS_READ_RE.lastIndex = 0;
   HTTP_FETCH_RE.lastIndex = 0;
@@ -109,13 +118,17 @@ function patternMatcher(f, content) {
   const hasCurlWget = CURL_WGET_RE.test(content);
 
   const domains = extractDomains(content);
-  const externalDomains = domains.filter(d => !NPMJS_DOMAIN_RE.test(d));
-  const gitHubDomains = domains.filter(d => GITHUB_DOMAIN_RE.test(d) && !NPMJS_DOMAIN_RE.test(d));
+  const externalDomains = domains.filter((d) => !NPMJS_DOMAIN_RE.test(d));
+  const gitHubDomains = domains.filter((d) => GITHUB_DOMAIN_RE.test(d) && !NPMJS_DOMAIN_RE.test(d));
 
   if (hasFsRead && hasHttpFetch) {
-    const isGithubOnly = gitHubDomains.length > 0 && externalDomains.length === gitHubDomains.length;
+    const isGithubOnly =
+      gitHubDomains.length > 0 && externalDomains.length === gitHubDomains.length;
     result.hasPattern = true;
-    result.patterns.push({ subtype: isGithubOnly ? 'nw_exfil_to_github' : 'fs_exfil', baseScore: 80 });
+    result.patterns.push({
+      subtype: isGithubOnly ? 'nw_exfil_to_github' : 'fs_exfil',
+      baseScore: 80,
+    });
     result.domainsFound.push(...domains);
     FS_READ_RE.lastIndex = 0;
     const fsMatch = FS_READ_RE.exec(content);
@@ -123,15 +136,21 @@ function patternMatcher(f, content) {
       const lc = getLineColumn(content, fsMatch.index);
       result.locations.push({ file, line: lc.line, column: lc.column });
     }
-    result.evidence.push(isGithubOnly
-      ? 'pattern: fs.readFile + network to GitHub'
-      : 'pattern: fs.readFile + external fetch');
+    result.evidence.push(
+      isGithubOnly
+        ? 'pattern: fs.readFile + network to GitHub'
+        : 'pattern: fs.readFile + external fetch'
+    );
   }
 
   if (hasFsRead && (hasChildProc || hasCurlWget)) {
-    const isGithubOnly = gitHubDomains.length > 0 && externalDomains.length === gitHubDomains.length;
+    const isGithubOnly =
+      gitHubDomains.length > 0 && externalDomains.length === gitHubDomains.length;
     result.hasPattern = true;
-    result.patterns.push({ subtype: isGithubOnly ? 'nw_exfil_to_github' : 'fs_exfil', baseScore: 80 });
+    result.patterns.push({
+      subtype: isGithubOnly ? 'nw_exfil_to_github' : 'fs_exfil',
+      baseScore: 80,
+    });
     result.domainsFound.push(...domains);
     FS_READ_RE.lastIndex = 0;
     const fsMatch = FS_READ_RE.exec(content);
@@ -139,9 +158,11 @@ function patternMatcher(f, content) {
       const lc = getLineColumn(content, fsMatch.index);
       result.locations.push({ file, line: lc.line, column: lc.column });
     }
-    result.evidence.push(isGithubOnly
-      ? 'pattern: fs.readFile + child_process to GitHub'
-      : 'pattern: fs.readFile + child_process network');
+    result.evidence.push(
+      isGithubOnly
+        ? 'pattern: fs.readFile + child_process to GitHub'
+        : 'pattern: fs.readFile + child_process network'
+    );
   }
 
   const creds = extractCredentials(content);
@@ -152,7 +173,7 @@ function patternMatcher(f, content) {
     result.patterns.push({ subtype: primaryType, baseScore: 85 });
     const lc = getLineColumn(content, creds[0].index);
     result.locations.push({ file, line: lc.line, column: lc.column });
-    const typeNames = [...new Set(creds.map(c => c.type))];
+    const typeNames = [...new Set(creds.map((c) => c.type))];
     result.evidence.push(`hardcoded_credentials: ${creds.length} (${typeNames.join(', ')})`);
   }
 
@@ -171,9 +192,11 @@ function patternMatcher(f, content) {
 
 export const name = 'tier1-infostealer';
 
-export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+export async function scan(pkgJson, jsFiles, _registryMeta, _allFiles) {
   const pkgName = pkgJson?.name;
-  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) return [];
+  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) {
+    return [];
+  }
 
   const files = jsFiles || [];
 
@@ -181,39 +204,49 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   const sigTexts = [];
   if (pkgJson?.scripts && typeof pkgJson.scripts === 'object') {
     for (const value of Object.values(pkgJson.scripts)) {
-      if (typeof value === 'string') sigTexts.push(value);
+      if (typeof value === 'string') {
+        sigTexts.push(value);
+      }
     }
   }
   for (const f of files) {
-    if (f?.content) sigTexts.push(f.content);
+    if (f?.content) {
+      sigTexts.push(f.content);
+    }
   }
   for (const sig of NAMED_SIGNATURES) {
     for (const text of sigTexts) {
       if (text.includes(sig)) {
-        return [{
-          detector: 'tier1-infostealer',
-          id: 'TIER1-INFOSTEALER',
-          severity: 'critical',
-          confidence: 'CRITICAL',
-          confidenceScore: 98,
-          subtype: 'named_signature_miasma',
-          message: `Named malware signature detected: "${sig}"`,
-          evidence: [sig],
-          locations: [{ file: '', line: 0 }],
-          crossFiles: [],
-          reference: 'Campaign 2 & 3',
-        }];
+        return [
+          {
+            detector: 'tier1-infostealer',
+            id: 'TIER1-INFOSTEALER',
+            severity: 'critical',
+            confidence: 'CRITICAL',
+            confidenceScore: 98,
+            subtype: 'named_signature_miasma',
+            message: `Named malware signature detected: "${sig}"`,
+            evidence: [sig],
+            locations: [{ file: '', line: 0 }],
+            crossFiles: [],
+            reference: 'Campaign 2 & 3',
+          },
+        ];
       }
     }
   }
 
-  if (files.length === 0) return [];
+  if (files.length === 0) {
+    return [];
+  }
 
   let parseFailCount = 0;
 
   for (const f of files) {
     const content = f.content || '';
-    if (!content) continue;
+    if (!content) {
+      continue;
+    }
     try {
       acorn.parse(content, { ecmaVersion: 'latest' });
     } catch {
@@ -221,12 +254,16 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     }
   }
 
-  if (files.length >= 20 && parseFailCount / files.length >= 0.1) return [];
+  if (files.length >= 20 && parseFailCount / files.length >= 0.1) {
+    return [];
+  }
 
-  const perFile = files.map(f => patternMatcher(f, f.content || ''));
-  const filesWithPatterns = perFile.filter(p => p.hasPattern);
+  const perFile = files.map((f) => patternMatcher(f, f.content || ''));
+  const filesWithPatterns = perFile.filter((p) => p.hasPattern);
 
-  if (filesWithPatterns.length === 0) return [];
+  if (filesWithPatterns.length === 0) {
+    return [];
+  }
 
   let highestBase = 0;
   let mainSubtype = '';
@@ -234,13 +271,17 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   const allEvidence = [];
   const allLocations = [];
   const involvedFiles = [];
-  const hasCreds = false;
+  const _hasCreds = false;
 
   for (const f of filesWithPatterns) {
-    if (!involvedFiles.includes(f.file)) involvedFiles.push(f.file);
+    if (!involvedFiles.includes(f.file)) {
+      involvedFiles.push(f.file);
+    }
     allLocations.push(...f.locations);
     allEvidence.push(...f.evidence);
-    if (f.isObfuscated) isObfuscated = true;
+    if (f.isObfuscated) {
+      isObfuscated = true;
+    }
     for (const p of f.patterns) {
       if (p.baseScore > highestBase) {
         highestBase = p.baseScore;
@@ -251,12 +292,16 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
 
   let baseScore = highestBase;
 
-  const anyCredPattern = filesWithPatterns.some(f => f.patterns.some(p => p.subtype.startsWith('cred_')));
+  const anyCredPattern = filesWithPatterns.some((f) =>
+    f.patterns.some((p) => p.subtype.startsWith('cred_'))
+  );
   if (anyCredPattern) {
     baseScore = Math.min(100, Math.round(baseScore * 2.5));
   }
 
-  if (isObfuscated) baseScore += 15;
+  if (isObfuscated) {
+    baseScore += 15;
+  }
 
   if (involvedFiles.length > 1) {
     baseScore = Math.min(100, Math.round(baseScore * 1.3));
@@ -265,8 +310,12 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   const confidenceScore = Math.max(50, Math.min(100, baseScore));
 
   function confidenceLabel(score) {
-    if (score >= 95) return 'CRITICAL';
-    if (score >= 80) return 'HIGH';
+    if (score >= 95) {
+      return 'CRITICAL';
+    }
+    if (score >= 80) {
+      return 'HIGH';
+    }
     return 'MEDIUM';
   }
 
@@ -276,14 +325,16 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   const locationMap = new Map();
   for (const loc of allLocations) {
     const key = `${loc.file}:${loc.line}:${loc.column}`;
-    if (!locationMap.has(key)) locationMap.set(key, loc);
+    if (!locationMap.has(key)) {
+      locationMap.set(key, loc);
+    }
   }
 
   const isCritical = anyCredPattern;
   const severity = isCritical ? 'critical' : confidenceScore >= 80 ? 'high' : 'medium';
 
-  const domainSummary = filesWithPatterns
-    .flatMap(f => f.domainsFound)
+  const _domainSummary = filesWithPatterns
+    .flatMap((f) => f.domainsFound)
     .filter(Boolean)
     .slice(0, 3);
 
@@ -300,17 +351,19 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     message = 'Filesystem exfiltration to external domain detected';
   }
 
-  return [{
-    detector: 'tier1-infostealer',
-    id: 'TIER1-INFOSTEALER',
-    severity,
-    confidence: confidenceLabel(confidenceScore),
-    confidenceScore,
-    subtype: mainSubtype || 'fs_exfil',
-    message,
-    evidence,
-    locations: [...locationMap.values()],
-    crossFiles: [...new Set(involvedFiles)],
-    reference: 'Campaign 2 & 3',
-  }];
+  return [
+    {
+      detector: 'tier1-infostealer',
+      id: 'TIER1-INFOSTEALER',
+      severity,
+      confidence: confidenceLabel(confidenceScore),
+      confidenceScore,
+      subtype: mainSubtype || 'fs_exfil',
+      message,
+      evidence,
+      locations: [...locationMap.values()],
+      crossFiles: [...new Set(involvedFiles)],
+      reference: 'Campaign 2 & 3',
+    },
+  ];
 }

