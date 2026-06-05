@@ -9,8 +9,8 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-459%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-yellowgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-696%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
 
@@ -481,102 +481,6 @@ npm-scan report --html > report.html
 
 ### Docker
 
-上記の[Dockerクイックスタート](#-dockerでlateosnpm-scanをどこでも実行--インストール不要)セクションを参照してください。プルコマンド、Composeパイプライン、マルチアーキテクチャイメージについて説明しています。
-
-すべてのPRでプロジェクトの`package-lock.json`をスキャン——タイポスクワッティング、難読化ペイロード、認証情報窃取ツール、ワーム伝播を本番環境に到達する前に検出：
-
-```yaml
-# .github/workflows/scan.yml
-name: npm-scan
-on:
-  pull_request:
-    paths:
-      - 'package-lock.json'
-      - '**/package.json'
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Scan lockfile
-      uses: lateos/npm-scan@v1
-      with:
-        scan-type: lockfile
-        fail-on: high
-```
-
-#### Action入力
-
-| 入力 | デフォルト | 説明 |
-|-------|---------|-------------|
-| `scan-type` | `lockfile` | `lockfile`は`package-lock.json`をスキャン、`package`は特定のnpmパッケージをスキャン |
-| `package` | — | パッケージ名（`scan-type=package`時に必須） |
-| `fail-on` | `high` | この重要度しきい値でワークフローを失敗させる：`none`、`low`、`medium`、`high`、`critical` |
-| `policy-file` | — | 許可リスト、重要度上書き、抑制用のYAML/JSONポリシーファイルへのパス |
-| `license-key` | — | SIEMエクスポートとPDFレポート用のプレミアムライセンスキー |
-| `siem-format` | — | SIEM出力：`cef`、`ecs`、`sentinel`、`qradar`（プレミアム） |
-| `sbom-format` | — | SBOM出力：`json`、`xml`、`spdx` |
-
-#### Action出力
-
-| 出力 | 説明 |
-|--------|-------------|
-| `findings-count` | 検出された発見項目の数 |
-| `scan-id` | 後でレポートで参照するためのスキャンID |
-
-#### 例：ポリシー＋SBOMで特定パッケージをスキャン
-
-```yaml
-- uses: lateos/npm-scan@v1
-  with:
-    scan-type: package
-    package: lodash
-    policy-file: .npm-scan.yml
-    sbom-format: spdx
-    fail-on: critical
-```
-
-#### 例：SIEMエクスポートでスキャン（プレミアム）
-
-```yaml
-- uses: lateos/npm-scan@v1
-  with:
-    scan-type: lockfile
-    siem-format: cef
-    license-key: ${{ secrets.NPM_SCAN_LICENSE_KEY }}
-```
-
-### CI/CDパイプライン
-
-複合アクションを使わずに既存のパイプラインに直接統合：
-
-```bash
-# ロックファイルをスキャン、高重要度でビルドを失敗
-npm-scan scan-lockfile --policy .npm-scan.yml || exit 1
-
-# 特定のパッケージをスキャン、クリティカルのみで失敗
-npm-scan scan lodash --policy .npm-scan.yml || exit 1
-
-# SBOMをビルドアーティファクトとして生成
-npm-scan scan express --sbom spdx > express-sbom.spdx.json
-
-# CIでHTMLコンプライアンスレポートを生成
-npm-scan report --html > report.html
-
-# レポートをアーティファクトとしてアップロード
-# uses: actions/upload-artifact@v4
-#   with:
-#     name: npm-scan-report
-#     path: report.html
-```
-
-### Docker
-
-上記の[Dockerクイックスタート](#-dockerでlateosnpm-scanをどこでも実行--インストール不要)セクションを参照してください。プルコマンド、Composeパイプライン、マルチアーキテクチャイメージについて説明しています。
-
 ---
 
 ## 🗺️ ロードマップとエンタープライズ機能
@@ -702,4 +606,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 ```bash
 npx @lateos/npm-scan scan lodash
+```
 ```

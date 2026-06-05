@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-536%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-696%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
@@ -596,126 +596,6 @@ npm-scan report --html > report.html
 
 See the [Docker quick-start section](#-run-lateosnpm-scan-anywhere-with-docker--zero-installation) above for pull commands, Compose pipeline, and multi-arch images.
 
-Scan your project's `package-lock.json` on every PR — detects typosquats, obfuscated payloads, credential harvesters, and worm propagation before they reach production:
-
-```yaml
-# .github/workflows/scan.yml
-name: npm-scan
-on:
-  pull_request:
-    paths:
-      - 'package-lock.json'
-      - '**/package.json'
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Scan lockfile
-      uses: lateos/npm-scan@v1
-      with:
-        scan-type: lockfile
-        fail-on: high
-```
-
-#### Action inputs
-
-| Input | Default | Description |
-|-------|---------|-------------|
-| `scan-type` | `lockfile` | `lockfile` to scan `package-lock.json` or `package` to scan a specific npm package |
-| `package` | — | Package name (required when `scan-type=package`) |
-| `fail-on` | `high` | Fail the workflow at this severity threshold: `none`, `low`, `medium`, `high`, `critical` |
-| `policy-file` | — | Path to a YAML/JSON policy file for allowlists, severity overrides, and suppressions |
-| `license-key` | — | Premium license key for SIEM export and PDF reports |
-| `siem-format` | — | SIEM output: `cef`, `ecs`, `sentinel`, `qradar` (premium) |
-| `sbom-format` | — | SBOM output: `json`, `xml`, `spdx` |
-
-#### Action outputs
-
-| Output | Description |
-|--------|-------------|
-| `findings-count` | Number of findings detected |
-| `scan-id` | Scan ID for later reference in reports |
-
-#### Example: scan a specific package with policy + SBOM
-
-```yaml
-- uses: lateos/npm-scan@v1
-  with:
-    scan-type: package
-    package: lodash
-    policy-file: .npm-scan.yml
-    sbom-format: spdx
-    fail-on: critical
-```
-
-#### Example: scan with SIEM export (premium)
-
-```yaml
-- uses: lateos/npm-scan@v1
-  with:
-    scan-type: lockfile
-    siem-format: cef
-    license-key: ${{ secrets.NPM_SCAN_LICENSE_KEY }}
-```
-
-### CI/CD pipeline
-
-Integrate directly into your existing pipeline without the composite action:
-
-```bash
-# Scan lockfile, fail build on high severity
-npm-scan scan-lockfile --policy .npm-scan.yml || exit 1
-
-# Scan a specific package, fail on critical only
-npm-scan scan lodash --policy .npm-scan.yml || exit 1
-
-# Generate SBOM as a build artifact
-npm-scan scan express --sbom spdx > express-sbom.spdx.json
-
-# Generate HTML compliance report in CI
-npm-scan report --html > report.html
-
-# Upload report as an artifact
-# uses: actions/upload-artifact@v4
-#   with:
-#     name: npm-scan-report
-#     path: report.html
-```
-
-### Pre-commit hook
-
-Block supply chain threats **before** they reach version control — no CI required.
-
-```bash
-# One-liner install (requires Node 18+, Git)
-npx husky@latest init && npm install && npx husky add .husky/pre-commit "npx lint-staged"
-```
-
-**What it does:** On every `git commit`, lint-staged detects staged changes to `package.json` or `package-lock.json` and runs `npm-scan scan-lockfile --fail-on high`. Commits are blocked if threats are found.
-
-```bash
-$ git commit -m "bump lodash"
-✔ Preparing lint-staged configuration...
-✔ Running tasks for staged package*.json files...
-✔ npm-scan scan-lockfile --fail-on high
-  🔴 ATK-003: Credential exfiltration (DNS lookup to credentialharvest.example.com)
-  🔴 ATK-007: Typosquat detected (lodash@7.7.7)
-  ⚠ Exiting with code 1 — threat(s) found
-
-npm scan • @lateos/npm-scan v0.11.6
-error: Command failed with exit code 1.
-```
-
-Add `--no-verify` to bypass for emergencies (`git commit -m "emergency fix" --no-verify`).
-
-### Docker
-
-See the [Docker quick-start section](#-run-lateosnpm-scan-anywhere-with-docker--zero-installation) above for pull commands, Compose pipeline, and multi-arch images.
-
 ---
 
 ## 🗺️ Roadmap & Enterprise Features
@@ -859,6 +739,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ```bash
 npx @lateos/npm-scan scan lodash
 ```
-t e s t  
- t e s t  
- 
