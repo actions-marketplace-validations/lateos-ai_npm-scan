@@ -33,6 +33,7 @@ import { scan as tier1SelfPropagationScan } from './tier1-self-propagation.js';
 import { scan as tier1EncryptedC2Scan } from './tier1-encrypted-c2.js';
 import { scan as tier1TransitiveDepsScan } from './tier1-transitive-deps.js';
 import { scan as tier1MaintainerCompromiseScan } from './tier1-maintainer-compromise.js';
+import { scan as tier1BuildConfigAbuseScan } from './tier1-build-config-abuse.js';
 
 function timeout(ms) {
   return new Promise((_, reject) =>
@@ -225,6 +226,16 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
     ...(await runTier1(
       'tier1-maintainer-compromise',
       tier1MaintainerCompromiseScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-build-config-abuse',
+      tier1BuildConfigAbuseScan,
       pkgJson,
       files,
       registryMeta,
