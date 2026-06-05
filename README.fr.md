@@ -9,8 +9,8 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-459%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-yellowgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-696%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
 
@@ -485,102 +485,6 @@ npm-scan report --html > report.html
 
 ### Docker
 
-Voir la [section Démarrage rapide Docker](#-exécutez-lateosnpm-scan-partout-avec-docker--zéro-installation) ci-dessus pour les commandes de tirage, le pipeline Compose et les images multi-arch.
-
-Scannez le `package-lock.json` de votre projet à chaque PR — détecte les typosquattings, les charges utiles obfusquées, les voleurs d'identifiants et la propagation de ver avant qu'ils n'atteignent la production :
-
-```yaml
-# .github/workflows/scan.yml
-name: npm-scan
-on:
-  pull_request:
-    paths:
-      - 'package-lock.json'
-      - '**/package.json'
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Scan lockfile
-      uses: lateos/npm-scan@v1
-      with:
-        scan-type: lockfile
-        fail-on: high
-```
-
-#### Entrées de l'action
-
-| Entrée | Défaut | Description |
-|-------|---------|-------------|
-| `scan-type` | `lockfile` | `lockfile` pour scanner `package-lock.json` ou `package` pour scanner un paquet npm spécifique |
-| `package` | — | Nom du paquet (requis quand `scan-type=package`) |
-| `fail-on` | `high` | Faire échouer le workflow à ce seuil de sévérité : `none`, `low`, `medium`, `high`, `critical` |
-| `policy-file` | — | Chemin vers un fichier de politique YAML/JSON pour listes blanches, surcharges de sévérité et suppressions |
-| `license-key` | — | Clé de licence premium pour l'export SIEM et les rapports PDF |
-| `siem-format` | — | Sortie SIEM : `cef`, `ecs`, `sentinel`, `qradar` (premium) |
-| `sbom-format` | — | Sortie SBOM : `json`, `xml`, `spdx` |
-
-#### Sorties de l'action
-
-| Sortie | Description |
-|--------|-------------|
-| `findings-count` | Nombre de résultats détectés |
-| `scan-id` | ID du scan pour référence ultérieure dans les rapports |
-
-#### Exemple : scanner un paquet spécifique avec politique + SBOM
-
-```yaml
-- uses: lateos/npm-scan@v1
-  with:
-    scan-type: package
-    package: lodash
-    policy-file: .npm-scan.yml
-    sbom-format: spdx
-    fail-on: critical
-```
-
-#### Exemple : scanner avec export SIEM (premium)
-
-```yaml
-- uses: lateos/npm-scan@v1
-  with:
-    scan-type: lockfile
-    siem-format: cef
-    license-key: ${{ secrets.NPM_SCAN_LICENSE_KEY }}
-```
-
-### Pipeline CI/CD
-
-Intégrez directement dans votre pipeline existant sans l'action composite :
-
-```bash
-# Scanner le fichier de verrouillage, échouer le build en sévérité élevée
-npm-scan scan-lockfile --policy .npm-scan.yml || exit 1
-
-# Scanner un paquet spécifique, échouer seulement sur critique
-npm-scan scan lodash --policy .npm-scan.yml || exit 1
-
-# Générer un SBOM comme artefact de build
-npm-scan scan express --sbom spdx > express-sbom.spdx.json
-
-# Générer un rapport de conformité HTML dans le CI
-npm-scan report --html > report.html
-
-# Télécharger le rapport comme artefact
-# uses: actions/upload-artifact@v4
-#   with:
-#     name: npm-scan-report
-#     path: report.html
-```
-
-### Docker
-
-Voir la [section Démarrage rapide Docker](#-exécutez-lateosnpm-scan-partout-avec-docker--zéro-installation) ci-dessus pour les commandes de tirage, le pipeline Compose et les images multi-arch.
-
 ---
 
 ## 🗺️ Feuille de route et fonctionnalités Enterprise
@@ -706,4 +610,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 ```bash
 npx @lateos/npm-scan scan lodash
+```
 ```

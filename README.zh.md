@@ -9,8 +9,8 @@
 [![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
 [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-459%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
-[![Coverage](https://img.shields.io/badge/coverage-85%25-yellowgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Tests](https://img.shields.io/badge/tests-696%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
 [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
 
@@ -485,102 +485,6 @@ npm-scan report --html > report.html
 
 ### Docker
 
-请参见上方的 [Docker 快速入门部分](#-在任何地方通过-docker-运行-lateosnpm-scan--零安装)，了解拉取命令、Compose 流水线和多架构镜像。
-
-在每个 PR 上扫描您项目的 `package-lock.json`——在它们进入生产环境之前检测域名抢注、混淆载荷、凭证窃取器和蠕虫传播：
-
-```yaml
-# .github/workflows/scan.yml
-name: npm-scan
-on:
-  pull_request:
-    paths:
-      - 'package-lock.json'
-      - '**/package.json'
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Scan lockfile
-      uses: lateos/npm-scan@v1
-      with:
-        scan-type: lockfile
-        fail-on: high
-```
-
-#### Action 输入
-
-| 输入 | 默认值 | 描述 |
-|-------|---------|-------------|
-| `scan-type` | `lockfile` | `lockfile` 扫描 `package-lock.json` 或 `package` 扫描特定 npm 包 |
-| `package` | — | 包名（`scan-type=package` 时需要） |
-| `fail-on` | `high` | 在此严重性阈值处使工作流失败：`none`、`low`、`medium`、`high`、`critical` |
-| `policy-file` | — | YAML/JSON 策略文件路径，用于白名单、严重性覆盖和抑制 |
-| `license-key` | — | 用于 SIEM 导出和 PDF 报告的高级版许可证密钥 |
-| `siem-format` | — | SIEM 输出：`cef`、`ecs`、`sentinel`、`qradar`（高级版） |
-| `sbom-format` | — | SBOM 输出：`json`、`xml`、`spdx` |
-
-#### Action 输出
-
-| 输出 | 描述 |
-|--------|-------------|
-| `findings-count` | 检测到的发现项数量 |
-| `scan-id` | 扫描 ID，用于后续报告引用 |
-
-#### 示例：使用策略 + SBOM 扫描特定包
-
-```yaml
-- uses: lateos/npm-scan@v1
-  with:
-    scan-type: package
-    package: lodash
-    policy-file: .npm-scan.yml
-    sbom-format: spdx
-    fail-on: critical
-```
-
-#### 示例：使用 SIEM 导出扫描（高级版）
-
-```yaml
-- uses: lateos/npm-scan@v1
-  with:
-    scan-type: lockfile
-    siem-format: cef
-    license-key: ${{ secrets.NPM_SCAN_LICENSE_KEY }}
-```
-
-### CI/CD 流水线
-
-直接集成到您现有的流水线中，无需复合操作：
-
-```bash
-# 扫描锁定文件，在高严重性时使构建失败
-npm-scan scan-lockfile --policy .npm-scan.yml || exit 1
-
-# 扫描特定包，仅在严重时失败
-npm-scan scan lodash --policy .npm-scan.yml || exit 1
-
-# 生成 SBOM 作为构建产物
-npm-scan scan express --sbom spdx > express-sbom.spdx.json
-
-# 在 CI 中生成 HTML 合规报告
-npm-scan report --html > report.html
-
-# 上传报告作为产物
-# uses: actions/upload-artifact@v4
-#   with:
-#     name: npm-scan-report
-#     path: report.html
-```
-
-### Docker
-
-请参见上方的 [Docker 快速入门部分](#-在任何地方通过-docker-运行-lateosnpm-scan--零安装)，了解拉取命令、Compose 流水线和多架构镜像。
-
 ---
 
 ## 🗺️ 路线图与企业功能
@@ -706,4 +610,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 
 ```bash
 npx @lateos/npm-scan scan lodash
+```
 ```
