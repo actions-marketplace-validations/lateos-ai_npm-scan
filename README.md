@@ -1,17 +1,6 @@
-# @lateos/npm-scan
+[![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md) [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json) [![Tests](https://img.shields.io/badge/tests-696%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan) [![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan) [![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan) [![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
 
-[![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
-[![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
-[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-696%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
-[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
-[![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
-[![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
-
-[![中文](https://img.shields.io/badge/lang-zh--CN-red?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.zh.md)
-[![日本語](https://img.shields.io/badge/lang-ja-purple?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.ja.md)
-[![Français](https://img.shields.io/badge/lang-fr-orange?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.fr.md)
-[![Deutsch](https://img.shields.io/badge/lang-de-green?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.de.md)
+[![中文](https://img.shields.io/badge/lang-zh--CN-red?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.zh.md) [![日本語](https://img.shields.io/badge/lang-ja-purple?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.ja.md) [![Français](https://img.shields.io/badge/lang-fr-orange?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.fr.md) [![Deutsch](https://img.shields.io/badge/lang-de-green?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.de.md)
 
 **Modern supply chain security for the npm ecosystem.**
 Static + behavioral analysis that catches what npm audit, Snyk, and Socket miss — obfuscated payloads, credential stealers, conditional triggers, sandbox evasion, and worm-like propagation.
@@ -201,8 +190,7 @@ npm-scan scan-lockfile --cache-dir /offline/cache --audit-log /var/log/npm-scan.
 npm-scan report --stig
 ```
 
-[![SOC 2 Ready](https://img.shields.io/badge/SOC%202-Ready-green?style=flat-square&logo=aicpa)](https://www.aicpa.org/interestareas/frc/assuranceadvisoryservices/sorhome.html#soc2)
-[![FedRAMP Aligned](https://img.shields.io/badge/FedRAMP-Aligned-blue?style=flat-square&logo=fedramp)](https://fedramp.gov/baselines/)
+[![SOC 2 Ready](https://img.shields.io/badge/SOC%202-Ready-green?style=flat-square&logo=aicpa)](https://www.aicpa.org/interestareas/frc/assuranceadvisoryservices/sorhome.html#soc2) [![FedRAMP Aligned](https://img.shields.io/badge/FedRAMP-Aligned-blue?style=flat-square&logo=fedramp)](https://fedramp.gov/baselines/)
 
 ---
 
@@ -713,8 +701,7 @@ See [`LICENSING.md`](LICENSING.md) for the exact boundary between free and premi
 
 **Roongrunchai Chongolnee** — creator and maintainer of `@lateos/npm-scan`. Certified security professional (CISSP, CEH, Cisco Security, AWS Cloud Practitioner) with a decade of infrastructure and application security experience at Philips. I built this tool to give the open-source community a practical, detector-driven defense against supply-chain malware — and I'm committed to keeping it transparent, community-owned, and continuously improved.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/)
-[![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/) [![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
 
 Issues, ideas, and pull requests are always welcome — security is strongest when we collaborate.
 
