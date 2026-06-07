@@ -1,0 +1,6 @@
+{"name":"@ironworm-rootkit","version":"1.0.0","files":[{"path":"loader.js","content":"bpf(BPF_PROG_LOAD, { prog_type: 1 }); bpf(BPF_PROG_ATTACH, { target_fd: cgroup_fd });"}],"expected":"BLOCK"}
+{"name":"ebpf-hide-process","version":"0.3.0","files":[{"path":"rootkit.rs","content":"extern \"C\" { fn bpf(cmd: u32, attr: *mut BPFAttr) -> i32; } unsafe { bpf(BPF_PROG_LOAD, &attr); bpf(BPF_PROG_ATTACH, &attach); } hide_process = true; rootkit_mode = true;"}],"expected":"BLOCK"}
+{"name":"kprobe-hook","version":"0.1.0","files":[{"path":"install.js","content":"kprobes/sys_open, kprobes/sys_connect, tracepoints/syscalls"}],"expected":"BLOCK"}
+{"name":"legitimate-rust-binary","version":"1.0.0","files":[{"path":"main.rs","content":"fn main() { println!(\"hello world\"); }"}],"expected":"PASS"}
+{"name":"rust-ffi","version":"0.1.0","files":[{"path":"lib.rs","content":"extern \"C\" { fn some_c_function(x: i32) -> i32; }"}],"expected":"PASS"}
+{"name":"ebpf-net-hook","version":"0.2.0","files":[{"path":"install.js","content":"sys_connect = hook_kprobe(\"sys_connect\"); sys_sendto = hook_kprobe(\"sys_sendto\"); hide_network = true;"}],"expected":"BLOCK"}

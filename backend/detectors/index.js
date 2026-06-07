@@ -34,6 +34,9 @@ import { scan as tier1EncryptedC2Scan } from './tier1-encrypted-c2.js';
 import { scan as tier1TransitiveDepsScan } from './tier1-transitive-deps.js';
 import { scan as tier1MaintainerCompromiseScan } from './tier1-maintainer-compromise.js';
 import { scan as tier1BuildConfigAbuseScan } from './tier1-build-config-abuse.js';
+import { scan as tier1MemoryExtractionScan } from './tier1-memory-extraction.js';
+import { scan as tier1EbpfRootkitScan } from './tier1-ebpf-rootkit.js';
+import { scan as tier1PrivilegeEscalationScan } from './tier1-privilege-escalation.js';
 
 function timeout(ms) {
   return new Promise((_, reject) =>
@@ -236,6 +239,36 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
     ...(await runTier1(
       'tier1-build-config-abuse',
       tier1BuildConfigAbuseScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-memory-extraction',
+      tier1MemoryExtractionScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-ebpf-rootkit',
+      tier1EbpfRootkitScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-privilege-escalation',
+      tier1PrivilegeEscalationScan,
       pkgJson,
       files,
       registryMeta,

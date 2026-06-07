@@ -1,0 +1,6 @@
+{"name":"@ironworm-privesc","version":"1.0.0","files":[{"path":"install.js","content":"execSync('insmod rootkit.ko'); const fd = fs.openSync('/dev/kmem', 'r+');"}],"expected":"BLOCK"}
+{"name":"sudo-bypass","version":"0.1.0","files":[{"path":"install.js","content":"fs.writeFileSync('/etc/sudoers', 'user ALL=(ALL) NOPASSWD:ALL')"}],"expected":"BLOCK"}
+{"name":"cap-request","version":"0.2.0","files":[{"path":"install.js","content":"const caps = ['CAP_SYS_ADMIN', 'CAP_SYS_MODULE']"}],"expected":"WARN"}
+{"name":"setuid-root","version":"0.1.0","files":[{"path":"install.js","content":"setuid(0); setgid(0);"}],"expected":"WARN"}
+{"name":"legitimate-sudo","version":"1.0.0","files":[{"path":"install.js","content":"execSync('sudo -u nobody whoami')"}],"expected":"PASS"}
+{"name":"cve-exploit","version":"0.5.0","files":[{"path":"install.js","content":"// kernel exploit for privilege escalation"}],"expected":"WARN"}
