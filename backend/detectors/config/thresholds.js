@@ -235,7 +235,7 @@ export default {
       execution_guard: 0.85,
       anti_tamper: 0.9,
     },
-    notes: 'D18: Self-Defending/Environment-Aware Malicious Code; file_mod_detection lowered to 20 to avoid FP on fs.statSync + mtime combos',
+    notes: 'D18: Self-Defending/Environment-Aware Malicious Code; file_mod_detection weight 20',
   },
   'D19-MODULE-LOAD': {
     flag_threshold: 160,
@@ -269,7 +269,8 @@ export default {
       user_enumeration: 0.65,
       cloud_detection: 0.8,
     },
-    notes: 'D20: Profiling & Reconnaissance; weights lowered post-FP calibration for platform_enum + user_enum + dir_scan combos',
+    notes:
+      'D20: Profiling & Reconnaissance; weights lowered for platform_enum + user_enum + dir_scan',
   },
   'D21-SELF-CLEANING': {
     flag_threshold: 180,

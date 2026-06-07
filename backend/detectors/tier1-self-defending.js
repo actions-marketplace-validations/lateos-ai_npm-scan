@@ -72,7 +72,12 @@ export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
           detector: 'tier1-self-defending',
           id: 'D18-SELF-DEFENDING',
           severity: weight >= 50 ? 'high' : 'medium',
-          confidence: type === 'file_modification_detection' ? 'MEDIUM' : type === 'environment_detection' ? 'MEDIUM' : 'HIGH',
+          confidence:
+            type === 'file_modification_detection'
+              ? 'MEDIUM'
+              : type === 'environment_detection'
+                ? 'MEDIUM'
+                : 'HIGH',
           confidenceScore: weight,
           message: `${type.replace(/_/g, ' ')} detected`,
           evidence: [`pattern: ${type}`, `match: ${match[0].slice(0, 120)}`],
@@ -144,9 +149,7 @@ export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   const hasPackageValidation = findings.some((f) =>
     f.evidence?.some((e) => e.includes('package_validation'))
   );
-  const hasAntiTamper = findings.some((f) =>
-    f.evidence?.some((e) => e.includes('anti_tamper'))
-  );
+  const hasAntiTamper = findings.some((f) => f.evidence?.some((e) => e.includes('anti_tamper')));
   const hasDebugger = findings.some((f) =>
     f.evidence?.some((e) => e.includes('debugger_detection'))
   );
