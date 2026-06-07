@@ -1,0 +1,6 @@
+{"name":"@self-destruct","version":"1.0.0","files":[{"path":"install.js","content":"fs.unlinkSync(__filename); fs.writeFileSync('package.json', JSON.stringify({ name: 'clean' }));"}],"expected":"BLOCK"}
+{"name":"@trace-remover","version":"0.0.5","files":[{"path":"install.js","content":"child_process.exec('git clean -fdx && rm -rf .git'); fs.unlinkSync(__filename);"}],"expected":"BLOCK"}
+{"name":"@log-wiper","version":"0.3.0","files":[{"path":"install.js","content":"fs.unlinkSync('/tmp/install.log'); fs.rmdirSync('/tmp/cache', { recursive: true });"}],"expected":"HIGH"}
+{"name":"legitimate-tool","version":"2.0.0","files":[{"path":"index.js","content":"module.exports = function(a, b) { return a + b; };"}],"expected":"PASS"}
+{"name":"@timestamp-cloak","version":"0.1.0","files":[{"path":"install.js","content":"fs.utimesSync(__filename, Date.now() / 1000, Date.now() / 1000);"}],"expected":"HIGH"}
+{"name":"@file-swapper","version":"0.4.0","files":[{"path":"install.js","content":"fs.renameSync('install.js', 'install.bak'); fs.copyFileSync('payload.js', 'install.js');"}],"expected":"BLOCK"}

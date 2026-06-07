@@ -37,6 +37,10 @@ import { scan as tier1BuildConfigAbuseScan } from './tier1-build-config-abuse.js
 import { scan as tier1MemoryExtractionScan } from './tier1-memory-extraction.js';
 import { scan as tier1EbpfRootkitScan } from './tier1-ebpf-rootkit.js';
 import { scan as tier1PrivilegeEscalationScan } from './tier1-privilege-escalation.js';
+import { scan as tier1SelfDefendingScan } from './tier1-self-defending.js';
+import { scan as tier1ModuleLoadScan } from './tier1-module-load.js';
+import { scan as tier1ProfilingReconScan } from './tier1-profiling-recon.js';
+import { scan as tier1SelfCleaningScan } from './tier1-self-cleaning.js';
 
 function timeout(ms) {
   return new Promise((_, reject) =>
@@ -269,6 +273,46 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
     ...(await runTier1(
       'tier1-privilege-escalation',
       tier1PrivilegeEscalationScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-self-defending',
+      tier1SelfDefendingScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-module-load',
+      tier1ModuleLoadScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-profiling-recon',
+      tier1ProfilingReconScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-self-cleaning',
+      tier1SelfCleaningScan,
       pkgJson,
       files,
       registryMeta,

