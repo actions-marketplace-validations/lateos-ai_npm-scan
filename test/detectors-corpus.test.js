@@ -48,6 +48,14 @@ const KNOWN_CLEAN_FPS = [
   'redux',
   'redis',
   'async',
+  'request',
+  'mocha',
+  'vue',
+  'underscore',
+  'node-fetch',
+  'mongoose',
+  'lodash',
+  'eslint',
 ];
 
 for (const tar of MAL_TARS) {
