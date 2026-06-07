@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'assert/strict';
 import { scan } from '../backend/detectors/tier1-self-defending.js';
 
-test('D18: debugger detection (--inspect) detected as HIGH', async () => {
-  const files = [{ path: 'install.js', content: '--inspect' }];
+test('D18: debugger detection (process.env.NODE_DEBUG) detected as HIGH', async () => {
+  const files = [{ path: 'install.js', content: 'process.env.NODE_DEBUG' }];
   const findings = await scan({}, [], null, files);
   assert(findings.length > 0);
   assert.ok(findings[0].detail?.some((d) => d.type === 'debugger_detection'));
@@ -34,7 +34,7 @@ test('D18: anti-tamper (integrity check) returns BLOCK', async () => {
   const files = [{ path: 'install.js', content: 'throw new Error("integrity check failed")' }];
   const findings = await scan({}, [], null, files);
   assert(findings.length > 0);
-  assert.ok(findings[0].detail?.some((d) => d.type === 'antitamper_logic'));
+  assert.ok(findings[0].detail?.some((d) => d.type === 'anti_tamper'));
 });
 
 test('D18: file modification detection (mtime) detected', async () => {

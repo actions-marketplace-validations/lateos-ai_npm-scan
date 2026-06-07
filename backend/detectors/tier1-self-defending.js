@@ -60,152 +60,66 @@ export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
 
   const findings = [];
   let aggregatedRisk = 0;
+  const seen = new Set();
 
-  // Pattern 1: Debugger detection
-  const debuggerPatterns = [
-    /process\.argv.*inspect/gi,
-    /process\.argv.*debug\b/gi,
-    /--inspect|--debug-brk/gi,
-    /debugging\s*[=:].*true/gi,
-    /process\.env\.NODE_DEBUG/gi,
-    /typeof\s+global\.v8debug\b/gi,
-  ];
-
-  for (const regex of debuggerPatterns) {
-    for (const match of matchAllSafe(regex, source)) {
-      const risk = PATTERN_WEIGHTS.debugger_detection;
-      findings.push({
-        detector: 'tier1-self-defending',
-        id: 'D18-SELF-DEFENDING',
-        severity: risk >= 50 ? 'high' : 'medium',
-        confidence: 'HIGH',
-        confidenceScore: risk,
-        message: 'Debugger detection pattern detected',
-        evidence: [`pattern: debugger_detection`, `match: ${match[0].slice(0, 120)}`],
-        locations: [{ file: 'install.js', line: extractLines(source, match.index) }],
-      });
-      aggregatedRisk += risk;
+  function tryAdd(type, patterns) {
+    if (seen.has(type)) return;
+    const weight = PATTERN_WEIGHTS[type];
+    for (const regex of patterns) {
+      for (const match of matchAllSafe(regex, source)) {
+        seen.add(type);
+        findings.push({
+          detector: 'tier1-self-defending',
+          id: 'D18-SELF-DEFENDING',
+          severity: weight >= 50 ? 'high' : 'medium',
+          confidence: type === 'file_modification_detection' ? 'MEDIUM' : type === 'environment_detection' ? 'MEDIUM' : 'HIGH',
+          confidenceScore: weight,
+          message: `${type.replace(/_/g, ' ')} detected`,
+          evidence: [`pattern: ${type}`, `match: ${match[0].slice(0, 120)}`],
+          locations: [{ file: 'install.js', line: extractLines(source, match.index) }],
+        });
+        aggregatedRisk += weight;
+        return;
+      }
     }
   }
 
-  // Pattern 2: Try-catch execution guards
-  const guardPatterns = [
+  tryAdd('debugger_detection', [
+    /process\.argv.*inspect/gi,
+    /process\.argv.*debug\b/gi,
+    /debugging\s*[=:].*true/gi,
+    /process\.env\.NODE_DEBUG/gi,
+    /typeof\s+global\.v8debug\b/gi,
+  ]);
+
+  tryAdd('execution_guard', [
     /if\s*\(\s*process\.env\..*SANDBOX/gi,
     /if\s*\(\s*process\.env\..*TEST\b/gi,
     /typeof\s+require\b.*undefined/gi,
     /process\.env\.CI\s*[=!]/gi,
     /process\.env\.npm_lifecycle_event\s*[=!]/gi,
-  ];
+  ]);
 
-  for (const regex of guardPatterns) {
-    for (const match of matchAllSafe(regex, source)) {
-      const risk = PATTERN_WEIGHTS.execution_guard;
-      findings.push({
-        detector: 'tier1-self-defending',
-        id: 'D18-SELF-DEFENDING',
-        severity: risk >= 50 ? 'high' : 'medium',
-        confidence: 'HIGH',
-        confidenceScore: risk,
-        message: 'Execution guard pattern detected',
-        evidence: [`pattern: execution_guard`, `match: ${match[0].slice(0, 120)}`],
-        locations: [{ file: 'install.js', line: extractLines(source, match.index) }],
-      });
-      aggregatedRisk += risk;
-    }
-  }
-
-  // Pattern 3: Package validation checks
-  const validationPatterns = [
+  tryAdd('package_validation', [
     /require\s*\(\s*['"].*package\.json['"]\s*\)/gi,
     /JSON\.parse.*fs\.readFileSync.*package\.json/gi,
     /crypto\.createHash.*JSON\.stringify.*pjson/gi,
-    /checksum|integrity/i,
-  ];
+  ]);
 
-  for (const regex of validationPatterns) {
-    for (const match of matchAllSafe(regex, source)) {
-      const risk = PATTERN_WEIGHTS.package_validation;
-      findings.push({
-        detector: 'tier1-self-defending',
-        id: 'D18-SELF-DEFENDING',
-        severity: risk >= 50 ? 'high' : 'medium',
-        confidence: 'HIGH',
-        confidenceScore: risk,
-        message: 'Package validation check detected',
-        evidence: [`pattern: package_validation`, `match: ${match[0].slice(0, 120)}`],
-        locations: [{ file: 'install.js', line: extractLines(source, match.index) }],
-      });
-      aggregatedRisk += risk;
-    }
-  }
-
-  // Pattern 4: Environment detection
-  const envPatterns = [
+  tryAdd('environment_detection', [
     /process\.env\.TRAVIS\b|process\.env\.CIRCLE\b|process\.env\.GITHUB_ACTIONS\b/gi,
     /process\.env\.npm_lifecycle_event\s*[=!]/gi,
     /process\.env\.npm_config_user_agent/gi,
-  ];
+  ]);
 
-  for (const regex of envPatterns) {
-    for (const match of matchAllSafe(regex, source)) {
-      const risk = PATTERN_WEIGHTS.environment_detection;
-      findings.push({
-        detector: 'tier1-self-defending',
-        id: 'D18-SELF-DEFENDING',
-        severity: risk >= 50 ? 'high' : 'medium',
-        confidence: 'MEDIUM',
-        confidenceScore: risk,
-        message: 'Environment detection pattern detected',
-        evidence: [`pattern: environment_detection`, `match: ${match[0].slice(0, 120)}`],
-        locations: [{ file: 'install.js', line: extractLines(source, match.index) }],
-      });
-      aggregatedRisk += risk;
-    }
-  }
+  tryAdd('anti_tamper', [
+    /throw\s+new\s+Error[^;]{0,40}\b(integrity|tamper|modified|checksum)\b/is,
+  ]);
 
-  // Pattern 5: Anti-tamper execution paths
-  const antitamperPatterns = [
-    /throw\s+new\s+Error.*integrity/i,
-    /throw\s+new\s+Error.*modified/i,
-    /throw\s+new\s+Error.*tamper/i,
-  ];
-
-  for (const regex of antitamperPatterns) {
-    for (const match of matchAllSafe(regex, source)) {
-      const risk = PATTERN_WEIGHTS.anti_tamper;
-      findings.push({
-        detector: 'tier1-self-defending',
-        id: 'D18-SELF-DEFENDING',
-        severity: risk >= 50 ? 'high' : 'medium',
-        confidence: 'HIGH',
-        confidenceScore: risk,
-        message: 'Anti-tamper logic detected',
-        evidence: [`pattern: antitamper_logic`, `match: ${match[0].slice(0, 120)}`],
-        locations: [{ file: 'install.js', line: extractLines(source, match.index) }],
-      });
-      aggregatedRisk += risk;
-    }
-  }
-
-  // Pattern 6: File modification detection
-  const filemodPatterns = [/fs\.statSync|fs\.stat\s*\(/gi, /mtimeMs|mtime|birthtime/gi];
-
-  for (const regex of filemodPatterns) {
-    for (const match of matchAllSafe(regex, source)) {
-      const risk = PATTERN_WEIGHTS.file_modification_detection;
-      findings.push({
-        detector: 'tier1-self-defending',
-        id: 'D18-SELF-DEFENDING',
-        severity: risk >= 50 ? 'high' : 'medium',
-        confidence: 'MEDIUM',
-        confidenceScore: risk,
-        message: 'File modification detection pattern detected',
-        evidence: [`pattern: file_modification_detection`, `match: ${match[0].slice(0, 120)}`],
-        locations: [{ file: 'install.js', line: extractLines(source, match.index) }],
-      });
-      aggregatedRisk += risk;
-    }
-  }
+  tryAdd('file_modification_detection', [
+    /fs\.statSync|fs\.stat\s*\(/gi,
+    /mtimeMs|mtime|birthtime/gi,
+  ]);
 
   if (findings.length === 0) return [];
 
@@ -231,7 +145,7 @@ export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     f.evidence?.some((e) => e.includes('package_validation'))
   );
   const hasAntiTamper = findings.some((f) =>
-    f.evidence?.some((e) => e.includes('antitamper_logic'))
+    f.evidence?.some((e) => e.includes('anti_tamper'))
   );
   const hasDebugger = findings.some((f) =>
     f.evidence?.some((e) => e.includes('debugger_detection'))

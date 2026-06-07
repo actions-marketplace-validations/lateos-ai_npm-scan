@@ -220,22 +220,22 @@ export default {
     notes: 'D14: Build Configuration Abuse (Phantom Gyp / Miasma variant)',
   },
   'D18-SELF-DEFENDING': {
-    flag_threshold: 75,
-    warn_threshold: 55,
+    flag_threshold: 170,
+    warn_threshold: 120,
     pattern_weights: {
-      debugger_detection: 55,
-      execution_guard: 60,
-      package_validation: 35,
-      environment_detection: 40,
+      debugger_detection: 30,
+      execution_guard: 35,
+      package_validation: 8,
+      environment_detection: 25,
       anti_tamper: 65,
-      file_modification_detection: 50,
+      file_modification_detection: 20,
     },
     pattern_confidence: {
       debugger_detection: 0.8,
       execution_guard: 0.85,
       anti_tamper: 0.9,
     },
-    notes: 'D18: Self-Defending/Environment-Aware Malicious Code',
+    notes: 'D18: Self-Defending/Environment-Aware Malicious Code; file_mod_detection lowered to 20 to avoid FP on fs.statSync + mtime combos',
   },
   'D19-MODULE-LOAD': {
     flag_threshold: 160,
@@ -254,14 +254,14 @@ export default {
     notes: 'D19: Module-Load Execution at Install Time',
   },
   'D20-PROFILING-RECON': {
-    flag_threshold: 160,
+    flag_threshold: 170,
     warn_threshold: 120,
     pattern_weights: {
-      platform_enumeration: 30,
-      user_enumeration: 35,
+      platform_enumeration: 20,
+      user_enumeration: 25,
       network_check: 25,
       cloud_detection: 45,
-      directory_scan: 30,
+      directory_scan: 20,
       tools_detection: 25,
     },
     pattern_confidence: {
@@ -269,7 +269,7 @@ export default {
       user_enumeration: 0.65,
       cloud_detection: 0.8,
     },
-    notes: 'D20: Profiling & Reconnaissance',
+    notes: 'D20: Profiling & Reconnaissance; weights lowered post-FP calibration for platform_enum + user_enum + dir_scan combos',
   },
   'D21-SELF-CLEANING': {
     flag_threshold: 180,
