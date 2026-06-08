@@ -278,18 +278,18 @@ npm-scan report --pdf             # tous les scans (premium)
 
 | Format | Disponibilité | Description |
 |--------|-------------|-------------|
-| JSON | ✅ Gratuit | Résultats structurés lisibles par machine |
-| HTML | ✅ Gratuit | Rapport HTML riche avec tableau de conformité NIST, badges de sévérité, matrice de contrôle |
-| Texte | ✅ Gratuit | Rapport texte propre et adapté au terminal |
-| CycloneDX SBOM | ✅ Gratuit | SBOM standard de l'industrie avec résultats intégrés comme vulnérabilités |
-| SPDX SBOM | ✅ Gratuit | Format de document SPDX 2.3 |
-| NIST 800-161 | ✅ Gratuit | Matrice de traçabilité des contrôles (SR-2.1 → SR-11.4) |
-| EU CRA | ✅ Gratuit | Cartographie des articles du Cyber Resilience Act |
-| PDF | 🔐 Premium | PDF multipage avec page de titre, tableau des résultats, matrice de conformité NIST |
-| Splunk CEF | 🔐 Premium | Format d'événement commun pour l'ingestion Splunk |
-| Elastic ECS | 🔐 Premium | Format Elastic Common Schema |
-| Microsoft Sentinel | 🔐 Premium | Sortie formatée prête pour Sentinel |
-| IBM QRadar | 🔐 Premium | Format prêt pour QRadar DSM avec correspondances QID |
+| JSON | ✅ | Résultats structurés lisibles par machine |
+| HTML | ✅ | Rapport HTML riche avec tableau de conformité NIST, badges de sévérité, matrice de contrôle |
+| Texte | ✅ | Rapport texte propre et adapté au terminal |
+| CycloneDX SBOM | ✅ | SBOM standard de l'industrie avec résultats intégrés comme vulnérabilités |
+| SPDX SBOM | ✅ | Format de document SPDX 2.3 |
+| NIST 800-161 | ✅ | Matrice de traçabilité des contrôles (SR-2.1 → SR-11.4) |
+| EU CRA | ✅ | Cartographie des articles du Cyber Resilience Act |
+| PDF | Fonctionnalité future | PDF multipage avec page de titre, tableau des résultats, matrice de conformité NIST |
+| Splunk CEF | Fonctionnalité future | Format d'événement commun pour l'ingestion Splunk |
+| Elastic ECS | Fonctionnalité future | Format Elastic Common Schema |
+| Microsoft Sentinel | Fonctionnalité future | Sortie formatée prête pour Sentinel |
+| IBM QRadar | Fonctionnalité future | Format prêt pour QRadar DSM avec correspondances QID |
 
 ### Exemple de sortie
 
@@ -340,7 +340,6 @@ npm-scan scan target --policy .npm-scan.yml
 
 | Variable | Description | Défaut |
 |----------|-------------|---------|
-| `NPM_SCAN_LICENSE_KEY` | Clé de licence Premium / Enterprise | — |
 | `NPM_SCAN_DATA_DIR` | Répertoire d'historique des scans | `./.npm-scan` |
 | `NPM_SCAN_LOG_LEVEL` | Niveau de verbosité des logs | `info` |
 
@@ -456,7 +455,6 @@ jobs:
   with:
     scan-type: lockfile
     siem-format: cef
-    license-key: ${{ secrets.NPM_SCAN_LICENSE_KEY }}
 ```
 
 ### Pipeline CI/CD
@@ -487,90 +485,11 @@ npm-scan report --html > report.html
 
 ---
 
-## 🗺️ Feuille de route et fonctionnalités Enterprise
+## 🤝 Avis de contribution
 
-### Niveau gratuit (livré)
+Merci de votre intérêt pour ce projet. Veuillez noter que nous n'acceptons actuellement aucune contribution de code externe, pull request, correction de bug ou soumission de fonctionnalité.
 
-- Les 11 détecteurs ATK + **MEGALODON** (D1-D6) + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** (D1-D7, 3 vagues, avec **MSH_SUPPLEMENT** D1-D4) + **VSIX_SCAN** (6 détecteurs) + **CVE-2026-48710 (BadHost)** (3 couches) + **TRAPDOOR** (9 règles) + **NODE_IPC_COMPROMISE** (11 règles) + **TYPOSQUAT_VPMDHAJ** (3 règles) + **AXIOS_POISONING** (3 règles)
-- Sortie SBOM (CycloneDX + SPDX)
-- Rapports HTML, texte et conformité (NIST + EU CRA)
-- Moteur de politique en tant que code (YAML)
-- Historique de scan local SQLite
-- GitHub Action
-- Images Docker + pipeline Compose
-
-### Premium (🔐 clé de licence)
-
-- Rapports de conformité PDF avec matrice de traçabilité NIST
-- Export SIEM (Splunk CEF, Elastic ECS, Microsoft Sentinel, IBM QRadar)
-- Sandbox dynamique (basé sur gVisor — ATK-008–010)
-- Analyse d'atteignabilité (filtrage par graphe d'appels)
-
-### Enterprise (🏢 licence personnalisée)
-
-- SAML 2.0 SSO (Okta, Azure AD, OneLogin, Keycloak)
-- API REST + webhooks (FastAPI)
-- RBAC d'équipe + journaux d'audit
-- Chart Helm pour déploiement Kubernetes
-- Backend PostgreSQL pour niveau hébergé/équipe
-- Support prioritaire avec garantie SLA
-
----
-
-## 🤝 Contribuer
-
-Nous accueillons les contributions — en particulier les nouveaux détecteurs, l'amélioration de la résistance à l'évasion et les modèles de conformité.
-
-Consultez [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) pour le processus de gouvernance ATK. Chaque nouveau détecteur nécessite :
-
-1. Un échantillon de preuve de concept
-2. Une règle de détection avec tests
-3. Une analyse des faux positifs sur les 500 premiers paquets npm
-4. Un mappage de contrôle NIST 800-161
-
-### Tests
-
-Le projet utilise **le moteur de test natif Node.js** (`node:test` + `assert/strict`).
-
-```bash
-# Exécuter tous les tests
-npm test
-
-# Exécuter les tests avec couverture
-npm run test:coverage
-
-# Exécuter les tests avec sortie détaillée
-npm run test:verbose
-
-# Exécuter le corpus local malveillant/clean (aucun réseau requis)
-node --test test/detectors-corpus.test.js
-```
-
-**Structure des tests :**
-- `test/fixtures/mock-data.js` — simulations partagées, paquets et extraits de code
-- `test/db.test.js` — CRUD de base de données (sauvegarde, requête, persistance)
-- `test/detectors-edge-cases.test.js` — tests limites par détecteur (no-ops, nettoyages, sévérité)
-- `test/detectors-corpus.test.js` — 33 tarballs malveillants + 50 propres (hors ligne)
-- `test/fetch.test.js` — extraction de tarball, nettoyage de répertoire temporaire
-- `test/policy-edge-cases.test.js` — cas limites dans la suppression, la surcharge, la validation de chargement
-- `test/report-snapshots.test.js` — assertions de format HTML/texte/CRA/PDF
-- `test/cve-2026-48710-badhost/manifest.test.js` — 13 tests d'analyse de manifeste Python (requirements.txt, pyproject.toml, poetry.lock, cas limites de version)
-- `test/cve-2026-48710-badhost/transitive.test.js` — 7 tests de dépendances transitives (Tier 1/2, contrôle de version fastapi, suppression par épinglage)
-- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 tests de motifs de code statiques (contexte auth, passage INFO, suppression scope)
-- `test/cve-2026-48710-badhost/integration.test.js` — 4 tests d'intégration (résultats composites de bout en bout, projet propre, pas de fichiers Python)
-- `test/trapdoor.test.js` — 40 tests de détection de la campagne TrapDoor (D1–D9 : marqueur de campagne, empreinte de charge utile, liste noire d'éditeur, exfiltration Gist, empoisonnement IA, nom leurre, primitives cryptographiques, clé XOR, validation d'identifiants)
-- `test/node-ipc.test.js` — 37 tests de détection de compromission node-ipc (D1–D11 : liste noire de versions, hachage tarball, injection CJS, hachage de charge utile, motif DNS C2, résolveur d'amorçage, exfiltration DNS TXT, déclencheur d'exécution, artefacts temporaires, éditeur non autorisé, rayon d'impact)
-- `test/msh-supplement.test.js` — 17 tests MSH supplement (obfuscation ctf-scramble-v2, démonisation, killswitch géographique, C2 dead-drop)
-- `test/typosquat-vpmdhaj.test.js` — 16 tests campagne typosquattage (blocage mainteneur, détection préfixe, Levenshtein, stagers pré-installation, exfiltration identifiants AWS/ECS/Vault/GitHub)
-- `test/axios-poisoning.test.js` — 13 tests empoisonnement Axios (liste noire versions, dépendance leurre, heuristique crypto, RAT multiplateforme, rappel C2)
-- `test/cli.test.js` — tests d'intégration commander (aide, version, scan, rapport, gestion d'erreurs)
-
-### Besoin d'aide ?
-
-- 🔒 Voir la [politique de sécurité](SECURITY.md) pour la divulgation des vulnérabilités
-- 📖 Lire le [plan du projet](docs/project-plan.md)
-- 🧬 Consulter la [taxonomie des attaques](docs/attack-taxonomy.md)
-- 🐛 Ouvrir une issue ou une PR
+Toute pull request ouverte sera automatiquement fermée sans examen.
 
 ---
 
@@ -588,7 +507,7 @@ Voir [`LICENSING.md`](LICENSING.md) pour la limite exacte entre les fonctionnali
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/)
 [![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
 
-Les issues, idées et pull requests sont toujours les bienvenus — la sécurité est plus forte quand nous collaborons.
+Les issues et idées sont toujours les bienvenues — la sécurité est plus forte quand nous collaborons. Les pull requests ne sont pas acceptées pour le moment.
 
 ---
 

@@ -278,18 +278,18 @@ npm-scan report --pdf             # 所有扫描（高级版）
 
 | 格式 | 可用性 | 描述 |
 |--------|-------------|-------------|
-| JSON | ✅ 免费 | 结构化机器可读的发现项 |
-| HTML | ✅ 免费 | 丰富 HTML 报告，含 NIST 合规表、严重性徽章、控制矩阵 |
-| 文本 | ✅ 免费 | 简洁的终端友好文本报告 |
-| CycloneDX SBOM | ✅ 免费 | 行业标准 SBOM，发现项嵌入为漏洞 |
-| SPDX SBOM | ✅ 免费 | SPDX 2.3 文档格式 |
-| NIST 800-161 | ✅ 免费 | 控制可追溯性矩阵（SR-2.1 → SR-11.4） |
-| EU CRA | ✅ 免费 | 网络弹性法案条款映射 |
-| PDF | 🔐 高级版 | 多页 PDF，含标题页、发现项表格、NIST 合规矩阵 |
-| Splunk CEF | 🔐 高级版 | 用于 Splunk 导入的通用事件格式 |
-| Elastic ECS | 🔐 高级版 | Elastic 通用模式格式 |
-| Microsoft Sentinel | 🔐 高级版 | Sentinel 就绪格式化输出 |
-| IBM QRadar | 🔐 高级版 | QRadar DSM 就绪格式，含 QID 映射 |
+| JSON | ✅ | 结构化机器可读的发现项 |
+| HTML | ✅ | 丰富 HTML 报告，含 NIST 合规表、严重性徽章、控制矩阵 |
+| 文本 | ✅ | 简洁的终端友好文本报告 |
+| CycloneDX SBOM | ✅ | 行业标准 SBOM，发现项嵌入为漏洞 |
+| SPDX SBOM | ✅ | SPDX 2.3 文档格式 |
+| NIST 800-161 | ✅ | 控制可追溯性矩阵（SR-2.1 → SR-11.4） |
+| EU CRA | ✅ | 网络弹性法案条款映射 |
+| PDF | 未来功能 | 多页 PDF，含标题页、发现项表格、NIST 合规矩阵 |
+| Splunk CEF | 未来功能 | 用于 Splunk 导入的通用事件格式 |
+| Elastic ECS | 未来功能 | Elastic 通用模式格式 |
+| Microsoft Sentinel | 未来功能 | Sentinel 就绪格式化输出 |
+| IBM QRadar | 未来功能 | QRadar DSM 就绪格式，含 QID 映射 |
 
 ### 示例输出
 
@@ -340,7 +340,6 @@ npm-scan scan target --policy .npm-scan.yml
 
 | 变量 | 描述 | 默认值 |
 |----------|-------------|---------|
-| `NPM_SCAN_LICENSE_KEY` | 高级版/企业版许可证密钥 | — |
 | `NPM_SCAN_DATA_DIR` | 扫描历史目录 | `./.npm-scan` |
 | `NPM_SCAN_LOG_LEVEL` | 日志详细级别 | `info` |
 
@@ -456,7 +455,6 @@ jobs:
   with:
     scan-type: lockfile
     siem-format: cef
-    license-key: ${{ secrets.NPM_SCAN_LICENSE_KEY }}
 ```
 
 ### CI/CD 流水线
@@ -487,90 +485,11 @@ npm-scan report --html > report.html
 
 ---
 
-## 🗺️ 路线图与企业功能
+## 🤝 贡献须知
 
-### 免费版（已发布）
+感谢您对这个项目的关注。请注意，我们目前不接受任何外部代码贡献、拉取请求、错误修复或功能提交。
 
-- 全部 11 个 ATK 检测器 + **MEGALODON** (D1-D6) + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** (D1-D7, 3 波，含 **MSH_SUPPLEMENT** D1-D4) + **VSIX_SCAN** (6 个检测器) + **CVE-2026-48710 (BadHost)** (3 层) + **TRAPDOOR** (9 条规则) + **NODE_IPC_COMPROMISE** (11 条规则) + **TYPOSQUAT_VPMDHAJ** (3 条规则) + **AXIOS_POISONING** (3 条规则)
-- SBOM 输出（CycloneDX + SPDX）
-- HTML、文本和合规报告（NIST + EU CRA）
-- 策略即代码引擎（YAML）
-- 本地 SQLite 扫描历史
-- GitHub Action
-- Docker 镜像 + Compose 流水线
-
-### 高级版（🔐 许可证密钥）
-
-- PDF 合规报告，含 NIST 可追溯性矩阵
-- SIEM 导出（Splunk CEF、Elastic ECS、Microsoft Sentinel、IBM QRadar）
-- 动态沙箱（基于 gVisor — ATK-008–010）
-- 可达性分析（调用图过滤）
-
-### 企业版（🏢 自定义许可证）
-
-- SAML 2.0 SSO（Okta、Azure AD、OneLogin、Keycloak）
-- REST API + webhooks（FastAPI）
-- 团队 RBAC + 审计日志
-- 用于 Kubernetes 部署的 Helm Chart
-- 用于托管/团队版的 PostgreSQL 后端
-- SLA 保障的优先支持
-
----
-
-## 🤝 贡献
-
-我们欢迎贡献——特别是新的检测器、改进的逃避抵抗能力和合规模板。
-
-请参阅 [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) 了解 ATK 治理流程。每个新的检测器需要：
-
-1. 概念验证样本
-2. 附带测试的检测规则
-3. 对前 500 个 npm 包的误报分析
-4. NIST 800-161 控制映射
-
-### 测试
-
-该项目使用 **Node.js 原生测试运行器**（`node:test` + `assert/strict`）。
-
-```bash
-# 运行所有测试
-npm test
-
-# 运行测试并带覆盖率
-npm run test:coverage
-
-# 运行测试并带详细输出
-npm run test:verbose
-
-# 运行本地恶意/清洁语料库（无需网络）
-node --test test/detectors-corpus.test.js
-```
-
-**测试结构：**
-- `test/fixtures/mock-data.js` — 共享的模拟扫描、包和代码片段
-- `test/db.test.js` — 数据库 CRUD（保存、查询、持久化）
-- `test/detectors-edge-cases.test.js` — 每个检测器的边界测试（无操作、清洁清除、严重性）
-- `test/detectors-corpus.test.js` — 33 个恶意 + 50 个清洁 tarball 集成测试（离线）
-- `test/fetch.test.js` — tarball 提取、临时目录清理
-- `test/policy-edge-cases.test.js` — 抑制、覆盖、加载验证的边缘情况
-- `test/report-snapshots.test.js` — HTML/文本/CRA/PDF 格式断言
-- `test/cve-2026-48710-badhost/manifest.test.js` — 13 个 Python 清单解析测试（requirements.txt, pyproject.toml, poetry.lock, 版本边界情况）
-- `test/cve-2026-48710-badhost/transitive.test.js` — 7 个传递性依赖测试（Tier 1/2, fastapi 版本门控, 固定版本抑制）
-- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 个静态代码模式测试（auth 上下文, INFO 穿透, scope 抑制）
-- `test/cve-2026-48710-badhost/integration.test.js` — 4 个集成测试（端到端复合发现项, 清洁项目, 无 Python 文件）
-- `test/trapdoor.test.js` — 40 个 TrapDoor 活动检测测试（D1–D9：活动标记、载荷指纹、发布者黑名单、Gist 外泄、AI 注入、诱饵名称、加密原语、XOR 密钥、凭证验证）
-- `test/node-ipc.test.js` — 37 个 node-ipc 入侵检测测试（D1–D11：版本黑名单、tarball 哈希、CJS 注入、载荷哈希、DNS C2 模式、引导解析器、DNS TXT 外泄、运行时触发、临时制品、未授权发布者、影响范围）
-- `test/msh-supplement.test.js`——17 个 MSH 补充测试 (ctf-scramble-v2 停止，守护化，地理终止开关，C2 死信)
-- `test/typosquat-vpmdhaj.test.js`——16 个域名抢注活动测试 (维护者阻止，前缀检测，Levenshtein，预安装加载器，Bun 加载器，AWS/ECS/Vault/GitHub 凭证外泄)
-- `test/axios-poisoning.test.js`——13 个 Axios 投毒测试 (版本黑名单停止，诱饵依赖，加密启发式，跨平台 RAT，C2 回调)
-- `test/cli.test.js` — commander 集成测试（帮助、版本、扫描、报告、错误处理）
-
-### 需要帮助？
-
-- 🔒 查看[安全策略](SECURITY.md)了解漏洞披露流程
-- 📖 阅读[项目计划](docs/project-plan.md)
-- 🧬 查看[攻击分类](docs/attack-taxonomy.md)
-- 🐛 提交 issue 或 PR
+任何打开的拉取请求将自动关闭，恕不审核。
 
 ---
 
@@ -588,7 +507,7 @@ Apache-2.0 核心 + Commons Clause。
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/)
 [![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
 
-欢迎提交 issue、想法和 PR——安全在协作中最强大。
+欢迎提交 issue 和想法——安全在协作中最强大。目前不接受拉取请求。
 
 ---
 

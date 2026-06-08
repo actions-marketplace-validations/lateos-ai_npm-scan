@@ -357,18 +357,18 @@ npm-scan report --pdf             # all scans (premium)
 
 | Format | Availability | Description |
 |--------|-------------|-------------|
-| JSON | ✅ Free | Structured machine-readable findings |
-| HTML | ✅ Free | Rich HTML report with NIST compliance table, severity badges, control matrix |
-| Text | ✅ Free | Clean terminal-friendly text report |
-| CycloneDX SBOM | ✅ Free | Industry-standard SBOM with findings as vulnerabilities |
-| SPDX SBOM | ✅ Free | SPDX 2.3 document format |
-| NIST 800-161 | ✅ Free | Control traceability matrix (SR-2.1 → SR-11.4) |
-| EU CRA | ✅ Free | Cyber Resilience Act article mapping |
-| PDF | 🔐 Premium | Multi-page PDF with title page, findings table, NIST compliance matrix |
-| Splunk CEF | 🔐 Premium | Common Event Format for Splunk ingestion |
-| Elastic ECS | 🔐 Premium | Elastic Common Schema format |
-| Microsoft Sentinel | 🔐 Premium | Sentinel-ready formatted output |
-| IBM QRadar | 🔐 Premium | QRadar DSM-ready format with QID mappings |
+| JSON | ✅ | Structured machine-readable findings |
+| HTML | ✅ | Rich HTML report with NIST compliance table, severity badges, control matrix |
+| Text | ✅ | Clean terminal-friendly text report |
+| CycloneDX SBOM | ✅ | Industry-standard SBOM with findings as vulnerabilities |
+| SPDX SBOM | ✅ | SPDX 2.3 document format |
+| NIST 800-161 | ✅ | Control traceability matrix (SR-2.1 → SR-11.4) |
+| EU CRA | ✅ | Cyber Resilience Act article mapping |
+| PDF | Future feature | Multi-page PDF with title page, findings table, NIST compliance matrix |
+| Splunk CEF | Future feature | Common Event Format for Splunk ingestion |
+| Elastic ECS | Future feature | Elastic Common Schema format |
+| Microsoft Sentinel | Future feature | Sentinel-ready formatted output |
+| IBM QRadar | Future feature | QRadar DSM-ready format with QID mappings |
 
 ### Sample output
 
@@ -419,7 +419,6 @@ npm-scan scan target --policy .npm-scan.yml
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NPM_SCAN_LICENSE_KEY` | Premium / enterprise license key | — |
 | `NPM_SCAN_DATA_DIR` | Scan history directory | `./.npm-scan` |
 | `NPM_SCAN_LOG_LEVEL` | Log verbosity | `info` |
 | `NPM_SCAN_LICENSE_SECRET` | HMAC key for license generation/validation | `npm-scan-default-dev-key` |
@@ -553,7 +552,6 @@ jobs:
   with:
     scan-type: lockfile
     siem-format: cef
-    license-key: ${{ secrets.NPM_SCAN_LICENSE_KEY }}
 ```
 
 ### CI/CD pipeline
@@ -586,107 +584,11 @@ See the [Docker quick-start section](#-run-lateosnpm-scan-anywhere-with-docker--
 
 ---
 
-## 🗺️ Roadmap & Enterprise Features
+## 🤝 Contributing Notice
 
-### Free tier (shipped)
+Thank you for your interest in this project. Please note that we are currently not accepting any external code contributions, pull requests, bug fixes, or feature submissions at this time.
 
-- All 11 ATK detectors + **MEGALODON** CI/CD campaign detection (D1–D6) + **HF_IMPERSONATION** detector + **MINI_SHAI_HULUD** worm campaign (D1–D7, 3 waves, with **MSH_SUPPLEMENT** D1–D4 for obfuscation/persistence/geofence/C2) + **VSIX_SCAN** extension supply chain scan (6 detectors) + **CVE-2026-48710 (BadHost)** Python vulnerability detection (3 layers) + **TRAPDOOR** cross-ecosystem attack detection (9 rules) + **NODE_IPC_COMPROMISE** expired-domain hijack detection (11 rules) + **TYPOSQUAT_VPMDHAJ** mass typosquatting campaign (3 rules) + **AXIOS_POISONING** registry poisoning campaign (3 rules)
-- SBOM output (CycloneDX + SPDX)
-- HTML, text, and compliance reports (NIST + EU CRA)
-- Policy-as-code engine (YAML)
-- Local SQLite scan history
-- GitHub Action
-- Pre-commit hook (husky + lint-staged)
-- Docker images + Compose pipeline
-- Watch mode (--watch / --monorepo for auto-rescan)
-- VS Code extension scanning (--vsix flag with Marketplace + Open VSX registries)
-
-### Premium (🔐 license key)
-
-- PDF compliance reports with NIST traceability matrix
-- SIEM export (Splunk CEF, Elastic ECS, Microsoft Sentinel, IBM QRadar)
-- Dynamic sandbox (gVisor-based — ATK-008–010)
-- Reachability analysis (call graph filtering)
-
-### Enterprise (🏢 custom license)
-
-- SAML 2.0 SSO (Okta, Azure AD, OneLogin, Keycloak)
-- REST API + webhooks (FastAPI)
-- Team RBAC + audit logs
-- Helm chart for Kubernetes deployment
-- PostgreSQL backend for hosted/team tier
-- SLA-backed priority support
-
----
-
-## 🤝 Contributing
-
-We welcome contributions — especially new detectors, improved evasion resistance, and compliance templates.
-
-See [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) for the ATK governance process. Every new detector requires:
-
-1. A proof-of-concept sample
-2. A detection rule with tests
-3. False-positive analysis on top-500 npm packages
-4. NIST 800-161 control mapping
-
-### Testing
-
-The project uses the **Node.js native test runner** (`node:test` + `assert/strict`).
-
-```bash
-# Run all tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run tests with verbose spec output
-npm run test:verbose
-
-# Run local malicious/clean corpus (no network needed)
-node --test test/detectors-corpus.test.js
-```
-
-**Test structure:**
-- `test/fixtures/mock-data.js` — shared mock scans, packages, and code snippets
-- `test/megalodon.test.js` — 30 Megalodon campaign detection tests (D1–D4 + aggregator + runAll integration)
-- `test/db.test.js` — database CRUD (save, query, persist)
-- `test/detectors-edge-cases.test.js` — per-detector boundary tests (no-ops, clean clears, severity)
-- `test/detectors-corpus.test.js` — 33 malicious + 50 clean tarball integration (offline)
-- `test/fetch.test.js` — tarball extraction, temp directory cleanup
-- `test/policy-edge-cases.test.js` — edge cases in suppress, override, load validation
-- `test/policy.test.js` — policy YAML/JSON load, apply, suppress, severity override tests
-- `test/report-snapshots.test.js` — HTML/text/CRA/PDF format assertions
-- `test/report.test.js` — SARIF, CSV, STIG, risk score format tests
-- `test/lockfile.test.js` — npm/yarn/pnpm parser, auto-detect, ATK-007/011 lockfile tests
-- `test/hf-impersonation.test.js` — 13 HF impersonation detection tests (no-ref, exact match, spoof, README clone, artifact mismatch, postinstall escalation, new-org tag)
-- `test/mini-shai-hulud.test.js` — 22 Mini Shai-Hulud worm campaign detection tests (burst, sibling, SLSA, maintainer, IOC, exfil, wave attribution)
-- `test/vsix-scan/burst-publish.test.js` — 4 VSIX burst publish tests (threshold, sub-threshold, hot-pull, Open VSX window)
-- `test/vsix-scan/publisher-anomaly.test.js` — 5 publisher anomaly tests (cross-namespace, new-account, add+publish, substitution, silent)
-- `test/vsix-scan/activation-event-risk.test.js` — 5 activation event risk tests (onStartupFinished, wildcard, escalation, first-time, silent)
-- `test/vsix-scan/orphan-commit-fetch.test.js` — 5 orphan commit tests (GitHub SHA, npx git, MCP exfil, Bun install, silent)
-- `test/vsix-scan/known-ioc.test.js` — 4 known IOC tests (extensionId, publisher window, outside window)
-- `test/vsix-scan/exfil-pattern.test.js` — 5 exfil pattern tests (creds, DNS tunnel, AES+RSA, anti-analysis, silent)
-- `test/vsix-scan/integration.test.js` — 4 integration tests (Nx Console CRITICAL, safe version clean, orphan commit, skipNetwork)
-- `test/cve-2026-48710-badhost/manifest.test.js` — 13 Python manifest parsing tests (requirements.txt, pyproject.toml, poetry.lock, version edge cases)
-- `test/cve-2026-48710-badhost/transitive.test.js` — 7 transitive dependency tests (Tier 1/2, fastapi version gating, pin suppression)
-- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 static code pattern tests (auth context, INFO fallthrough, scope suppression)
-- `test/cve-2026-48710-badhost/integration.test.js` — 4 integration tests (end-to-end composite findings, clean project, no Python files)
-- `test/trapdoor.test.js` — 40 TrapDoor campaign detection tests (D1–D9: campaign marker, payload fingerprint, publisher blocklist, Gist exfil, AI poisoning, lure name, crypto primitives, XOR key, credential validation)
-- `test/node-ipc.test.js` — 37 node-ipc compromise detection tests (D1–D11: version blocklist, tarball hash, CJS injection, payload hash, DNS C2 pattern, bootstrap resolver, DNS TXT exfil, runtime trigger, temp artifact, unauthorized publisher, blast radius)
-- `test/msh-supplement.test.js` — 17 MSH supplement tests (ctf-scramble-v2 stop, daemonization, geo killswitch, C2 dead-drop, provenance, false positives)
-- `test/typosquat-vpmdhaj.test.js` — 16 typosquatting campaign tests (maintainer block, prefix detection, levenshtein, preinstall stagers, Bun loader, AWS/ECS/Vault/GitHub cred exfil)
-- `test/axios-poisoning.test.js` — 13 axios poisoning tests (version blocklist stop, decoy dependency, crypto heuristic, cross-platform RAT, C2 callback)
-- `test/cli.test.js` — commander integration tests (help, version, scan, report, error handling)
-- `test/cli-lockfile.test.js` — scan-lockfile CLI options, yarn/pnpm/monorepo/watch tests
-
-### Need help?
-
-- 🔒 See [security policy](SECURITY.md) for vulnerability disclosure
-- 📖 Read the [project plan](docs/project-plan.md)
-- 🧬 Review the [attack taxonomy](docs/attack-taxonomy.md)
-- 🐛 Open an issue or PR
+Any pull requests opened will be automatically closed without review.
 
 ---
 
@@ -703,7 +605,7 @@ See [`LICENSING.md`](LICENSING.md) for the exact boundary between free and premi
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/) [![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
 
-Issues, ideas, and pull requests are always welcome — security is strongest when we collaborate.
+Issues and ideas are always welcome — security is strongest when we collaborate. Pull requests are not accepted at this time.
 
 ---
 
