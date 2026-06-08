@@ -619,74 +619,11 @@ See the [Docker quick-start section](#-run-lateosnpm-scan-anywhere-with-docker--
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contributing Notice
 
-We welcome contributions — especially new detectors, improved evasion resistance, and compliance templates.
+Thank you for your interest in this project. Please note that we are currently not accepting any external code contributions, pull requests, bug fixes, or feature submissions at this time.
 
-See [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) for the ATK governance process. Every new detector requires:
-
-1. A proof-of-concept sample
-2. A detection rule with tests
-3. False-positive analysis on top-500 npm packages
-4. NIST 800-161 control mapping
-
-### Testing
-
-The project uses the **Node.js native test runner** (`node:test` + `assert/strict`).
-
-```bash
-# Run all tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-
-# Run tests with verbose spec output
-npm run test:verbose
-
-# Run local malicious/clean corpus (no network needed)
-node --test test/detectors-corpus.test.js
-```
-
-**Test structure:**
-- `test/fixtures/mock-data.js` — shared mock scans, packages, and code snippets
-- `test/megalodon.test.js` — 30 Megalodon campaign detection tests (D1–D4 + aggregator + runAll integration)
-- `test/db.test.js` — database CRUD (save, query, persist)
-- `test/detectors-edge-cases.test.js` — per-detector boundary tests (no-ops, clean clears, severity)
-- `test/detectors-corpus.test.js` — 33 malicious + 50 clean tarball integration (offline)
-- `test/fetch.test.js` — tarball extraction, temp directory cleanup
-- `test/policy-edge-cases.test.js` — edge cases in suppress, override, load validation
-- `test/policy.test.js` — policy YAML/JSON load, apply, suppress, severity override tests
-- `test/report-snapshots.test.js` — HTML/text/CRA/PDF format assertions
-- `test/report.test.js` — SARIF, CSV, STIG, risk score format tests
-- `test/lockfile.test.js` — npm/yarn/pnpm parser, auto-detect, ATK-007/011 lockfile tests
-- `test/hf-impersonation.test.js` — 13 HF impersonation detection tests (no-ref, exact match, spoof, README clone, artifact mismatch, postinstall escalation, new-org tag)
-- `test/mini-shai-hulud.test.js` — 22 Mini Shai-Hulud worm campaign detection tests (burst, sibling, SLSA, maintainer, IOC, exfil, wave attribution)
-- `test/vsix-scan/burst-publish.test.js` — 4 VSIX burst publish tests (threshold, sub-threshold, hot-pull, Open VSX window)
-- `test/vsix-scan/publisher-anomaly.test.js` — 5 publisher anomaly tests (cross-namespace, new-account, add+publish, substitution, silent)
-- `test/vsix-scan/activation-event-risk.test.js` — 5 activation event risk tests (onStartupFinished, wildcard, escalation, first-time, silent)
-- `test/vsix-scan/orphan-commit-fetch.test.js` — 5 orphan commit tests (GitHub SHA, npx git, MCP exfil, Bun install, silent)
-- `test/vsix-scan/known-ioc.test.js` — 4 known IOC tests (extensionId, publisher window, outside window)
-- `test/vsix-scan/exfil-pattern.test.js` — 5 exfil pattern tests (creds, DNS tunnel, AES+RSA, anti-analysis, silent)
-- `test/vsix-scan/integration.test.js` — 4 integration tests (Nx Console CRITICAL, safe version clean, orphan commit, skipNetwork)
-- `test/cve-2026-48710-badhost/manifest.test.js` — 13 Python manifest parsing tests (requirements.txt, pyproject.toml, poetry.lock, version edge cases)
-- `test/cve-2026-48710-badhost/transitive.test.js` — 7 transitive dependency tests (Tier 1/2, fastapi version gating, pin suppression)
-- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 static code pattern tests (auth context, INFO fallthrough, scope suppression)
-- `test/cve-2026-48710-badhost/integration.test.js` — 4 integration tests (end-to-end composite findings, clean project, no Python files)
-- `test/trapdoor.test.js` — 40 TrapDoor campaign detection tests (D1–D9: campaign marker, payload fingerprint, publisher blocklist, Gist exfil, AI poisoning, lure name, crypto primitives, XOR key, credential validation)
-- `test/node-ipc.test.js` — 37 node-ipc compromise detection tests (D1–D11: version blocklist, tarball hash, CJS injection, payload hash, DNS C2 pattern, bootstrap resolver, DNS TXT exfil, runtime trigger, temp artifact, unauthorized publisher, blast radius)
-- `test/msh-supplement.test.js` — 17 MSH supplement tests (ctf-scramble-v2 stop, daemonization, geo killswitch, C2 dead-drop, provenance, false positives)
-- `test/typosquat-vpmdhaj.test.js` — 16 typosquatting campaign tests (maintainer block, prefix detection, levenshtein, preinstall stagers, Bun loader, AWS/ECS/Vault/GitHub cred exfil)
-- `test/axios-poisoning.test.js` — 13 axios poisoning tests (version blocklist stop, decoy dependency, crypto heuristic, cross-platform RAT, C2 callback)
-- `test/cli.test.js` — commander integration tests (help, version, scan, report, error handling)
-- `test/cli-lockfile.test.js` — scan-lockfile CLI options, yarn/pnpm/monorepo/watch tests
-
-### Need help?
-
-- 🔒 See [security policy](SECURITY.md) for vulnerability disclosure
-- 📖 Read the [project plan](docs/project-plan.md)
-- 🧬 Review the [attack taxonomy](docs/attack-taxonomy.md)
-- 🐛 Open an issue or PR
+Any pull requests opened will be automatically closed without review.
 
 ---
 
@@ -703,7 +640,7 @@ See [`LICENSING.md`](LICENSING.md) for the exact boundary between free and premi
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/) [![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
 
-Issues, ideas, and pull requests are always welcome — security is strongest when we collaborate.
+Issues and ideas are always welcome — security is strongest when we collaborate. Pull requests are not accepted at this time.
 
 ---
 

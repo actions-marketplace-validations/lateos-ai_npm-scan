@@ -517,60 +517,11 @@ npm-scan report --html > report.html
 
 ---
 
-## 🤝 Contribuer
+## 🤝 Avis de contribution
 
-Nous accueillons les contributions — en particulier les nouveaux détecteurs, l'amélioration de la résistance à l'évasion et les modèles de conformité.
+Merci de votre intérêt pour ce projet. Veuillez noter que nous n'acceptons actuellement aucune contribution de code externe, pull request, correction de bug ou soumission de fonctionnalité.
 
-Consultez [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) pour le processus de gouvernance ATK. Chaque nouveau détecteur nécessite :
-
-1. Un échantillon de preuve de concept
-2. Une règle de détection avec tests
-3. Une analyse des faux positifs sur les 500 premiers paquets npm
-4. Un mappage de contrôle NIST 800-161
-
-### Tests
-
-Le projet utilise **le moteur de test natif Node.js** (`node:test` + `assert/strict`).
-
-```bash
-# Exécuter tous les tests
-npm test
-
-# Exécuter les tests avec couverture
-npm run test:coverage
-
-# Exécuter les tests avec sortie détaillée
-npm run test:verbose
-
-# Exécuter le corpus local malveillant/clean (aucun réseau requis)
-node --test test/detectors-corpus.test.js
-```
-
-**Structure des tests :**
-- `test/fixtures/mock-data.js` — simulations partagées, paquets et extraits de code
-- `test/db.test.js` — CRUD de base de données (sauvegarde, requête, persistance)
-- `test/detectors-edge-cases.test.js` — tests limites par détecteur (no-ops, nettoyages, sévérité)
-- `test/detectors-corpus.test.js` — 33 tarballs malveillants + 50 propres (hors ligne)
-- `test/fetch.test.js` — extraction de tarball, nettoyage de répertoire temporaire
-- `test/policy-edge-cases.test.js` — cas limites dans la suppression, la surcharge, la validation de chargement
-- `test/report-snapshots.test.js` — assertions de format HTML/texte/CRA/PDF
-- `test/cve-2026-48710-badhost/manifest.test.js` — 13 tests d'analyse de manifeste Python (requirements.txt, pyproject.toml, poetry.lock, cas limites de version)
-- `test/cve-2026-48710-badhost/transitive.test.js` — 7 tests de dépendances transitives (Tier 1/2, contrôle de version fastapi, suppression par épinglage)
-- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 tests de motifs de code statiques (contexte auth, passage INFO, suppression scope)
-- `test/cve-2026-48710-badhost/integration.test.js` — 4 tests d'intégration (résultats composites de bout en bout, projet propre, pas de fichiers Python)
-- `test/trapdoor.test.js` — 40 tests de détection de la campagne TrapDoor (D1–D9 : marqueur de campagne, empreinte de charge utile, liste noire d'éditeur, exfiltration Gist, empoisonnement IA, nom leurre, primitives cryptographiques, clé XOR, validation d'identifiants)
-- `test/node-ipc.test.js` — 37 tests de détection de compromission node-ipc (D1–D11 : liste noire de versions, hachage tarball, injection CJS, hachage de charge utile, motif DNS C2, résolveur d'amorçage, exfiltration DNS TXT, déclencheur d'exécution, artefacts temporaires, éditeur non autorisé, rayon d'impact)
-- `test/msh-supplement.test.js` — 17 tests MSH supplement (obfuscation ctf-scramble-v2, démonisation, killswitch géographique, C2 dead-drop)
-- `test/typosquat-vpmdhaj.test.js` — 16 tests campagne typosquattage (blocage mainteneur, détection préfixe, Levenshtein, stagers pré-installation, exfiltration identifiants AWS/ECS/Vault/GitHub)
-- `test/axios-poisoning.test.js` — 13 tests empoisonnement Axios (liste noire versions, dépendance leurre, heuristique crypto, RAT multiplateforme, rappel C2)
-- `test/cli.test.js` — tests d'intégration commander (aide, version, scan, rapport, gestion d'erreurs)
-
-### Besoin d'aide ?
-
-- 🔒 Voir la [politique de sécurité](SECURITY.md) pour la divulgation des vulnérabilités
-- 📖 Lire le [plan du projet](docs/project-plan.md)
-- 🧬 Consulter la [taxonomie des attaques](docs/attack-taxonomy.md)
-- 🐛 Ouvrir une issue ou une PR
+Toute pull request ouverte sera automatiquement fermée sans examen.
 
 ---
 
@@ -588,7 +539,7 @@ Voir [`LICENSING.md`](LICENSING.md) pour la limite exacte entre les fonctionnali
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/)
 [![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
 
-Les issues, idées et pull requests sont toujours les bienvenus — la sécurité est plus forte quand nous collaborons.
+Les issues et idées sont toujours les bienvenues — la sécurité est plus forte quand nous collaborons. Les pull requests ne sont pas acceptées pour le moment.
 
 ---
 

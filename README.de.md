@@ -517,60 +517,11 @@ npm-scan report --html > report.html
 
 ---
 
-## 🤝 Beitragen
+## 🤝 Beitragshinweis
 
-Wir begrüßen Beiträge — insbesondere neue Detektoren, verbesserte Ausweichresistenz und Compliance-Vorlagen.
+Vielen Dank für Ihr Interesse an diesem Projekt. Bitte beachten Sie, dass wir derzeit keine externen Code-Beiträge, Pull-Requests, Fehlerbehebungen oder Funktionsvorschläge annehmen.
 
-Siehe [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) für den ATK-Governance-Prozess. Jeder neue Detektor erfordert:
-
-1. Ein Proof-of-Concept-Beispiel
-2. Eine Erkennungsregel mit Tests
-3. False-Positive-Analyse auf den Top-500-npm-Paketen
-4. NIST 800-161-Control-Zuordnung
-
-### Tests
-
-Das Projekt verwendet den **nativen Node.js-Test-Runner** (`node:test` + `assert/strict`).
-
-```bash
-# Alle Tests ausführen
-npm test
-
-# Tests mit Codeabdeckung ausführen
-npm run test:coverage
-
-# Tests mit ausführlicher Ausgabe ausführen
-npm run test:verbose
-
-# Lokales bösartiges/sauberes Korpus ausführen (kein Netzwerk erforderlich)
-node --test test/detectors-corpus.test.js
-```
-
-**Teststruktur:**
-- `test/fixtures/mock-data.js` — gemeinsam genutzte Mock-Scans, Pakete und Code-Snippets
-- `test/db.test.js` — Datenbank-CRUD (Speichern, Abfragen, Persistieren)
-- `test/detectors-edge-cases.test.js` — detektorspezifische Grenztests (No-Ops, saubere Bereinigung, Schweregrad)
-- `test/detectors-corpus.test.js` — 33 bösartige + 50 saubere Tarball-Integrationstests (offline)
-- `test/fetch.test.js` — Tarball-Extraktion, Bereinigung temporärer Verzeichnisse
-- `test/policy-edge-cases.test.js` — Grenzfälle bei Unterdrückung, Überschreibung, Ladevalidierung
-- `test/report-snapshots.test.js` — HTML/Text/CRA/PDF-Format-Assertions
-- `test/cve-2026-48710-badhost/manifest.test.js` — 13 Python-Manifest-Parsing-Tests (requirements.txt, pyproject.toml, poetry.lock, Version-Grenzfälle)
-- `test/cve-2026-48710-badhost/transitive.test.js` — 7 transitive Abhängigkeitstests (Tier 1/2, fastapi-Version-Gating, Pin-Unterdrückung)
-- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 statische Code-Pattern-Tests (Auth-Kontext, INFO-Durchgriff, Scope-Unterdrückung)
-- `test/cve-2026-48710-badhost/integration.test.js` — 4 Integrationstests (End-to-End-Composite-Findings, sauberes Projekt, keine Python-Dateien)
-- `test/trapdoor.test.js` — 40 TrapDoor-Kampagnenerkennungstests (D1–D9: Kampagnenmarker, Payload-Fingerprint, Publisher-Blocklist, Gist-Exfil, KI-Vergiftung, Lockname, Krypto-Primitive, XOR-Key, Credential-Validierung)
-- `test/node-ipc.test.js` — 37 node-ipc-Kompromittierungstests (D1–D11: Versions-Blocklist, Tarball-Hash, CJS-Injektion, Payload-Hash, DNS-C2-Muster, Bootstrap-Resolver, DNS-TXT-Exfil, Laufzeitauslöser, Temp-Artefakte, unbefugter Publisher, Blastradius)
-- `test/msh-supplement.test.js` - 17 MSH-Ergänzungstests (ctf-scramble-v2-Stopp, Dämonisierung, geografischer Killswitch, C2-Dead-Drop)
-- `test/typosquat-vpmdhaj.test.js` - 16 Typosquatting-Kampagnentests (Maintainer-Block, Präfixerkennung, Levenshtein, Preinstall-Stager, Bun-Loader, AWS/ECS/Vault/GitHub-Cred-Exfil)
-- `test/axios-poisoning.test.js` - 13 Axios-Vergiftungstests (Versions-Blocklist-Stopp, Decoy-Abhängigkeit, Krypto-Heuristik, plattformübergreifender RAT, C2-Callback)
-- `test/cli.test.js` — Commander-Integrationstests (Hilfe, Version, Scan, Bericht, Fehlerbehandlung)
-
-### Hilfe benötigt?
-
-- 🔒 Siehe [Sicherheitsrichtlinie](SECURITY.md) für die Offenlegung von Schwachstellen
-- 📖 Lesen Sie den [Projektplan](docs/project-plan.md)
-- 🧬 Überprüfen Sie die [Angriffstaxonomie](docs/attack-taxonomy.md)
-- 🐛 Öffnen Sie ein Issue oder PR
+Jede geöffnete Pull-Request wird automatisch ohne Überprüfung geschlossen.
 
 ---
 
@@ -588,7 +539,7 @@ Siehe [`LICENSING.md`](LICENSING.md) für die genaue Grenze zwischen kostenlosen
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/)
 [![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
 
-Issues, Ideen und Pull-Requests sind immer willkommen — Sicherheit ist am stärksten, wenn wir zusammenarbeiten.
+Issues und Ideen sind immer willkommen — Sicherheit ist am stärksten, wenn wir zusammenarbeiten. Pull-Requests werden derzeit nicht angenommen.
 
 ---
 

@@ -517,60 +517,11 @@ npm-scan report --html > report.html
 
 ---
 
-## 🤝 贡献
+## 🤝 贡献须知
 
-我们欢迎贡献——特别是新的检测器、改进的逃避抵抗能力和合规模板。
+感谢您对这个项目的关注。请注意，我们目前不接受任何外部代码贡献、拉取请求、错误修复或功能提交。
 
-请参阅 [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md) 了解 ATK 治理流程。每个新的检测器需要：
-
-1. 概念验证样本
-2. 附带测试的检测规则
-3. 对前 500 个 npm 包的误报分析
-4. NIST 800-161 控制映射
-
-### 测试
-
-该项目使用 **Node.js 原生测试运行器**（`node:test` + `assert/strict`）。
-
-```bash
-# 运行所有测试
-npm test
-
-# 运行测试并带覆盖率
-npm run test:coverage
-
-# 运行测试并带详细输出
-npm run test:verbose
-
-# 运行本地恶意/清洁语料库（无需网络）
-node --test test/detectors-corpus.test.js
-```
-
-**测试结构：**
-- `test/fixtures/mock-data.js` — 共享的模拟扫描、包和代码片段
-- `test/db.test.js` — 数据库 CRUD（保存、查询、持久化）
-- `test/detectors-edge-cases.test.js` — 每个检测器的边界测试（无操作、清洁清除、严重性）
-- `test/detectors-corpus.test.js` — 33 个恶意 + 50 个清洁 tarball 集成测试（离线）
-- `test/fetch.test.js` — tarball 提取、临时目录清理
-- `test/policy-edge-cases.test.js` — 抑制、覆盖、加载验证的边缘情况
-- `test/report-snapshots.test.js` — HTML/文本/CRA/PDF 格式断言
-- `test/cve-2026-48710-badhost/manifest.test.js` — 13 个 Python 清单解析测试（requirements.txt, pyproject.toml, poetry.lock, 版本边界情况）
-- `test/cve-2026-48710-badhost/transitive.test.js` — 7 个传递性依赖测试（Tier 1/2, fastapi 版本门控, 固定版本抑制）
-- `test/cve-2026-48710-badhost/codePattern.test.js` — 6 个静态代码模式测试（auth 上下文, INFO 穿透, scope 抑制）
-- `test/cve-2026-48710-badhost/integration.test.js` — 4 个集成测试（端到端复合发现项, 清洁项目, 无 Python 文件）
-- `test/trapdoor.test.js` — 40 个 TrapDoor 活动检测测试（D1–D9：活动标记、载荷指纹、发布者黑名单、Gist 外泄、AI 注入、诱饵名称、加密原语、XOR 密钥、凭证验证）
-- `test/node-ipc.test.js` — 37 个 node-ipc 入侵检测测试（D1–D11：版本黑名单、tarball 哈希、CJS 注入、载荷哈希、DNS C2 模式、引导解析器、DNS TXT 外泄、运行时触发、临时制品、未授权发布者、影响范围）
-- `test/msh-supplement.test.js`——17 个 MSH 补充测试 (ctf-scramble-v2 停止，守护化，地理终止开关，C2 死信)
-- `test/typosquat-vpmdhaj.test.js`——16 个域名抢注活动测试 (维护者阻止，前缀检测，Levenshtein，预安装加载器，Bun 加载器，AWS/ECS/Vault/GitHub 凭证外泄)
-- `test/axios-poisoning.test.js`——13 个 Axios 投毒测试 (版本黑名单停止，诱饵依赖，加密启发式，跨平台 RAT，C2 回调)
-- `test/cli.test.js` — commander 集成测试（帮助、版本、扫描、报告、错误处理）
-
-### 需要帮助？
-
-- 🔒 查看[安全策略](SECURITY.md)了解漏洞披露流程
-- 📖 阅读[项目计划](docs/project-plan.md)
-- 🧬 查看[攻击分类](docs/attack-taxonomy.md)
-- 🐛 提交 issue 或 PR
+任何打开的拉取请求将自动关闭，恕不审核。
 
 ---
 
@@ -588,7 +539,7 @@ Apache-2.0 核心 + Commons Clause。
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/)
 [![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
 
-欢迎提交 issue、想法和 PR——安全在协作中最强大。
+欢迎提交 issue 和想法——安全在协作中最强大。目前不接受拉取请求。
 
 ---
 

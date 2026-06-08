@@ -513,60 +513,11 @@ npm-scan report --html > report.html
 
 ---
 
-## 🤝 コントリビューション
+## 🤝 コントリビューションに関するお知らせ
 
-コントリビューションを歓迎します——特に新しい検出器、回避耐性の向上、コンプライアンステンプレートを募集しています。
+このプロジェクトにご興味をお持ちいただきありがとうございます。現在、外部からのコード貢献、プルリクエスト、バグ修正、機能提案は受け付けておりません。
 
-ATKガバナンスプロセスについては[`docs/attack-taxonomy.md`](docs/attack-taxonomy.md)を参照してください。新しい検出器には以下が必要です：
-
-1. 概念実証サンプル
-2. テスト付き検出ルール
-3. トップ500 npmパッケージに対する誤検出分析
-4. NIST 800-161コントロールマッピング
-
-### テスト
-
-このプロジェクトは**Node.jsネイティブテストランナー**（`node:test` + `assert/strict`）を使用しています。
-
-```bash
-# すべてのテストを実行
-npm test
-
-# カバレッジ付きでテストを実行
-npm run test:coverage
-
-# 詳細な出力付きでテストを実行
-npm run test:verbose
-
-# ローカルの悪意／クリーンコーパスを実行（ネットワーク不要）
-node --test test/detectors-corpus.test.js
-```
-
-**テスト構造：**
-- `test/fixtures/mock-data.js` — 共有モックスキャン、パッケージ、コードスニペット
-- `test/db.test.js` — データベースCRUD（保存、クエリ、永続化）
-- `test/detectors-edge-cases.test.js` — 検出器ごとの境界テスト（no-op、クリーンクリア、重要度）
-- `test/detectors-corpus.test.js` — 33悪意＋50クリーンtarball統合テスト（オフライン）
-- `test/fetch.test.js` — tarball抽出、一時ディレクトリクリーンアップ
-- `test/policy-edge-cases.test.js` — 抑制、上書き、ロード検証のエッジケース
-- `test/report-snapshots.test.js` — HTML/テキスト/CRA/PDF形式のアサーション
-- `test/cve-2026-48710-badhost/manifest.test.js` — 13のPythonマニフェスト解析テスト（requirements.txt, pyproject.toml, poetry.lock, バージョンエッジケース）
-- `test/cve-2026-48710-badhost/transitive.test.js` — 7の推移的依存関係テスト（Tier 1/2, fastapiバージョンゲーティング, 固定抑制）
-- `test/cve-2026-48710-badhost/codePattern.test.js` — 6の静的コードパターンテスト（authコンテキスト, INFOフォールスルー, scope抑制）
-- `test/cve-2026-48710-badhost/integration.test.js` — 4の統合テスト（エンドツーエンド複合発見項目, クリーンプロジェクト, Pythonファイルなし）
-- `test/trapdoor.test.js` — 40のTrapDoorキャンペーン検出テスト（D1–D9：キャンペーンマーカー、ペイロードフィンガープリント、パブリッシャーブロックリスト、Gist流出、AIポイズニング、ルアー名、暗号プリミティブ、XORキー、認証情報検証）
-- `test/node-ipc.test.js` — 37のnode-ipc侵害検出テスト（D1–D11：バージョンブロックリスト、tarballハッシュ、CJSインジェクション、ペイロードハッシュ、DNS C2パターン、ブートストラップリゾルバー、DNS TXT流出、ランタイムトリガー、一時アーティファクト、未承認パブリッシャー、影響範囲）
-- `test/msh-supplement.test.js` — 17 MSH補足テスト（ctf-scramble-v2停止、デーモン化、地理的キルスイッチ、C2 dead-drop）
-- `test/typosquat-vpmdhaj.test.js` — 16タイポスクワッティングキャンペーンテスト（メンテナーブロック、プレフィックス検出、Levenshtein、プリインストールステイジャー、Bunローダー、AWS/ECS/Vault/GitHub認証情報流出）
-- `test/axios-poisoning.test.js` — 13 Axiosポイズニングテスト（バージョンブロックリスト停止、デコイ依存関係、暗号ヒューリスティック、クロスプラットフォームRAT、C2コールバック）
-- `test/cli.test.js` — commander統合テスト（ヘルプ、バージョン、スキャン、レポート、エラーハンドリング）
-
-### ヘルプが必要ですか？
-
-- 🔒 [セキュリティポリシー](SECURITY.md)で脆弱性の開示方法を確認
-- 📖 [プロジェクト計画](docs/project-plan.md)を読む
-- 🧬 [攻撃分類](docs/attack-taxonomy.md)を確認
-- 🐛 IssueまたはPRを開く
+開かれたプルリクエストはレビューなしで自動的にクローズされます。
 
 ---
 
@@ -584,7 +535,7 @@ Apache-2.0コア＋Commons Clause。
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/)
 [![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
 
-Issue、アイデア、PRはいつでも歓迎します——セキュリティは協力によって最も強力になります。
+Issueとアイデアはいつでも歓迎します——セキュリティは協力によって最も強力になります。現在プルリクエストは受け付けていません。
 
 ---
 
