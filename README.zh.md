@@ -340,7 +340,6 @@ npm-scan scan target --policy .npm-scan.yml
 
 | 变量 | 描述 | 默认值 |
 |----------|-------------|---------|
-| `NPM_SCAN_LICENSE_KEY` | 高级版/企业版许可证密钥 | — |
 | `NPM_SCAN_DATA_DIR` | 扫描历史目录 | `./.npm-scan` |
 | `NPM_SCAN_LOG_LEVEL` | 日志详细级别 | `info` |
 
@@ -456,7 +455,6 @@ jobs:
   with:
     scan-type: lockfile
     siem-format: cef
-    license-key: ${{ secrets.NPM_SCAN_LICENSE_KEY }}
 ```
 
 ### CI/CD 流水线

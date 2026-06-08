@@ -340,7 +340,6 @@ npm-scan scan target --policy .npm-scan.yml
 
 | Variable | Beschreibung | Standard |
 |----------|-------------|---------|
-| `NPM_SCAN_LICENSE_KEY` | Premium-/Enterprise-Lizenzschlüssel | — |
 | `NPM_SCAN_DATA_DIR` | Scan-Verlaufsverzeichnis | `./.npm-scan` |
 | `NPM_SCAN_LOG_LEVEL` | Ausführlichkeitsgrad der Protokollierung | `info` |
 
@@ -456,7 +455,6 @@ jobs:
   with:
     scan-type: lockfile
     siem-format: cef
-    license-key: ${{ secrets.NPM_SCAN_LICENSE_KEY }}
 ```
 
 ### CI/CD-Pipeline

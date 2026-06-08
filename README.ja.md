@@ -336,7 +336,6 @@ npm-scan scan target --policy .npm-scan.yml
 
 | 変数 | 説明 | デフォルト |
 |----------|-------------|---------|
-| `NPM_SCAN_LICENSE_KEY` | プレミアム／エンタープライズライセンスキー | — |
 | `NPM_SCAN_DATA_DIR` | スキャン履歴ディレクトリ | `./.npm-scan` |
 | `NPM_SCAN_LOG_LEVEL` | ログの詳細レベル | `info` |
 
@@ -452,7 +451,6 @@ jobs:
   with:
     scan-type: lockfile
     siem-format: cef
-    license-key: ${{ secrets.NPM_SCAN_LICENSE_KEY }}
 ```
 
 ### CI/CDパイプライン
