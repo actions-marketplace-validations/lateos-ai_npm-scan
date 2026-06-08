@@ -278,18 +278,18 @@ npm-scan report --pdf             # tous les scans (premium)
 
 | Format | Disponibilité | Description |
 |--------|-------------|-------------|
-| JSON | ✅ Gratuit | Résultats structurés lisibles par machine |
-| HTML | ✅ Gratuit | Rapport HTML riche avec tableau de conformité NIST, badges de sévérité, matrice de contrôle |
-| Texte | ✅ Gratuit | Rapport texte propre et adapté au terminal |
-| CycloneDX SBOM | ✅ Gratuit | SBOM standard de l'industrie avec résultats intégrés comme vulnérabilités |
-| SPDX SBOM | ✅ Gratuit | Format de document SPDX 2.3 |
-| NIST 800-161 | ✅ Gratuit | Matrice de traçabilité des contrôles (SR-2.1 → SR-11.4) |
-| EU CRA | ✅ Gratuit | Cartographie des articles du Cyber Resilience Act |
-| PDF | 🔐 Premium | PDF multipage avec page de titre, tableau des résultats, matrice de conformité NIST |
-| Splunk CEF | 🔐 Premium | Format d'événement commun pour l'ingestion Splunk |
-| Elastic ECS | 🔐 Premium | Format Elastic Common Schema |
-| Microsoft Sentinel | 🔐 Premium | Sortie formatée prête pour Sentinel |
-| IBM QRadar | 🔐 Premium | Format prêt pour QRadar DSM avec correspondances QID |
+| JSON | ✅ | Résultats structurés lisibles par machine |
+| HTML | ✅ | Rapport HTML riche avec tableau de conformité NIST, badges de sévérité, matrice de contrôle |
+| Texte | ✅ | Rapport texte propre et adapté au terminal |
+| CycloneDX SBOM | ✅ | SBOM standard de l'industrie avec résultats intégrés comme vulnérabilités |
+| SPDX SBOM | ✅ | Format de document SPDX 2.3 |
+| NIST 800-161 | ✅ | Matrice de traçabilité des contrôles (SR-2.1 → SR-11.4) |
+| EU CRA | ✅ | Cartographie des articles du Cyber Resilience Act |
+| PDF | Fonctionnalité future | PDF multipage avec page de titre, tableau des résultats, matrice de conformité NIST |
+| Splunk CEF | Fonctionnalité future | Format d'événement commun pour l'ingestion Splunk |
+| Elastic ECS | Fonctionnalité future | Format Elastic Common Schema |
+| Microsoft Sentinel | Fonctionnalité future | Sortie formatée prête pour Sentinel |
+| IBM QRadar | Fonctionnalité future | Format prêt pour QRadar DSM avec correspondances QID |
 
 ### Exemple de sortie
 
@@ -484,36 +484,6 @@ npm-scan report --html > report.html
 ```
 
 ### Docker
-
----
-
-## 🗺️ Feuille de route et fonctionnalités Enterprise
-
-### Niveau gratuit (livré)
-
-- Les 11 détecteurs ATK + **MEGALODON** (D1-D6) + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** (D1-D7, 3 vagues, avec **MSH_SUPPLEMENT** D1-D4) + **VSIX_SCAN** (6 détecteurs) + **CVE-2026-48710 (BadHost)** (3 couches) + **TRAPDOOR** (9 règles) + **NODE_IPC_COMPROMISE** (11 règles) + **TYPOSQUAT_VPMDHAJ** (3 règles) + **AXIOS_POISONING** (3 règles)
-- Sortie SBOM (CycloneDX + SPDX)
-- Rapports HTML, texte et conformité (NIST + EU CRA)
-- Moteur de politique en tant que code (YAML)
-- Historique de scan local SQLite
-- GitHub Action
-- Images Docker + pipeline Compose
-
-### Premium (🔐 clé de licence)
-
-- Rapports de conformité PDF avec matrice de traçabilité NIST
-- Export SIEM (Splunk CEF, Elastic ECS, Microsoft Sentinel, IBM QRadar)
-- Sandbox dynamique (basé sur gVisor — ATK-008–010)
-- Analyse d'atteignabilité (filtrage par graphe d'appels)
-
-### Enterprise (🏢 licence personnalisée)
-
-- SAML 2.0 SSO (Okta, Azure AD, OneLogin, Keycloak)
-- API REST + webhooks (FastAPI)
-- RBAC d'équipe + journaux d'audit
-- Chart Helm pour déploiement Kubernetes
-- Backend PostgreSQL pour niveau hébergé/équipe
-- Support prioritaire avec garantie SLA
 
 ---
 

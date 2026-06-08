@@ -278,18 +278,18 @@ npm-scan report --pdf             # 所有扫描（高级版）
 
 | 格式 | 可用性 | 描述 |
 |--------|-------------|-------------|
-| JSON | ✅ 免费 | 结构化机器可读的发现项 |
-| HTML | ✅ 免费 | 丰富 HTML 报告，含 NIST 合规表、严重性徽章、控制矩阵 |
-| 文本 | ✅ 免费 | 简洁的终端友好文本报告 |
-| CycloneDX SBOM | ✅ 免费 | 行业标准 SBOM，发现项嵌入为漏洞 |
-| SPDX SBOM | ✅ 免费 | SPDX 2.3 文档格式 |
-| NIST 800-161 | ✅ 免费 | 控制可追溯性矩阵（SR-2.1 → SR-11.4） |
-| EU CRA | ✅ 免费 | 网络弹性法案条款映射 |
-| PDF | 🔐 高级版 | 多页 PDF，含标题页、发现项表格、NIST 合规矩阵 |
-| Splunk CEF | 🔐 高级版 | 用于 Splunk 导入的通用事件格式 |
-| Elastic ECS | 🔐 高级版 | Elastic 通用模式格式 |
-| Microsoft Sentinel | 🔐 高级版 | Sentinel 就绪格式化输出 |
-| IBM QRadar | 🔐 高级版 | QRadar DSM 就绪格式，含 QID 映射 |
+| JSON | ✅ | 结构化机器可读的发现项 |
+| HTML | ✅ | 丰富 HTML 报告，含 NIST 合规表、严重性徽章、控制矩阵 |
+| 文本 | ✅ | 简洁的终端友好文本报告 |
+| CycloneDX SBOM | ✅ | 行业标准 SBOM，发现项嵌入为漏洞 |
+| SPDX SBOM | ✅ | SPDX 2.3 文档格式 |
+| NIST 800-161 | ✅ | 控制可追溯性矩阵（SR-2.1 → SR-11.4） |
+| EU CRA | ✅ | 网络弹性法案条款映射 |
+| PDF | 未来功能 | 多页 PDF，含标题页、发现项表格、NIST 合规矩阵 |
+| Splunk CEF | 未来功能 | 用于 Splunk 导入的通用事件格式 |
+| Elastic ECS | 未来功能 | Elastic 通用模式格式 |
+| Microsoft Sentinel | 未来功能 | Sentinel 就绪格式化输出 |
+| IBM QRadar | 未来功能 | QRadar DSM 就绪格式，含 QID 映射 |
 
 ### 示例输出
 
@@ -484,36 +484,6 @@ npm-scan report --html > report.html
 ```
 
 ### Docker
-
----
-
-## 🗺️ 路线图与企业功能
-
-### 免费版（已发布）
-
-- 全部 11 个 ATK 检测器 + **MEGALODON** (D1-D6) + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** (D1-D7, 3 波，含 **MSH_SUPPLEMENT** D1-D4) + **VSIX_SCAN** (6 个检测器) + **CVE-2026-48710 (BadHost)** (3 层) + **TRAPDOOR** (9 条规则) + **NODE_IPC_COMPROMISE** (11 条规则) + **TYPOSQUAT_VPMDHAJ** (3 条规则) + **AXIOS_POISONING** (3 条规则)
-- SBOM 输出（CycloneDX + SPDX）
-- HTML、文本和合规报告（NIST + EU CRA）
-- 策略即代码引擎（YAML）
-- 本地 SQLite 扫描历史
-- GitHub Action
-- Docker 镜像 + Compose 流水线
-
-### 高级版（🔐 许可证密钥）
-
-- PDF 合规报告，含 NIST 可追溯性矩阵
-- SIEM 导出（Splunk CEF、Elastic ECS、Microsoft Sentinel、IBM QRadar）
-- 动态沙箱（基于 gVisor — ATK-008–010）
-- 可达性分析（调用图过滤）
-
-### 企业版（🏢 自定义许可证）
-
-- SAML 2.0 SSO（Okta、Azure AD、OneLogin、Keycloak）
-- REST API + webhooks（FastAPI）
-- 团队 RBAC + 审计日志
-- 用于 Kubernetes 部署的 Helm Chart
-- 用于托管/团队版的 PostgreSQL 后端
-- SLA 保障的优先支持
 
 ---
 

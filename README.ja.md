@@ -274,18 +274,18 @@ npm-scan report --pdf             # すべてのスキャン（プレミアム�
 
 | 形式 | 利用可能性 | 説明 |
 |--------|-------------|-------------|
-| JSON | ✅ 無料 | 構造化された機械可読な発見項目 |
-| HTML | ✅ 無料 | NISTコンプライアンス表、重要度バッジ、コントロールマトリックス付きリッチHTMLレポート |
-| テキスト | ✅ 無料 | クリーンな端末向けテキストレポート |
-| CycloneDX SBOM | ✅ 無料 | 発見項目を脆弱性として埋め込んだ業界標準SBOM |
-| SPDX SBOM | ✅ 無料 | SPDX 2.3文書形式 |
-| NIST 800-161 | ✅ 無料 | コントロールトレーサビリティマトリックス（SR-2.1 → SR-11.4） |
-| EU CRA | ✅ 無料 | サイバーレジリエンス法の条項マッピング |
-| PDF | 🔐 プレミアム | タイトルページ、発見項目表、NISTコンプライアンスマトリックス付きマルチページPDF |
-| Splunk CEF | 🔐 プレミアム | Splunk取り込み用共通イベント形式 |
-| Elastic ECS | 🔐 プレミアム | Elastic Common Schema形式 |
-| Microsoft Sentinel | 🔐 プレミアム | Sentinel対応のフォーマット済み出力 |
-| IBM QRadar | 🔐 プレミアム | QIDマッピング付きQRadar DSM対応形式 |
+| JSON | ✅ | 構造化された機械可読な発見項目 |
+| HTML | ✅ | NISTコンプライアンス表、重要度バッジ、コントロールマトリックス付きリッチHTMLレポート |
+| テキスト | ✅ | クリーンな端末向けテキストレポート |
+| CycloneDX SBOM | ✅ | 発見項目を脆弱性として埋め込んだ業界標準SBOM |
+| SPDX SBOM | ✅ | SPDX 2.3文書形式 |
+| NIST 800-161 | ✅ | コントロールトレーサビリティマトリックス（SR-2.1 → SR-11.4） |
+| EU CRA | ✅ | サイバーレジリエンス法の条項マッピング |
+| PDF | 将来の機能 | タイトルページ、発見項目表、NISTコンプライアンスマトリックス付きマルチページPDF |
+| Splunk CEF | 将来の機能 | Splunk取り込み用共通イベント形式 |
+| Elastic ECS | 将来の機能 | Elastic Common Schema形式 |
+| Microsoft Sentinel | 将来の機能 | Sentinel対応のフォーマット済み出力 |
+| IBM QRadar | 将来の機能 | QIDマッピング付きQRadar DSM対応形式 |
 
 ### 出力サンプル
 
@@ -480,36 +480,6 @@ npm-scan report --html > report.html
 ```
 
 ### Docker
-
----
-
-## 🗺️ ロードマップとエンタープライズ機能
-
-### 無料版（出荷済み）
-
-- 全11ATK検出器（静的＋行動）+ **MEGALODON**（D1-D6）+ **HF_IMPERSONATION** + **MINI_SHAI_HULUD**（D1-D7、3波、**MSH_SUPPLEMENT** D1-D4含む）+ **VSIX_SCAN**（6検出器）+ **CVE-2026-48710（BadHost）**（3層）+ **TRAPDOOR**（9ルール）+ **NODE_IPC_COMPROMISE**（11ルール）+ **TYPOSQUAT_VPMDHAJ**（3ルール）+ **AXIOS_POISONING**（3ルール）
-- SBOM出力（CycloneDX + SPDX）
-- HTML、テキスト、コンプライアンスレポート（NIST + EU CRA）
-- ポリシー・アズ・コードエンジン（YAML）
-- ローカルSQLiteスキャン履歴
-- GitHub Action
-- Dockerイメージ＋Composeパイプライン
-
-### プレミアム（🔐 ライセンスキー）
-
-- NISTトレーサビリティマトリックス付きPDFコンプライアンスレポート
-- SIEMエクスポート（Splunk CEF、Elastic ECS、Microsoft Sentinel、IBM QRadar）
-- 動的サンドボックス（gVisorベース — ATK-008–010）
-- 到達可能性分析（コールグラフフィルタリング）
-
-### エンタープライズ（🏢 カスタムライセンス）
-
-- SAML 2.0 SSO（Okta、Azure AD、OneLogin、Keycloak）
-- REST API + webhooks（FastAPI）
-- チームRBAC＋監査ログ
-- Kubernetes展開用Helmチャート
-- ホスティング/チーム階層向けPostgreSQLバックエンド
-- SLA保証付き優先サポート
 
 ---
 

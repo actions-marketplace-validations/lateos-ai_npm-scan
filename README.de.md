@@ -278,18 +278,18 @@ npm-scan report --pdf             # alle Scans (Premium)
 
 | Format | Verfügbarkeit | Beschreibung |
 |--------|-------------|-------------|
-| JSON | ✅ Kostenlos | Strukturierte maschinenlesbare Ergebnisse |
-| HTML | ✅ Kostenlos | Reichhaltiger HTML-Bericht mit NIST-Compliance-Tabelle, Schweregrad-Abzeichen, Kontrollmatrix |
-| Text | ✅ Kostenlos | Sauberer, terminalfreundlicher Textbericht |
-| CycloneDX SBOM | ✅ Kostenlos | Branchenstandard-SBOM mit Ergebnissen als Schwachstellen eingebettet |
-| SPDX SBOM | ✅ Kostenlos | SPDX 2.3-Dokumentformat |
-| NIST 800-161 | ✅ Kostenlos | Kontroll-Rückverfolgbarkeitsmatrix (SR-2.1 → SR-11.4) |
-| EU CRA | ✅ Kostenlos | Zuordnung der Cyber Resilience Act-Artikel |
-| PDF | 🔐 Premium | Mehrseitiges PDF mit Titelseite, Ergebnistabelle, NIST-Compliance-Matrix |
-| Splunk CEF | 🔐 Premium | Common Event Format für Splunk-Erfassung |
-| Elastic ECS | 🔐 Premium | Elastic Common Schema-Format |
-| Microsoft Sentinel | 🔐 Premium | Sentinel-ready formatierte Ausgabe |
-| IBM QRadar | 🔐 Premium | QRadar-DSM-ready-Format mit QID-Zuordnungen |
+| JSON | ✅ | Strukturierte maschinenlesbare Ergebnisse |
+| HTML | ✅ | Reichhaltiger HTML-Bericht mit NIST-Compliance-Tabelle, Schweregrad-Abzeichen, Kontrollmatrix |
+| Text | ✅ | Sauberer, terminalfreundlicher Textbericht |
+| CycloneDX SBOM | ✅ | Branchenstandard-SBOM mit Ergebnissen als Schwachstellen eingebettet |
+| SPDX SBOM | ✅ | SPDX 2.3-Dokumentformat |
+| NIST 800-161 | ✅ | Kontroll-Rückverfolgbarkeitsmatrix (SR-2.1 → SR-11.4) |
+| EU CRA | ✅ | Zuordnung der Cyber Resilience Act-Artikel |
+| PDF | Zukünftige Funktion | Mehrseitiges PDF mit Titelseite, Ergebnistabelle, NIST-Compliance-Matrix |
+| Splunk CEF | Zukünftige Funktion | Common Event Format für Splunk-Erfassung |
+| Elastic ECS | Zukünftige Funktion | Elastic Common Schema-Format |
+| Microsoft Sentinel | Zukünftige Funktion | Sentinel-ready formatierte Ausgabe |
+| IBM QRadar | Zukünftige Funktion | QRadar-DSM-ready-Format mit QID-Zuordnungen |
 
 ### Beispielausgabe
 
@@ -484,36 +484,6 @@ npm-scan report --html > report.html
 ```
 
 ### Docker
-
----
-
-## 🗺️ Roadmap und Enterprise-Funktionen
-
-### Kostenlose Stufe (ausgeliefert)
-
-- Alle 11 ATK-Detektoren (statisch + verhaltensbasiert) + **MEGALODON** (D1-D6) + **HF_IMPERSONATION** + **MINI_SHAI_HULUD** (D1-D7, 3 Wellen, mit **MSH_SUPPLEMENT** D1-D4) + **VSIX_SCAN** (6 Detektoren) + **CVE-2026-48710 (BadHost)** (3 Ebenen) + **TRAPDOOR** (9 Regeln) + **NODE_IPC_COMPROMISE** (11 Regeln) + **TYPOSQUAT_VPMDHAJ** (3 Regeln) + **AXIOS_POISONING** (3 Regeln)
-- SBOM-Ausgabe (CycloneDX + SPDX)
-- HTML-, Text- und Compliance-Berichte (NIST + EU CRA)
-- Policy-as-Code-Engine (YAML)
-- Lokaler SQLite-Scan-Verlauf
-- GitHub Action
-- Docker-Images + Compose-Pipeline
-
-### Premium (🔐 Lizenzschlüssel)
-
-- PDF-Compliance-Berichte mit NIST-Rückverfolgbarkeitsmatrix
-- SIEM-Export (Splunk CEF, Elastic ECS, Microsoft Sentinel, IBM QRadar)
-- Dynamische Sandbox (gVisor-basiert — ATK-008–010)
-- Erreichbarkeitsanalyse (Call-Graph-Filterung)
-
-### Enterprise (🏢 benutzerdefinierte Lizenz)
-
-- SAML 2.0 SSO (Okta, Azure AD, OneLogin, Keycloak)
-- REST-API + Webhooks (FastAPI)
-- Team-RBAC + Audit-Logs
-- Helm-Chart für Kubernetes-Bereitstellung
-- PostgreSQL-Backend für gehostete/Team-Stufe
-- SLA-gestützter Prioritätssupport
 
 ---
 

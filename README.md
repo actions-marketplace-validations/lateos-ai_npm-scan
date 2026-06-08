@@ -357,18 +357,18 @@ npm-scan report --pdf             # all scans (premium)
 
 | Format | Availability | Description |
 |--------|-------------|-------------|
-| JSON | ✅ Free | Structured machine-readable findings |
-| HTML | ✅ Free | Rich HTML report with NIST compliance table, severity badges, control matrix |
-| Text | ✅ Free | Clean terminal-friendly text report |
-| CycloneDX SBOM | ✅ Free | Industry-standard SBOM with findings as vulnerabilities |
-| SPDX SBOM | ✅ Free | SPDX 2.3 document format |
-| NIST 800-161 | ✅ Free | Control traceability matrix (SR-2.1 → SR-11.4) |
-| EU CRA | ✅ Free | Cyber Resilience Act article mapping |
-| PDF | 🔐 Premium | Multi-page PDF with title page, findings table, NIST compliance matrix |
-| Splunk CEF | 🔐 Premium | Common Event Format for Splunk ingestion |
-| Elastic ECS | 🔐 Premium | Elastic Common Schema format |
-| Microsoft Sentinel | 🔐 Premium | Sentinel-ready formatted output |
-| IBM QRadar | 🔐 Premium | QRadar DSM-ready format with QID mappings |
+| JSON | ✅ | Structured machine-readable findings |
+| HTML | ✅ | Rich HTML report with NIST compliance table, severity badges, control matrix |
+| Text | ✅ | Clean terminal-friendly text report |
+| CycloneDX SBOM | ✅ | Industry-standard SBOM with findings as vulnerabilities |
+| SPDX SBOM | ✅ | SPDX 2.3 document format |
+| NIST 800-161 | ✅ | Control traceability matrix (SR-2.1 → SR-11.4) |
+| EU CRA | ✅ | Cyber Resilience Act article mapping |
+| PDF | Future feature | Multi-page PDF with title page, findings table, NIST compliance matrix |
+| Splunk CEF | Future feature | Common Event Format for Splunk ingestion |
+| Elastic ECS | Future feature | Elastic Common Schema format |
+| Microsoft Sentinel | Future feature | Sentinel-ready formatted output |
+| IBM QRadar | Future feature | QRadar DSM-ready format with QID mappings |
 
 ### Sample output
 
@@ -583,39 +583,6 @@ npm-scan report --html > report.html
 ### Docker
 
 See the [Docker quick-start section](#-run-lateosnpm-scan-anywhere-with-docker--zero-installation) above for pull commands, Compose pipeline, and multi-arch images.
-
----
-
-## 🗺️ Roadmap & Enterprise Features
-
-### Free tier (shipped)
-
-- All 11 ATK detectors + **MEGALODON** CI/CD campaign detection (D1–D6) + **HF_IMPERSONATION** detector + **MINI_SHAI_HULUD** worm campaign (D1–D7, 3 waves, with **MSH_SUPPLEMENT** D1–D4 for obfuscation/persistence/geofence/C2) + **VSIX_SCAN** extension supply chain scan (6 detectors) + **CVE-2026-48710 (BadHost)** Python vulnerability detection (3 layers) + **TRAPDOOR** cross-ecosystem attack detection (9 rules) + **NODE_IPC_COMPROMISE** expired-domain hijack detection (11 rules) + **TYPOSQUAT_VPMDHAJ** mass typosquatting campaign (3 rules) + **AXIOS_POISONING** registry poisoning campaign (3 rules)
-- SBOM output (CycloneDX + SPDX)
-- HTML, text, and compliance reports (NIST + EU CRA)
-- Policy-as-code engine (YAML)
-- Local SQLite scan history
-- GitHub Action
-- Pre-commit hook (husky + lint-staged)
-- Docker images + Compose pipeline
-- Watch mode (--watch / --monorepo for auto-rescan)
-- VS Code extension scanning (--vsix flag with Marketplace + Open VSX registries)
-
-### Premium (🔐 license key)
-
-- PDF compliance reports with NIST traceability matrix
-- SIEM export (Splunk CEF, Elastic ECS, Microsoft Sentinel, IBM QRadar)
-- Dynamic sandbox (gVisor-based — ATK-008–010)
-- Reachability analysis (call graph filtering)
-
-### Enterprise (🏢 custom license)
-
-- SAML 2.0 SSO (Okta, Azure AD, OneLogin, Keycloak)
-- REST API + webhooks (FastAPI)
-- Team RBAC + audit logs
-- Helm chart for Kubernetes deployment
-- PostgreSQL backend for hosted/team tier
-- SLA-backed priority support
 
 ---
 
