@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+﻿import { test } from 'node:test';
 import assert from 'assert/strict';
 import { scan } from '../backend/detectors/tier1-github-author-spoof.js';
 
@@ -12,9 +12,7 @@ test('D23: "claude@users.noreply.github.com" detected as CRITICAL', async () => 
 });
 
 test('D23: "gpt@users.noreply.github.com" detected as CRITICAL', async () => {
-  const files = [
-    { path: 'publish.js', content: 'const author = "gpt@users.noreply.github.com"' },
-  ];
+  const files = [{ path: 'publish.js', content: 'const author = "gpt@users.noreply.github.com"' }];
   const findings = await scan({}, [], null, files);
   assert(findings.length > 0);
   assert.ok(findings[0].detail?.some((d) => d.type === 'github_author_spoof'));
@@ -64,7 +62,8 @@ test('D23: GITHUB_TOKEN + spoofed commit + push returns BLOCK', async () => {
   const files = [
     {
       path: 'publish.js',
-      content: 'const token = process.env.GITHUB_TOKEN; execSync("git commit -m fix"); execSync("git push")',
+      content:
+        'const token = process.env.GITHUB_TOKEN; execSync("git commit -m fix"); execSync("git push")',
     },
   ];
   const findings = await scan({}, [], null, files);

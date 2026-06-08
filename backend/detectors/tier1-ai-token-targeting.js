@@ -1,12 +1,10 @@
-import path from 'path';
+﻿import path from 'path';
 import thresholds from './config/thresholds.js';
 
 const cfg = thresholds['D22-AI-TOKEN-TARGETING'];
 const PATTERN_WEIGHTS = cfg.pattern_weights;
 
-const CODE_EXTENSIONS = new Set([
-  '.js', '.mjs', '.cjs', '.ts',
-]);
+const CODE_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts']);
 
 function isCodeFile(f) {
   const fp = (f.path || f.name || '').toLowerCase();
@@ -153,9 +151,7 @@ export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   const hasExfil = findings.some((f) =>
     f.evidence?.some((e) => e.includes('ai_token_exfiltration'))
   );
-  const hasToken = findings.some((f) =>
-    f.evidence?.some((e) => e.includes('_token_targeting'))
-  );
+  const hasToken = findings.some((f) => f.evidence?.some((e) => e.includes('_token_targeting')));
   const hasConfig = findings.some((f) =>
     f.evidence?.some((e) => e.includes('ai_config_targeting'))
   );
@@ -182,7 +178,7 @@ export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       evidence: [
         `total_findings: ${findings.length}`,
         `aggregated_risk: ${aggregatedRisk}`,
-        `ai_platforms_targeted: ${[...new Set(findings.map(f => f.message?.split(' ')[0] || ''))].filter(Boolean).join(', ')}`,
+        `ai_platforms_targeted: ${[...new Set(findings.map((f) => f.message?.split(' ')[0] || ''))].filter(Boolean).join(', ')}`,
         ...findings.map((f) => {
           const loc = f.locations?.[0];
           return `${f.message}${loc ? ' @ ' + (loc.file || '') + (loc.line ? ':' + loc.line : '') : ''}`;
@@ -191,7 +187,8 @@ export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       locations: findings.flatMap((f) => f.locations || []),
       recommendation,
       detail: findings.map((f) => ({
-        type: f.evidence?.find((e) => e.startsWith('pattern:'))?.replace('pattern: ', '') || 'unknown',
+        type:
+          f.evidence?.find((e) => e.startsWith('pattern:'))?.replace('pattern: ', '') || 'unknown',
         pattern: f.evidence?.find((e) => e.startsWith('pattern:'))?.replace('pattern: ', ''),
         confidence: f.confidenceScore,
         risk: f.confidenceScore,

