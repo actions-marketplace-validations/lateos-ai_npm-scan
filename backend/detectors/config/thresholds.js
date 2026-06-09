@@ -321,8 +321,8 @@ export default {
     pattern_weights: {
       github_author_spoof: 95,
       spoofed_git_commit: 90,
-      force_push: 85,
-      force_push_lease: 70,
+      force_push: 40,
+      force_push_lease: 30,
       ai_workflow_impersonation: 80,
       full_author_spoof_attack: 99,
       authenticated_spoof_push: 95,

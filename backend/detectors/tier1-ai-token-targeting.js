@@ -84,7 +84,8 @@ export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     /OPENAI_API_KEY/gi,
     /OPENAI_ORG_ID/gi,
     /process\.env\.OPENAI/gi,
-    /sk-[A-Za-z0-9]{20,}/gi,
+    /["'`]sk-[A-Za-z0-9]{20,}["'`]/gi,
+    /OPENAI_API_KEY\s*[:=]\s*["'`]sk-/gi,
   ]);
 
   tryAdd('gemini_token_targeting', [
