@@ -1,4 +1,5 @@
 ﻿import path from 'path';
+import { KNOWN_REPUTABLE_PACKAGES } from '../policy.js';
 import thresholds from './config/thresholds.js';
 
 const cfg = thresholds['D22-AI-TOKEN-TARGETING'];
@@ -41,6 +42,9 @@ function matchAllSafe(regex, str) {
 export const name = 'tier1-ai-token-targeting';
 
 export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+  const pkgName = pkgJson?.name;
+  if (pkgName && KNOWN_REPUTABLE_PACKAGES.has(pkgName)) return [];
+
   const files = allFiles || jsFiles || [];
   if (files.length === 0) return [];
 
