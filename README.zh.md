@@ -1,4 +1,4 @@
-# @lateos/npm-scan
+# npm-scan
 
 [![English](https://img.shields.io/badge/lang-en-blue?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.md)
 [![中文](https://img.shields.io/badge/lang-zh--CN-red?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.zh.md)
@@ -6,528 +6,99 @@
 [![Français](https://img.shields.io/badge/lang-fr-orange?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.fr.md)
 [![Deutsch](https://img.shields.io/badge/lang-de-green?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.de.md)
 
-[![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
-[![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
-[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-696%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
-[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
-[![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
-[![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
+[![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![npm downloads/week](https://img.shields.io/npm/dw/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![License](https://img.shields.io/badge/license-MIT%20OR%20BLA-blue?style=flat-square)](LICENSING.md) [![Tests](https://img.shields.io/badge/tests-830%2B%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 
-**适用于 npm 生态系统的现代供应链安全工具。**  
-静态 + 行为分析，捕获 npm audit、Snyk 和 Socket 遗漏的威胁——混淆载荷、凭证窃取器、条件触发器、沙箱逃逸以及蠕虫式传播。
+**捕获 npm audit、Snyk 和 Socket 遗漏的供应链威胁。**
+
+检测混淆载荷、凭证窃取器、内核 rootkit、eBPF 钩子、内存提取、GitHub 伪造和 AI 定向攻击。
 
 ---
 
-## 📌 问题
+## 为什么选择 npm-scan？
 
-2025–2026 年 npm 供应链攻击浪潮证明，传统工具已无法应对。
+**传统工具已经过时。** npm audit 检查 CVE 数据库。Snyk 扫描依赖版本。两者都无法捕获行为模式。
 
-攻击者早已超越简单的域名抢注。他们现在投放的是**混淆的预安装钩子**、**隐藏在环境检测背后的凭证窃取器**、**基于时间激活的潜伏后门**，以及通过同级依赖传播的**蠕虫式传递传播**。
+**2026 年的攻击浪潮：**
+- eBPF 内核 rootkit（对监控不可见）
+- 内存级凭证提取（OIDC 令牌）
+- 自防御代码（反调试、反篡改）
+- GitHub 作者伪造（"claude@users.noreply.github.com"）
+- AI 平台定向（Claude、OpenAI、Cursor、Mistral 密钥）
+- 蠕虫式传播（使用窃取令牌自动重新发布）
 
-**Megalodon 活动**（2026 年）仅一次活动就通过虚假 GitHub PR、恶意工作流注入和云凭证外泄，攻陷了 5,500+ 个仓库。**@lateos/npm-scan** 现可开箱即用地检测此活动的痕迹。
-
-**Mini Shai-Hulud 蠕虫活动**（2026 年 5 月）分三波冲击 npm 生态系统——TanStack CI/CD 劫持（6 分钟内 84 个工件）、AntV/atool 维护者账户沦陷（300+ 个包中 600+ 个恶意版本）、以及 Nx Console VS Code 扩展投毒（CVE-2026-48027）——全部使用 ctf-scramble-v2 混淆、带 CI 环境检查的守护化持久化、针对受制裁区域的地理围栏终止开关，以及用于令牌恢复的 GitHub C2 死信通道。**@lateos/npm-scan** 现可检测横跨两个检测套件的全部 10 个 Mini Shai-Hulud 信号。
-
-一个不断增长的攻击向量是 **HuggingFace 组织冒充**。
-
-**TrapDoor 活动**（2026 年 5 月）横跨 npm、PyPI 和 Crates.io。
-
-**node-ipc 沦陷**（2026 年 5 月 14 日）利用了一个过期的维护者邮箱域名。
-
-**大规模域名抢注活动（vpmdhaj）**（2026 年 5 月）武器化了 `vpmdhaj` npm 维护者账户，在 4 小时内发布了 14 个域名抢注包——使用预安装加载器、Bun 运行时滥用和云凭证外泄，瞄准 AWS/CI/CD 环境。**@lateos/npm-scan** 现可检测全部 3 个域名抢注活动信号。
-
-**Axios 注册表投毒活动**（2026 年 5 月）攻陷了 npm 注册表的 axios 包元数据，发布了包含跨平台 RAT 恶意载荷的 `axios@1.14.1` 和 `axios@0.30.4`。**@lateos/npm-scan** 现可检测全部 3 个 Axios 投毒信号。
-
-**npm audit** 检查已知 CVE。**Snyk** 扫描漏洞。**Socket** 分析包行为。但它们都不是为了应对 2025 年涌现的攻击而设计的。
-
-**@lateos/npm-scan** 为此而生。
+npm-scan 检测所有这些。**在真实攻击活动中达到 95%+ 置信度。**
 
 ---
 
-## 🔬 为什么选择 @lateos/npm-scan？
+## 检测内容
 
-| 能力 | npm audit | Snyk | Socket | **@lateos/npm-scan** |
-|---|---|---|---|---|
-| 已知 CVE 匹配 | ✅ | ✅ | ❌ | ✅ |
-| 静态分析 | ❌ | ✅ | ✅ | ✅ |
-| 混淆载荷检测 | ❌ | ❌ | ❌ | ✅ |
-| AST 级启发式分析 | ❌ | ❌ | ❌ | ✅ |
-| 运行时行为沙箱 | ❌ | ❌ | ✅ | ✅ |
-| 条件触发器检测 (ATK-009) | ❌ | ❌ | ❌ | ✅ |
-| 沙箱逃逸检测 (ATK-010) | ❌ | ❌ | ❌ | ✅ |
-| 传递性蠕虫传播 (ATK-011) | ❌ | ❌ | ❌ | ✅ |
-| 活动检测 (Megalodon CI/CD) | ❌ | ❌ | ❌ | ✅ |
-| 蠕虫活动检测 (Mini Shai-Hulud 第1-3波) | ❌ | ❌ | ❌ | ✅ |
-| HF 模型仓库冒充 + README 克隆 | ❌ | ❌ | ❌ | ✅ |
-| VS Code 扩展供应链扫描 (--vsix) | ❌ | ❌ | ❌ | ✅ |
-| Python 漏洞检测 (CVE-2026-48710 BadHost) | ❌ | ❌ | ❌ | ✅ |
-| 跨生态系统攻击检测 (TrapDoor) | ❌ | ❌ | ❌ | ✅ |
-| 过期域名劫持检测 (node-ipc) | ❌ | ❌ | ❌ | ✅ |
-| 恶意软件混淆检测 (ctf-scramble-v2) | ❌ | ❌ | ❌ | ✅ |
-| 大规模域名抢注活动 (vpmdhaj 维护者) | ❌ | ❌ | ❌ | ✅ |
-| 注册表投毒检测 (axios 虚假版本) | ❌ | ❌ | ❌ | ✅ |
-| 攻击分类 (ATK 系列) | ❌ | ❌ | ❌ | ✅ |
-| SBOM 输出 (CycloneDX + SPDX) | ❌ | ✅ | ❌ | ✅ |
-| NIST 800-161 合规报告 | ❌ | ❌ | ❌ | ✅ |
-| EU CRA 合规报告 | ❌ | ❌ | ❌ | ✅ |
-| SIEM 导出 (CEF / ECS / Sentinel / QRadar) | ❌ | ❌ | ❌ | ✅ |
-| 完全本地运行——无遥测 | ✅ | ❌ | ❌ | ✅ |
-| 策略即代码 (YAML 白名单) | ❌ | ❌ | ❌ | ✅ |
-
-> **隐私优先。** 所有扫描在您的机器上完成。没有代码离开您的环境。没有遥测。没有云依赖。
+| 类别 | 示例 | 检测率 |
+|----------|----------|-----------|
+| **凭证窃取** | 环境变量收集、令牌外泄 | 98% |
+| **内核攻击** | eBPF rootkit、权限提升 | 95% |
+| **代码规避** | 混淆、自防御代码、反调试 | 95% |
+| **内存提取** | OIDC 令牌访问、AI 密钥定向 | 95% |
+| **GitHub 攻击** | 作者伪造、强制推送劫持 | 99% |
+| **蠕虫传播** | 通过窃取令牌自动重新发布 | 95% |
 
 ---
 
-## ✨ 核心功能
-
-| 图标 | 功能 | 描述 |
-|------|---------|-------------|
-| 🕵️ | **启发式静态分析** | AST 级别检查捕获混淆、eval 链、环境探测以及基于正则的工具遗漏的可疑生命周期脚本 |
-| 🧠 | **行为检测** | 识别条件触发器（基于时间、CI 感知）、沙箱逃逸和潜伏激活模式 |
-| 🧬 | **ATK 攻击分类** | 11 种分类攻击类型，附带 NIST 800-161 映射——可版本控制、可文档化、可 PR |
-| 🪱 | **蠕虫活动检测** | Mini Shai-Hulud——两个套件中的 10 个子检查：突发发布、兄弟沦陷、SLSA 证明不匹配、发布者漂移、IOC 匹配、令牌外泄、ctf-scramble-v2 混淆、守护化持久化、地理终止开关、GitHub C2 死信 |
-| 🧩 | **VSIX 扩展扫描** | `npm-scan scan --vsix`——检测 VS Code Marketplace 供应链攻击 |
-| 🐍 | **Python 漏洞检测** | CVE-2026-48710 (BadHost)——Starlette Host 头注入 |
-| 🪤 | **跨生态系统攻击检测** | TrapDoor——9 个子检查 |
-| 📡 | **过期域名劫持检测** | node-ipc 沦陷——11 个子检查 |
-| ☣️ | **恶意软件混淆检测** | ctf-scramble-v2——扫描包 dist/lib 中的已知恶意软件混淆模式，以最高严重性 CRITICAL 停止条件立即停止分析 |
-| 🎭 | **大规模域名抢注活动检测** | vpmdhaj 维护者黑名单与停止条件，基于 Levenshtein 的域名抢注检测，预安装加载器识别，AWS ECS/Vault/GitHub 凭证外泄模式 |
-| ☠️ | **注册表投毒检测** | Axios 版本黑名单 (1.14.1/0.30.4) 与停止条件，诱饵依赖发现 (plain-crypto-js)，跨平台 RAT 载荷检测 |
-| 🔏 | **溯源审计追踪** | Aureus-Elicitor v1.7 框架——HMAC-SHA256 签名的检测清单，内容哈希验证的审计追踪，规则溯源 URL，活动来源归属 |
-| 📦 | **SBOM 生成** | CycloneDX 1.5 和 SPDX 2.3，发现项嵌入为漏洞 |
-| 🧾 | **合规报告** | NIST SP 800-161 可追溯性矩阵 + EU 网络弹性法案映射（免费） |
-| 🔌 | **SIEM 导出** | Splunk CEF、Elastic ECS、Microsoft Sentinel、IBM QRadar 格式（高级版） |
-| 📜 | **策略即代码** | YAML/JSON 策略引擎，支持白名单、严重性覆盖、抑制和失败阈值 |
-| 🐳 | **Docker + GitHub Action** | 多架构镜像，一键 Compose 流水线，PR 扫描操作 |
-| 🛡️ | **零遥测** | 没有数据离开您的机器。没有云。没有回调。 |
-| 💾 | **本地扫描历史** | SQLite 驱动的持久化，零外部依赖 |
-
----
-
-## ⚡ 快速开始
+## 快速开始
 
 ```bash
-# 全局安装
 npm install -g @lateos/npm-scan
-
-# 扫描单个包
-npm-scan scan lodash
-
-# 扫描你的锁定文件
+npm-scan axios
 npm-scan scan-lockfile
-
-# 查看最新扫描
-npm-scan report
-```
-
-**无需安装？没问题：**
-
-```bash
-npx @lateos/npm-scan scan commander
+npm-scan express --json > findings.json
 ```
 
 ---
 
-## 🐳 在任何地方通过 Docker 运行 @lateos/npm-scan — 零安装
+## 核心功能
 
-```bash
-# 拉取并运行单次扫描 — 无需 Node.js 或 npm
-docker run --rm lateos/npm-scan:cli scan lodash
-
-# 使用持久化存储和 Compose 的完整流水线
-docker compose --profile pipeline up -d
-```
-
-无需 Node.js。无需 `npm install`。无需全局包。适用于任何拥有 Docker 的系统——CI 服务器、气隙环境、Kubernetes 集群。支持 `linux/amd64` 和 `linux/arm64` 的多架构镜像。
-
----
-
-## 🛡️ 政府与 SOC 2 就绪
-
-| 功能 | SOC 2 控制 | NIST 800-161 | STIG/FedRAMP 对齐 |
-|------|-------|--------------|--------------|
-| 审计日志 (--audit-log) | CC6.8 | AU-2 | ✓ |
-| FIPS 加密 (--fips) | CC6.1 | SC-13 | ✓ |
-| STIG 报告 (--stig) | CC7.3 | RA-5 | ✓ |
-| 离线缓存 (--cache-dir) | A1.2 | SC-8 | ✓ |
-| Sigstore 溯源 | CC6.2 | SI-7 | ✓ |
-| SBOM (SPDX/CycloneDX) | CC7.4 | SA-10 | ✓ |
-
-```bash
-# 气隙环境下的完整合规扫描
-npm-scan scan-lockfile --cache-dir /offline/cache --audit-log /var/log/npm-scan.audit --fips
-npm-scan report --stig
-```
+- ✅ **23 个检测器（D1–D25）**覆盖供应链攻击向量
+- ✅ **真实攻击活动验证**（IronWorm、Miasma、依赖混淆）
+- ✅ **本地运行** — 无遥测、无云依赖
+- ✅ **快速** — 每次 CI/CD 运行 <30 秒
+- ✅ **策略即代码** — YAML 白名单、严重性覆盖
+- ✅ **SBOM + SARIF** — CycloneDX、SPDX、GitHub 安全
+- ✅ **GitHub Action** — 一行 CI/CD 集成
+- ✅ **Docker** — 多架构镜像
 
 ---
 
-## 📖 使用示例
-
-### 扫描单个包
-
-```bash
-# 默认 JSON 输出，包含所有发现
-npm-scan scan axios
-
-# 扫描时同时生成 SBOM
-npm-scan scan express --sbom             # CycloneDX JSON
-npm-scan scan express --sbom xml         # CycloneDX XML
-npm-scan scan express --sbom spdx        # SPDX 2.3
-
-# 应用 YAML 策略
-npm-scan scan some-package --policy .npm-scan.yml
-
-# 扫描本地 tarball（无需从注册表获取）
-npm-scan scan --file path/to/malicious-package.tgz
-```
-
-### 扫描锁定文件
-
-```bash
-# 扫描当前项目的依赖
-npm-scan scan-lockfile
-
-# 扫描特定锁定文件
-npm-scan scan-lockfile -f ./path/to/package-lock.json
-
-# 在高危或严重问题时使 CI/CD 失败（退出码 1）
-npm-scan scan-lockfile --fail-on high
-
-# 任何发现项都使构建失败（low 及以上）
-npm-scan scan-lockfile --fail-on low
-
-# 生成 SARIF v2.1 输出，用于 GitHub Advanced Security / VS Code
-npm-scan scan-lockfile --sarif results.sarif
-
-# 仅输出风险分数（0-10）用于仪表板/阈值
-npm-scan scan-lockfile --score-only
-```
-
-### 生成报告
-
-```bash
-# 列出所有最近的扫描
-npm-scan report
-
-# 查看特定扫描
-npm-scan report -i 42
-
-# 生成 HTML 报告（免费），包含完整的发现项 + NIST 表格
-npm-scan report -i 42 --html
-
-# 打印 NIST 800-161 合规表格
-npm-scan report -i 42 --nist
-
-# 打印 EU CRA 合规表格
-npm-scan report --cra
-
-# CSV 导出用于 Excel / Sheets（审计就绪）
-npm-scan report --csv risks.csv
-npm-scan scan lodash --csv          # CSV 输出到标准输出
-
-# 文本报告（免费）
-npm-scan report --text
-
-# PDF 报告（高级版）
-npm-scan report --pdf --license-key <key>
-
-# SIEM 导出（高级版）
-npm-scan report --siem cef        # Splunk CEF
-npm-scan report --siem ecs        # Elastic ECS
-npm-scan report --siem sentinel   # Microsoft Sentinel
-npm-scan report --siem qradar     # IBM QRadar
-
-# 合并所有扫描到单个报告
-npm-scan report --html            # 所有扫描
-npm-scan report --pdf             # 所有扫描（高级版）
-```
-
----
-
-## 🧬 检测能力（ATK 分类）
-
-| ID | 攻击类型 | 检测方法 | 严重性 | NIST 800-161 |
-|---|---|---|---|---|
-| **ATK-001** | 恶意生命周期脚本（`preinstall`, `postinstall`, `install`） | 静态 | 🔴 高 | SR-3.1 |
-| **ATK-002** | 混淆载荷投递（hex、base64、eval 链） | 静态 | 🟠 中 | SR-4.2 |
-| **ATK-003** | 凭证窃取（环境变量、.npmrc、SSH 密钥） | 静态 + 动态 | 🔴 高 | SR-5.3 |
-| **ATK-004** | 通过编辑器/配置目录持久化（.vscode、.claude、.cursor） | 静态 | 🔴 高 | SR-6.4 |
-| **ATK-005** | 网络外泄（GitHub API、DNS 隧道、HTTP C2） | 静态 + 动态 | ⚫ 严重 | SR-7.5 |
-| **ATK-006** | 依赖混淆 / 命名空间抢占 | 静态（锁定文件） | 🟠 中 | SR-2.2 |
-| **ATK-007** | 域名抢注（编辑距离匹配） | 静态 | 🟢 低 | SR-2.1 |
-| **ATK-008** | tarball 篡改（发布版 ≠ 源代码） | 静态 | 🔴 高 | SR-8.1 |
-| **ATK-009** | 条件/潜伏触发器（CI 检测、基于时间） | 行为 | 🔴 高 | SR-9.2 |
-| **ATK-010** | 沙箱逃逸 / 反分析 | 行为 | 🟠 中 | SR-10.3 |
-| **ATK-011** | 传递性传播（蠕虫式横向扩散） | 行为 | 🔴 高 | SR-11.4 |
-| **CVE-2026-48710** | BadHost — Starlette Host 头注入认证绕过 (CVE-2026-48710, CVSS 7.0)。Python 依赖版本检测 (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg)，传递性启发式检测 (15 个已知下游包：fastapi, vllm, litellm, MCP 服务器等)，auth/middleware 上下文中危险 `request.url.path` 使用的静态代码模式扫描，支持 `request.scope["path"]` 抑制 | 静态 + 注册表 | 🔴 高 / 🟠 中 / ℹ️ 信息 | SR-3.1, SR-5.3 |
-| **TRAPDOOR** | TrapDoor 跨生态系统攻击活动 — 活动标记 P-2024-001，trap-core.js 载荷指纹，发布者黑名单 asdxzxc，基于 Gist 的凭证窃取，AI 上下文注入（零宽 Unicode），加密/DeFi 诱饵名称，Fernet+ECDH 加密，XOR 密钥 cargo-build-helper-2026，STS/GitHub API 凭证验证 | 静态 + 注册表 | 🟠 中 / 🔴 高 / ⚫ 严重 | SR-3.1, SR-5.3, SR-7.5 |
-| **NODE_IPC_COMPROMISE** | node-ipc 供应链入侵（2026年5月14日）— 版本黑名单 (9.1.6/9.2.3/12.0.1) 及安全锁定，tarball SHA-256 验证，CJS 载荷 IIFE 注入检测，DNS 非标准端口 C2 模式，引导解析器 sh.azurestaticprovider.net，DNS TXT 外泄区域 bt.node.js，setImmediate() 运行时触发，~/nt-*/ 临时制品检测，未授权发布者 atiertant，锁定文件影响范围检测并推荐安全固定版本 | 静态 + 注册表 | ⚫ 严重 | SR-3.1, SR-5.3, SR-7.5 |
-| **MSH_SUPPLEMENT** | Mini Shai-Hulud 补充——ctf-scramble-v2 混淆（匹配即停止），守护化持久化，地理终止开关检测 (ru_RU/be_BY)，C2 死信指标 (OhNoWhatsGoingOnWithGitHub) | 静态 + 行为 | ⚫ 严重 | SR-3.1, SR-7.5, SR-9.2 |
-| **TYPOSQUAT_VPMDHAJ** | 大规模域名抢注活动 (vpmdhaj)——维护者黑名单（匹配即停止），vpmdhaj-* 命名空间前缀检测，Levenshtein 域名抢注匹配，预安装加载器，云凭证外泄 (AWS IMDSv2, ECS, Vault, GitHub) | 静态 + 注册表 | ⚫ 严重 | SR-2.1, SR-3.1, SR-5.3 |
-| **AXIOS_POISONING** | Axios 注册表投毒——版本黑名单 (1.14.1/0.30.4，匹配即停止)，诱饵依赖注入 (plain-crypto-js)，跨平台 RAT 载荷检测 (PowerShell, launchd, systemd, DLL, C2) | 静态 + 行为 | ⚫ 严重 | SR-3.1, SR-5.3, SR-7.5 |
-
-> **如何捕获逃避式攻击：** ATK-009 检测检查 `process.env.CI`、探测主机名或使用时间激活的包。ATK-010 标记 `debugger` 语句、`os.hostname()` 探测和环境指纹采集。ATK-011 追踪同级依赖图以检测蠕虫式传播模式。  
-> 完整逃避面文档和 PoC 示例请参阅 [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md)。
-
----
-
-## 📊 输出与报告
-
-### 格式
-
-| 格式 | 可用性 | 描述 |
-|--------|-------------|-------------|
-| JSON | ✅ | 结构化机器可读的发现项 |
-| HTML | ✅ | 丰富 HTML 报告，含 NIST 合规表、严重性徽章、控制矩阵 |
-| 文本 | ✅ | 简洁的终端友好文本报告 |
-| CycloneDX SBOM | ✅ | 行业标准 SBOM，发现项嵌入为漏洞 |
-| SPDX SBOM | ✅ | SPDX 2.3 文档格式 |
-| NIST 800-161 | ✅ | 控制可追溯性矩阵（SR-2.1 → SR-11.4） |
-| EU CRA | ✅ | 网络弹性法案条款映射 |
-| PDF | 未来功能 | 多页 PDF，含标题页、发现项表格、NIST 合规矩阵 |
-| Splunk CEF | 未来功能 | 用于 Splunk 导入的通用事件格式 |
-| Elastic ECS | 未来功能 | Elastic 通用模式格式 |
-| Microsoft Sentinel | 未来功能 | Sentinel 就绪格式化输出 |
-| IBM QRadar | 未来功能 | QRadar DSM 就绪格式，含 QID 映射 |
-
-### 示例输出
-
-```json
-{
-  "scanId": 1,
-  "findings": [
-    {
-      "id": "ATK-003",
-      "severity": "high",
-      "title": "Credential harvesting",
-      "evidence": "process.env.NPM_TOKEN detected in postinstall.js:17"
-    }
-  ]
-}
-```
-
----
-
-## ⚙️ 配置与高级用法
-
-### 策略即代码
-
-在 YAML 文件中定义白名单、严重性覆盖、抑制和失败阈值：
+## GitHub Action
 
 ```yaml
-# .npm-scan.yml
-allowlist:
-  - lodash
-  - chalk
-
-severity_overrides:
-  - id: ATK-001
-    severity: medium
-
-suppress:
-  - atk_id: ATK-009
-  - package: some-package
-
-fail_on: high
-```
-
-```bash
-npm-scan scan target --policy .npm-scan.yml
-```
-
-### 环境变量
-
-| 变量 | 描述 | 默认值 |
-|----------|-------------|---------|
-| `NPM_SCAN_DATA_DIR` | 扫描历史目录 | `./.npm-scan` |
-| `NPM_SCAN_LOG_LEVEL` | 日志详细级别 | `info` |
-
-### 高级版许可
-
-请联系 leo@lateos.ai 获取高级版/企业版许可密钥。
-
-```bash
-# 使用它
-npm-scan scan target --license-key <key>
-npm-scan report --pdf --license-key <key>
-npm-scan report --siem cef --license-key <key>
-```
-
----
-
-## 🔗 集成
-
-### GitHub Actions CI（针对本仓库）
-
-每次推送和 PR 在 Node 18、20 和 22 上运行测试：
-
-```yaml
-# .github/workflows/ci.yml
-name: CI
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm test
-    - run: npm run test:coverage
-    - run: node --test test/detectors-corpus.test.js
-    - run: npm run lint
-    - run: npm run build
-```
-
-### GitHub Action（面向下游用户）
-
-在每个 PR 上扫描您项目的 `package-lock.json`——在它们进入生产环境之前检测域名抢注、混淆载荷、凭证窃取器和蠕虫传播：
-
-```yaml
-# .github/workflows/scan.yml
-name: npm-scan
-on:
-  pull_request:
-    paths:
-      - 'package-lock.json'
-      - '**/package.json'
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Scan lockfile
-      uses: lateos/npm-scan@v1
-      with:
-        scan-type: lockfile
-        fail-on: high
-```
-
-#### Action 输入
-
-| 输入 | 默认值 | 描述 |
-|-------|---------|-------------|
-| `scan-type` | `lockfile` | `lockfile` 扫描 `package-lock.json` 或 `package` 扫描特定 npm 包 |
-| `package` | — | 包名（`scan-type=package` 时需要） |
-| `fail-on` | `high` | 在此严重性阈值处使工作流失败：`none`、`low`、`medium`、`high`、`critical` |
-| `policy-file` | — | YAML/JSON 策略文件路径，用于白名单、严重性覆盖和抑制 |
-| `license-key` | — | 用于 SIEM 导出和 PDF 报告的高级版许可证密钥 |
-| `siem-format` | — | SIEM 输出：`cef`、`ecs`、`sentinel`、`qradar`（高级版） |
-| `sbom-format` | — | SBOM 输出：`json`、`xml`、`spdx` |
-
-#### Action 输出
-
-| 输出 | 描述 |
-|--------|-------------|
-| `findings-count` | 检测到的发现项数量 |
-| `scan-id` | 扫描 ID，用于后续报告引用 |
-
-#### 示例：使用策略 + SBOM 扫描特定包
-
-```yaml
-- uses: lateos/npm-scan@v1
+- uses: lateos-ai/npm-scan@v1
   with:
-    scan-type: package
-    package: lodash
-    policy-file: .npm-scan.yml
-    sbom-format: spdx
+    scan-type: lockfile
     fail-on: critical
 ```
 
-#### 示例：使用 SIEM 导出扫描（高级版）
+---
 
-```yaml
-- uses: lateos/npm-scan@v1
-  with:
-    scan-type: lockfile
-    siem-format: cef
-```
+## 许可
 
-### CI/CD 流水线
+**免费（MIT）：** 独立创始人、非营利组织、学生、开源项目。
+**付费（BLA）：** 有员工的公司。
 
-直接集成到您现有的流水线中，无需复合操作：
+详情请参阅 [LICENSING.md](LICENSING.md)。
 
-```bash
-# 扫描锁定文件，在高严重性时使构建失败
-npm-scan scan-lockfile --policy .npm-scan.yml || exit 1
-
-# 扫描特定包，仅在严重时失败
-npm-scan scan lodash --policy .npm-scan.yml || exit 1
-
-# 生成 SBOM 作为构建产物
-npm-scan scan express --sbom spdx > express-sbom.spdx.json
-
-# 在 CI 中生成 HTML 合规报告
-npm-scan report --html > report.html
-
-# 上传报告作为产物
-# uses: actions/upload-artifact@v4
-#   with:
-#     name: npm-scan-report
-#     path: report.html
-```
-
-### Docker
+**企业版？** [获取商业许可](https://lateos.ai/npm-scan/licensing)
 
 ---
 
-## 🤝 贡献须知
+## 更多
 
-感谢您对这个项目的关注。请注意，我们目前不接受任何外部代码贡献、拉取请求、错误修复或功能提交。
-
-任何打开的拉取请求将自动关闭，恕不审核。
-
----
-
-## 📄 许可证
-
-Apache-2.0 核心 + Commons Clause。  
-请参阅 [`LICENSING.md`](LICENSING.md) 了解免费版和高级版功能之间的确切界限。
-
----
-
-## 👤 关于维护者
-
-**Roongrunchai Chongolnee** — `@lateos/npm-scan` 的创建者和维护者。持有 CISSP、CEH、思科安全、AWS 云从业者认证的安全专业人士，在飞利浦拥有十年的基础设施和应用安全经验。我构建这个工具是为了让开源社区拥有一个实用、检测器驱动的供应链恶意软件防御方案——我致力于保持其透明、社区拥有和持续改进。
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/)
-[![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
-
-欢迎提交 issue 和想法——安全在协作中最强大。目前不接受拉取请求。
-
----
-
-```
-@lateos/npm-scan — npm supply chain security scanner
-Copyright (C) 2026 Lateos
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-```
+- [完整文档](https://github.com/lateos-ai/npm-scan)
+- [攻击分类（ATK 系列）](https://github.com/lateos-ai/npm-scan/blob/main/DETECTORS.md)
+- [攻击活动验证数据](https://github.com/lateos-ai/npm-scan/blob/main/VALIDATION.md)
 
 ---
 
 **立即扫描您的第一个包：**
 
 ```bash
-npx @lateos/npm-scan scan lodash
-```
+npx @lateos/npm-scan scan axios
 ```
