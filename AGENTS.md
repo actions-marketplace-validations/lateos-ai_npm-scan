@@ -8,12 +8,12 @@ ESM Node.js CLI monorepo for @lateos/npm-scan supply chain scanner.
 - **Premium:** `/Users/leochong/Projects/npm-scan-premium` — private premium feature repo (license-gated features: SIEM, PDF, SSO, etc.)
 
 ## Verification
-Run `npm test` (222 tests), `npm run test:coverage` (85%+), `npm run lint`, `npm run build`.
+Run `npm test` (243 tests), `npm run test:coverage` (85%+), `npm run lint`, `npm run build`.
 
 ## Architecture
 - `cli/`: Commander.js entrypoints
 - `backend/`: Core logic, detectors (ATK-001 to ATK-011), db/schema.sql
-- `backend/detectors/`: 11 ATK detectors + index.js routing
+- `backend/detectors/`: 11 ATK detectors + tier-1 suite (D1–D6c, D24–D25) + campaign detectors + index.js routing
 - `backend/siem/`: SIEM exporters (CEF, ECS, Sentinel, QRadar)
 - `backend/license.js`: HMAC-signed license key generation/validation
 - `backend/db.js`: SQLite via sql.js (WASM, no native deps)
@@ -23,7 +23,7 @@ Run `npm test` (222 tests), `npm run test:coverage` (85%+), `npm run lint`, `npm
 - `backend/sbom.js`: CycloneDX + SPDX SBOM
 - `backend/pdf.js`: PDF report generation (premium)
 - `backend/policy.js`: YAML/JSON policy-as-code engine
-- `test/`: 222 tests across 8 files (db, detectors-edge-cases, detectors-corpus, report, policy, cli, fetch)
+- `test/`: 243 tests across 10 files (db, detectors-edge-cases, detectors-corpus, report, policy, cli, fetch, tier1-bun-runtime-swap, tier1-split-dynamic-payload)
 - `test/fixtures/`: Shared mock data for test suites
 - `tests/corpus/`: 33 malicious + 50 clean tarballs for integration testing
 - `deploy/helm/`: Kubernetes Helm chart (enterprise)
@@ -43,11 +43,14 @@ Run `npm test` (222 tests), `npm run test:coverage` (85%+), `npm run lint`, `npm
 | D6a | `tier1-version-confusion.js` | `TIER1-VERSION-CONFUSION` | Sentinel versions (99.99.99 family), high-version heuristic (major≥9) |
 | D6b | `tier1-multistage-postinstall.js` | `TIER1-MULTISTAGE-POSTINSTALL` | Two-stage download+exec, detached background persistence |
 | D6c | `tier1-cloud-imds.js` | `TIER1-CLOUD-IMDS` | GCP metadata server, Azure IMDS endpoint targeting |
+| D24 | `tier1-bun-runtime-swap.js` | `D24-BUN-RUNTIME-SWAP` | Bun runtime swap (spawn, API usage, process.argv), bun downloader, credential combo, node-to-bun evasion (Miasma/Hades campaign) |
+| D25 | `tier1-split-dynamic-payload.js` | `D25-SPLIT-DYNAMIC-PAYLOAD` | Split/dynamic payload assembly, sys.path manipulation, eval+fetch chains, buffer assembly, multifile traversal (Miasma/Hades campaign) |
 
 ### Calibration Notes
 
 - **D6a heuristic** (`major >= 9 && minor >= 5 && patch >= 5`, `major !== 1`): known FP risk area. Tune confidence thresholds once production scan telemetry is available.
 - **D2 named signatures**: zero-FP string literals for confirmed malware campaigns. Safe to add new entries without score recalibration.
+- **D24/D25 pattern weights**: calibrated against Miasma/Hades campaign artifacts. Tune `bun_api_usage` and `buffer_assembly` weights once broader scan telemetry is available, as these patterns may appear in legitimate Bun-based tooling.
 
 ## Publishing
 - Bump version: `npm version patch && git push origin main --tags`

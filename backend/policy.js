@@ -88,6 +88,10 @@ const KNOWN_REPUTABLE_PACKAGES = new Set([
   'jsonwebtoken',
   'nodemailer',
   'class-validator',
+  'rxjs',
+  'request',
+  'async',
+  'minimist',
 ]);
 
 function severityIndex(s) {

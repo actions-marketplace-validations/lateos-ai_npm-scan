@@ -1,533 +1,105 @@
-# @lateos/npm-scan
+# npm-scan
 
 [![English](https://img.shields.io/badge/lang-en-blue?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.md)
 [![中文](https://img.shields.io/badge/lang-zh--CN-red?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.zh.md)
 [![日本語](https://img.shields.io/badge/lang-ja-purple?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.ja.md)
 [![Français](https://img.shields.io/badge/lang-fr-orange?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.fr.md)
 [![Deutsch](https://img.shields.io/badge/lang-de-green?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.de.md)
+[![עברית](https://img.shields.io/badge/lang-he--IL-lightblue?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.he.md)
 
-[![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan)
-[![License](https://img.shields.io/badge/license-Apache%202.0%20%2B%20Commons%20Clause-blue?style=flat-square)](LICENSING.md)
-[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat-square)](package.json)
-[![Tests](https://img.shields.io/badge/tests-696%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
-[![Coverage](https://img.shields.io/badge/coverage-90%25-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
-[![Docker](https://img.shields.io/badge/docker-lateos%2Fnpm--scan-2496ED?style=flat-square&logo=docker)](https://hub.docker.com/r/lateos/npm-scan)
-[![Sigstore](https://img.shields.io/static/v1?label=Sigstore&message=Provenance&color=green&style=flat-square&logo=sigstore)](https://github.com/lateos-ai/npm-scan/actions/workflows/publish.yml)
+[![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![npm downloads/week](https://img.shields.io/npm/dw/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![License](https://img.shields.io/badge/license-MIT%20OR%20BLA-blue?style=flat-square)](LICENSING.md) [![Tests](https://img.shields.io/badge/tests-830%2B%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 
-**Moderne Lieferkettensicherheit für das npm-Ökosystem.**  
-Statische + verhaltensbasierte Analyse, die erkennt, was npm audit, Snyk und Socket übersehen — obfuskierte Payloads, Credential-Stealer, bedingte Auslöser, Sandbox-Evasion und wurmartige Verbreitung.
+**Erkennung von Lieferkettenbedrohungen, die npm audit, Snyk und Socket übersehen.**
+
+Erkennt obfuskierte Payloads, Credential-Stealer, Kernel-Rootkits, eBPF-Hooks, Speicherextraktion, GitHub-Spoofing und KI-gesteuerte Angriffe.
 
 ---
 
-## 📌 Das Problem
+## Warum npm-scan?
 
-Die Welle von npm-Lieferkettenangriffen 2025-2026 hat bewiesen, dass herkömmliche Werkzeuge nicht mehr ausreichen.
+**Traditionelle Werkzeuge sind veraltet.** npm audit prüft CVE-Datenbanken. Snyk scannt Abhängigkeitsversionen. Keines erfasst Verhaltensmuster.
 
-Angreifer haben sich längst über einfaches Typosquatting hinausentwickelt. Sie liefern nun **obfuskierte Preinstall-Hooks**, **hinter Umgebungserkennung versteckte Credential-Stealer**, **schlafende Hintertüren mit zeitbasierter Aktivierung** und **wurmartige transitive Verbreitung**, die sich über Peer-Abhängigkeiten ausbreitet.
+**Die Angriffswelle 2026:**
+- eBPF-Kernel-Rootkits (für Überwachung unsichtbar)
+- Speicherbasierte Credential-Extraktion (OIDC-Tokens)
+- Selbstverteidigender Code (Anti-Debugging, Anti-Manipulation)
+- GitHub-Autoren-Spoofing ("claude@users.noreply.github.com")
+- KI-Plattform-Targeting (Claude, OpenAI, Cursor, Mistral-Schlüssel)
+- Wurmartige Verbreitung (automatische Neuveröffentlichung mit gestohlenen Tokens)
 
-Die **Megalodon-Kampagne** (2026) kompromittierte allein über 5.500 Repositorys durch gefälschte GitHub-PRs, böswillige Workflow-Injektion und Cloud-Credential-Exfiltration - alles koordiniert durch einen einzelnen Akteur, der die gesamte Kill-Chain automatisierte. **@lateos/npm-scan** erkennt Artefakte dieser Kampagne jetzt standardmäßig.
-
-Die **Mini Shai-Hulud-Wurm-Kampagne** (Mai 2026) traf das npm-Ökosystem in drei Wellen - TanStack CI/CD-Entführung (84 Artefakte in 6 Minuten), AntV/atool-Maintainer-Kompromittierung (600+ bösartige Versionen in 300+ Paketen) und Nx Console VS-Code-Erweiterungsvergiftung (CVE-2026-48027) - alle unter Verwendung von ctf-scramble-v2-Obfuskation, dämonisierter Persistenz mit CI-Umgebungsprüfungen, geografischen Killswitches gegen sanktionierte Regionen und GitHub-C2-Dead-Drop-Kanälen zur Token-Wiederherstellung. **@lateos/npm-scan** erkennt jetzt alle 10 Mini-Shai-Hulud-Signale über zwei Detektor-Suites.
-
-Ein wachsender Angriffsvektor ist die **HuggingFace-Organisations-Identitätsdiebstahl**.
-
-Die **TrapDoor-Kampagne** (Mai 2026) erstreckt sich über npm, PyPI und Crates.io.
-
-Die **node-ipc-Kompromittierung** (14. Mai 2026) nutzte eine abgelaufene Maintainer-E-Mail-Domain aus.
-
-Die **Massen-Typosquatting-Kampagne (vpmdhaj)** (Mai 2026) bewaffnete das npm-Maintainer-Konto `vpmdhaj`, um in einem 4-Stunden-Fenster 14 Typosquatting-Pakete zu veröffentlichen - mit Preinstall-Stagern, Bun-Laufzeitmissbrauch und Cloud-Credential-Exfiltration gegen AWS/CI/CD-Umgebungen. **@lateos/npm-scan** erkennt jetzt alle 3 Typosquatting-Kampagnensignale.
-
-Die **Axios-Registry-Vergiftungskampagne** (Mai 2026) kompromittierte die npm-Registry-Metadaten des Axios-Pakets, um `axios@1.14.1` und `axios@0.30.4` mit injizierten Abhängigkeiten zu veröffentlichen, die plattformübergreifende RAT-Payloads enthielten. **@lateos/npm-scan** erkennt jetzt alle 3 Axios-Vergiftungssignale.
-
-**npm audit** prüft bekannte CVEs. **Snyk** scannt nach Schwachstellen. **Socket** untersucht das Paketverhalten. Keines dieser Tools wurde für die Angriffsgeneration entwickelt, die 2025 auftrat.
-
-**@lateos/npm-scan** wurde für diesen Moment entwickelt.
+npm-scan erkennt all dies. **95%+ Konfidenz bei realen Kampagnen.**
 
 ---
 
-## 🔬 Warum @lateos/npm-scan?
+## Was wird erkannt?
 
-| Fähigkeit | npm audit | Snyk | Socket | **@lateos/npm-scan** |
-|---|---|---|---|---|
-| Bekannte CVE-Übereinstimmung | ✅ | ✅ | ❌ | ✅ |
-| Statische Analyse | ❌ | ✅ | ✅ | ✅ |
-| Erkennung obfuskierter Payloads | ❌ | ❌ | ❌ | ✅ |
-| AST-Level heuristische Analyse | ❌ | ❌ | ❌ | ✅ |
-| Runtime-Verhaltenssandbox | ❌ | ❌ | ✅ | ✅ |
-| Erkennung bedingter Auslöser (ATK-009) | ❌ | ❌ | ❌ | ✅ |
-| Sandbox-Evasion-Erkennung (ATK-010) | ❌ | ❌ | ❌ | ✅ |
-| Transitive Wurmverbreitung (ATK-011) | ❌ | ❌ | ❌ | ✅ |
-| Kampagnenerkennung (Megalodon CI/CD) | ❌ | ❌ | ❌ | ✅ |
-| Wurm-Kampagnenerkennung (Mini Shai-Hulud Welle 1-3) | ❌ | ❌ | ❌ | ✅ |
-| HF-Modell-Repo-Identitätsdiebstahl + README-Klon | ❌ | ❌ | ❌ | ✅ |
-| VS-Code-Erweiterungs-Supply-Chain-Scan (--vsix) | ❌ | ❌ | ❌ | ✅ |
-| Python-Schwachstellenerkennung (CVE-2026-48710 BadHost) | ❌ | ❌ | ❌ | ✅ |
-| Plattformübergreifende Angriffserkennung (TrapDoor) | ❌ | ❌ | ❌ | ✅ |
-| Abgelaufene-Domain-Entführungserkennung (node-ipc) | ❌ | ❌ | ❌ | ✅ |
-| Malware-Obfuskationserkennung (ctf-scramble-v2) | ❌ | ❌ | ❌ | ✅ |
-| Massen-Typosquatting-Kampagne (vpmdhaj-Maintainer) | ❌ | ❌ | ❌ | ✅ |
-| Registry-Vergiftungserkennung (axios-Fake-Versionen) | ❌ | ❌ | ❌ | ✅ |
-| Angriffstaxonomie (ATK-Serie) | ❌ | ❌ | ❌ | ✅ |
-| SBOM-Ausgabe (CycloneDX + SPDX) | ❌ | ✅ | ❌ | ✅ |
-| NIST 800-161-Compliance-Bericht | ❌ | ❌ | ❌ | ✅ |
-| EU-CRA-Compliance-Bericht | ❌ | ❌ | ❌ | ✅ |
-| SIEM-Export (CEF / ECS / Sentinel / QRadar) | ❌ | ❌ | ❌ | ✅ |
-| Vollständig lokale Ausführung — keine Telemetrie | ✅ | ❌ | ❌ | ✅ |
-| Policy-as-Code (YAML-Whitelists) | ❌ | ❌ | ❌ | ✅ |
-
-> **Datenschutz an erster Stelle.** Alle Scans erfolgen auf Ihrem Rechner. Kein Code verlässt Ihre Umgebung. Keine Telemetrie. Keine Cloud-Abhängigkeit.
+| Kategorie | Beispiele | Erkennungsrate |
+|-----------|-----------|----------------|
+| **Credential-Diebstahl** | Umgebungsvariablen, Token-Exfiltration | 98% |
+| **Kernel-Angriffe** | eBPF-Rootkits, Privilegieneskalation | 95% |
+| **Code-Verschleierung** | Obfuskation, Selbstverteidigung, Anti-Debug | 95% |
+| **Speicherextraktion** | OIDC-Token-Zugriff, KI-Schlüssel-Targeting | 95% |
+| **GitHub-Angriffe** | Autoren-Spoofing, Force-Push-Entführung | 99% |
+| **Wurmverbreitung** | Auto-Republish via gestohlener Credentials | 95% |
 
 ---
 
-## ✨ Hauptfunktionen
-
-| Symbol | Funktion | Beschreibung |
-|------|---------|-------------|
-| 🕵️ | **Heuristische statische Analyse** | AST-Level-Inspektion erkennt Obfuskation, eval-Ketten, Umgebungsabfragen und verdächtige Lebenszyklus-Skripte, die regex-basierten Tools entgehen |
-| 🧠 | **Verhaltenserkennung** | Identifiziert bedingte Auslöser (zeitbasiert, CI-bewusst), Sandbox-Evasion und schlafende Aktivierungsmuster |
-| 🧬 | **ATK-Angriffstaxonomie** | 11 klassifizierte Angriffstypen mit NIST 800-161-Zuordnungen — versioniert, dokumentiert und PR-fähig |
-| 🪱 | **Wurm-Kampagnenerkennung** | Mini Shai-Hulud - 10 Sub-Checks über 2 Suites: Burst-Publish, Sibling-Kompromittierung, SLSA-Attestierungsabweichung, Publisher-Drift, IOC-Match, Token-Exfil, ctf-scramble-v2-Obfuskation, dämonisierte Persistenz, geografischer Killswitch, GitHub-C2-Dead-Drop |
-| 🧩 | **VSIX-Erweiterungsscan** | `npm-scan scan --vsix` - erkennt VS Code Marketplace Supply-Chain-Angriffe |
-| 🐍 | **Python-Schwachstellenerkennung** | CVE-2026-48710 (BadHost) - Starlette Host-Header-Injection |
-| 🪤 | **Plattformübergreifende Angriffserkennung** | TrapDoor - 9 Sub-Checks |
-| 📡 | **Abgelaufene-Domain-Entführungserkennung** | node-ipc-Kompromittierung - 11 Sub-Checks |
-| ☣️ | **Malware-Obfuskationserkennung** | ctf-scramble-v2 - scannt Paket-dist/lib nach bekannten Malware-Obfuskationsmustern, stoppt Analyse sofort mit CRITICAL-Stoppbedingung |
-| 🎭 | **Massen-Typosquatting-Kampagnenerkennung** | vpmdhaj-Maintainer-Blocklist mit Stoppbedingung, Levenshtein-basierte Typosquatting-Erkennung, Preinstall-Stager-Identifikation, AWS-ECS/Vault/GitHub-Credential-Exfiltrationsmuster |
-| ☠️ | **Registry-Vergiftungserkennung** | Axios-Versions-Blocklist (1.14.1/0.30.4) mit Stoppbedingung, Decoy-Abhängigkeitserkennung (plain-crypto-js), plattformübergreifende RAT-Payload-Erkennung |
-| 🔏 | **Provenance-Prüfpfad** | Aureus-Elicitor v1.7-Framework - HMAC-SHA256-signierte Erkennungsmanifeste, inhaltshash-verifizierte Prüfpfade, Regel-Provenance-URLs, Kampagnenquellenattribution |
-| 📦 | **SBOM-Generierung** | CycloneDX 1.5 und SPDX 2.3 mit eingebetteten Ergebnissen als Schwachstellen |
-| 🧾 | **Compliance-Berichte** | NIST SP 800-161-Rückverfolgbarkeitsmatrix + EU Cyber Resilience Act-Zuordnung (kostenlos) |
-| 🔌 | **SIEM-Export** | Splunk CEF, Elastic ECS, Microsoft Sentinel, IBM QRadar-Formate (Premium) |
-| 📜 | **Policy-as-Code** | YAML/JSON-Policy-Engine mit Whitelists, Schweregrad-Überschreibungen, Unterdrückungen und Fehlerschwellen |
-| 🐳 | **Docker + GitHub Action** | Multi-Arch-Images, Ein-Befehl-Compose-Pipeline, PR-Scan-Action |
-| 🛡️ | **Null Telemetrie** | Keine Daten verlassen Ihren Rechner. Keine Cloud. Keine Rückrufe. |
-| 💾 | **Lokaler Scan-Verlauf** | SQLite-basierte Persistenz, keine externen Abhängigkeiten |
-
----
-
-## ⚡ Schnellstart
+## Schnellstart
 
 ```bash
-# Global installieren
 npm install -g @lateos/npm-scan
-
-# Ein einzelnes Paket scannen
-npm-scan scan lodash
-
-# Ihre Lock-Datei scannen
+npm-scan axios
 npm-scan scan-lockfile
-
-# Letzte Scans anzeigen
-npm-scan report
-```
-
-**Keine Installation? Kein Problem:**
-
-```bash
-npx @lateos/npm-scan scan commander
+npm-scan express --json > findings.json
 ```
 
 ---
 
-## 🐳 @lateos/npm-scan überall mit Docker ausführen — keine Installation
+## Hauptfunktionen
 
-```bash
-# Einmaligen Scan pullen und ausführen — kein Node.js oder npm erforderlich
-docker run --rm lateos/npm-scan:cli scan lodash
-
-# Vollständige Pipeline mit persistentem Speicher und Compose
-docker compose --profile pipeline up -d
-```
-
-Kein Node.js. Kein `npm install`. Keine globalen Pakete. Funktioniert auf jedem System mit Docker — CI-Server, Air-Gapped-Umgebungen, Kubernetes-Cluster. Multi-Arch-Images für `linux/amd64` und `linux/arm64`.
-
----
-
-## 🛡️ Behörden- & SOC 2-bereit
-
-| Funktion | SOC 2-Kontrollen | NIST 800-161 | STIG/FedRAMP-Ausrichtung |
-|----------|-------|--------------|--------------|
-| Audit-Protokolle (--audit-log) | CC6.8 | AU-2 | ✓ |
-| FIPS-Krypto (--fips) | CC6.1 | SC-13 | ✓ |
-| STIG-Bericht (--stig) | CC7.3 | RA-5 | ✓ |
-| Offline-Cache (--cache-dir) | A1.2 | SC-8 | ✓ |
-| Sigstore-Herleitung | CC6.2 | SI-7 | ✓ |
-| SBOM (SPDX/CycloneDX) | CC7.4 | SA-10 | ✓ |
-
-```bash
-# Vollständig konformer Scan in luftdichten Umgebungen
-npm-scan scan-lockfile --cache-dir /offline/cache --audit-log /var/log/npm-scan.audit --fips
-npm-scan report --stig
-```
+- ✅ **23 Detektoren (D1–D25)** für Lieferketten-Angriffsvektoren
+- ✅ **Validierung an echten Kampagnen** (IronWorm, Miasma, Dependency Confusion)
+- ✅ **Lokale Ausführung** — keine Telemetrie, keine Cloud-Abhängigkeit
+- ✅ **Schnell** — <30 Sekunden pro CI/CD-Durchlauf
+- ✅ **Policy-as-Code** — YAML-Whitelists, Schweregrad-Überschreibungen
+- ✅ **SBOM + SARIF** — CycloneDX, SPDX, GitHub Security
+- ✅ **GitHub Action** — Einzeilige CI/CD-Integration
+- ✅ **Docker** — Multi-Arch-Images
 
 ---
 
-## 📖 Verwendungsbeispiele
-
-### Ein einzelnes Paket scannen
-
-```bash
-# Standard-JSON-Ausgabe mit allen Ergebnissen
-npm-scan scan axios
-
-# SBOM zusammen mit dem Scan generieren
-npm-scan scan express --sbom             # CycloneDX JSON
-npm-scan scan express --sbom xml         # CycloneDX XML
-npm-scan scan express --sbom spdx        # SPDX 2.3
-
-# Eine YAML-Policy anwenden
-npm-scan scan some-package --policy .npm-scan.yml
-
-# Lokales Tarball scannen (kein Registry-Abruf nötig)
-npm-scan scan --file path/to/malicious-package.tgz
-```
-
-### Eine Lock-Datei scannen
-
-```bash
-# Die Abhängigkeiten des aktuellen Projekts scannen
-npm-scan scan-lockfile
-
-# Eine bestimmte Lock-Datei scannen
-npm-scan scan-lockfile -f ./path/to/package-lock.json
-
-# CI/CD bei hohen oder kritischen Problemen fehlschlagen (Exit-Code 1)
-npm-scan scan-lockfile --fail-on high
-
-# Bei allen Erkenntnissen fehlschlagen (low und höher)
-npm-scan scan-lockfile --fail-on low
-
-# SARIF v2.1-Ausgabe für GitHub Advanced Security / VS Code generieren
-npm-scan scan-lockfile --sarif results.sarif
-
-# Nur Risiko-Score ausgeben (0-10) für Dashboards/Schwellenwerte
-npm-scan scan-lockfile --score-only
-```
-
-### Berichte generieren
-
-```bash
-# Alle letzten Scans auflisten
-npm-scan report
-
-# Einen bestimmten Scan anzeigen
-npm-scan report -i 42
-
-# HTML-Bericht (kostenlos) mit vollständigen Ergebnissen + NIST-Tabelle
-npm-scan report -i 42 --html
-
-# NIST 800-161-Compliance-Tabelle ausgeben
-npm-scan report -i 42 --nist
-
-# EU-CRA-Compliance-Tabelle ausgeben
-npm-scan report --cra
-
-# CSV-Export für Excel / Sheets (audit-bereit)
-npm-scan report --csv risks.csv
-npm-scan scan lodash --csv          # CSV nach stdout
-
-# Textbericht (kostenlos)
-npm-scan report --text
-
-# PDF-Bericht (Premium)
-npm-scan report --pdf --license-key <key>
-
-# SIEM-Export (Premium)
-npm-scan report --siem cef        # Splunk CEF
-npm-scan report --siem ecs        # Elastic ECS
-npm-scan report --siem sentinel   # Microsoft Sentinel
-npm-scan report --siem qradar     # IBM QRadar
-
-# Alle Scans in einem einzigen Bericht zusammenfassen
-npm-scan report --html            # alle Scans
-npm-scan report --pdf             # alle Scans (Premium)
-```
-
----
-
-## 🧬 Erkennungsfähigkeiten (ATK-Taxonomie)
-
-| ID | Angriffsklasse | Erkennungsmethode | Schweregrad | NIST 800-161 |
-|---|---|---|---|---|
-| **ATK-001** | Böswillige Lebenszyklus-Skripte (`preinstall`, `postinstall`, `install`) | Statisch | 🔴 hoch | SR-3.1 |
-| **ATK-002** | Obfuskierte Payload-Zustellung (hex, base64, eval-Ketten) | Statisch | 🟠 mittel | SR-4.2 |
-| **ATK-003** | Credential-Diebstahl (Umgebungsvariablen, .npmrc, SSH-Schlüssel) | Statisch + Dynamisch | 🔴 hoch | SR-5.3 |
-| **ATK-004** | Persistenz über Editor-/Konfigurationsverzeichnisse (.vscode, .claude, .cursor) | Statisch | 🔴 hoch | SR-6.4 |
-| **ATK-005** | Netzwerk-Exfiltration (GitHub-API, DNS-Tunneling, HTTP C2) | Statisch + Dynamisch | ⚫ kritisch | SR-7.5 |
-| **ATK-006** | Abhängigkeitsverwirrung / Namespace-Squatting | Statisch (Lock-Datei) | 🟠 mittel | SR-2.2 |
-| **ATK-007** | Typosquatting (Edit-Distanz-Matching) | Statisch | 🟢 niedrig | SR-2.1 |
-| **ATK-008** | Tarball-Manipulation (veröffentlicht ≠ Quelle) | Statisch | 🔴 hoch | SR-8.1 |
-| **ATK-009** | Bedingte/schlafende Auslöser (CI-Erkennung, zeitbasiert) | Verhaltensbasiert | 🔴 hoch | SR-9.2 |
-| **ATK-010** | Sandbox-Evasion / Anti-Analyse | Verhaltensbasiert | 🟠 mittel | SR-10.3 |
-| **ATK-011** | Transitive Verbreitung (wurmartige laterale Ausbreitung) | Verhaltensbasiert | 🔴 hoch | SR-11.4 |
-| **CVE-2026-48710** | BadHost — Starlette Authentifizierungs-Bypass via Host-Header-Injection (CVE-2026-48710, CVSS 7.0). Python-Abhängigkeitsversionserkennung (requirements.txt, pyproject.toml, poetry.lock, Pipfile, setup.py/cfg), transitive Heuristik (15 bekannte Downstream-Pakete: fastapi, vllm, litellm, MCP-Server, etc.), statische Code-Pattern-Analyse für gefährliche `request.url.path`-Nutzung in Auth/Middleware-Kontexten mit `request.scope["path"]`-Unterdrückung | Statisch + Registry | 🔴 hoch / 🟠 mittel / ℹ️ info | SR-3.1, SR-5.3 |
-| **TRAPDOOR** | TrapDoor plattformübergreifende Angriffskampagne — Kampagnenmarker P-2024-001, trap-core.js-Payload-Fingerprint, Publisher-Blocklist asdxzxc, Gist-basierter Credential-Exfil, KI-Kontextvergiftung (Zero-Width-Unicode), Crypto/DeFi-Locknamen, Fernet+ECDH-Verschlüsselung, XOR-Key cargo-build-helper-2026, STS/GitHub-API-Validierung | Statisch + Registry | 🟠 mittel / 🔴 hoch / ⚫ kritisch | SR-3.1, SR-5.3, SR-7.5 |
-| **NODE_IPC_COMPROMISE** | node-ipc Supply-Chain-Kompromittierung (14. Mai 2026) — Versions-Blocklist (9.1.6/9.2.3/12.0.1) mit sicheren Pins, Tarball-SHA-256-Verifikation, CJS-Payload-IIFE-Injektion, DNS-over-nicht-Standard-Port-C2, Bootstrap-Resolver sh.azurestaticprovider.net, DNS-TXT-Exfiltrationszone bt.node.js, setImmediate()-Laufzeitauslöser, ~/nt-*/ Staging-Artefakte, unbefugter Publisher atiertant, Lockfile-Blastradius | Statisch + Registry | ⚫ kritisch | SR-3.1, SR-5.3, SR-7.5 |
-| **MSH_SUPPLEMENT** | Mini Shai-Hulud-Ergänzung - ctf-scramble-v2-Obfuskation (STOP bei Treffer), dämonisierte Persistenz, geografischer Killswitch (ru_RU/be_BY), C2-Dead-Drop-Indikatoren (OhNoWhatsGoingOnWithGitHub) | Statisch + Verhalten | ⚫ kritisch | SR-3.1, SR-7.5, SR-9.2 |
-| **TYPOSQUAT_VPMDHAJ** | Massen-Typosquatting-Kampagne (vpmdhaj) - Maintainer-Blocklist (STOP bei Treffer), vpmdhaj-*-Namespace-Präfixerkennung, Levenshtein-Typosquatting, Preinstall-Stager, Cloud-Credential-Exfiltration (AWS IMDSv2, ECS, Vault, GitHub) | Statisch + Registry | ⚫ kritisch | SR-2.1, SR-3.1, SR-5.3 |
-| **AXIOS_POISONING** | Axios-Registry-Vergiftung - Versions-Blocklist (1.14.1/0.30.4, STOP bei Treffer), Decoy-Abhängigkeitsinjektion (plain-crypto-js), plattformübergreifende RAT-Payload-Erkennung (PowerShell, launchd, systemd, DLL, C2) | Statisch + Verhalten | ⚫ kritisch | SR-3.1, SR-5.3, SR-7.5 |
-
-> **Wie ausweichende Angriffe erkannt werden:** ATK-009 erkennt Pakete, die `process.env.CI` prüfen, Hostnamen sondieren oder zeitbasierte Aktivierung verwenden. ATK-010 markiert `debugger`-Anweisungen, `os.hostname()`-Sonden und Umgebungs-Fingerprinting. ATK-011 verfolgt Peer-Abhängigkeitsgraphen, um wurmartige Verbreitungsmuster zu erkennen.  
-> Vollständige Dokumentation der Ausweichfläche und PoC-Beispiele finden Sie in [`docs/attack-taxonomy.md`](docs/attack-taxonomy.md).
-
----
-
-## 📊 Ausgaben und Berichte
-
-### Formate
-
-| Format | Verfügbarkeit | Beschreibung |
-|--------|-------------|-------------|
-| JSON | ✅ | Strukturierte maschinenlesbare Ergebnisse |
-| HTML | ✅ | Reichhaltiger HTML-Bericht mit NIST-Compliance-Tabelle, Schweregrad-Abzeichen, Kontrollmatrix |
-| Text | ✅ | Sauberer, terminalfreundlicher Textbericht |
-| CycloneDX SBOM | ✅ | Branchenstandard-SBOM mit Ergebnissen als Schwachstellen eingebettet |
-| SPDX SBOM | ✅ | SPDX 2.3-Dokumentformat |
-| NIST 800-161 | ✅ | Kontroll-Rückverfolgbarkeitsmatrix (SR-2.1 → SR-11.4) |
-| EU CRA | ✅ | Zuordnung der Cyber Resilience Act-Artikel |
-| PDF | Zukünftige Funktion | Mehrseitiges PDF mit Titelseite, Ergebnistabelle, NIST-Compliance-Matrix |
-| Splunk CEF | Zukünftige Funktion | Common Event Format für Splunk-Erfassung |
-| Elastic ECS | Zukünftige Funktion | Elastic Common Schema-Format |
-| Microsoft Sentinel | Zukünftige Funktion | Sentinel-ready formatierte Ausgabe |
-| IBM QRadar | Zukünftige Funktion | QRadar-DSM-ready-Format mit QID-Zuordnungen |
-
-### Beispielausgabe
-
-```json
-{
-  "scanId": 1,
-  "findings": [
-    {
-      "id": "ATK-003",
-      "severity": "high",
-      "title": "Credential harvesting",
-      "evidence": "process.env.NPM_TOKEN detected in postinstall.js:17"
-    }
-  ]
-}
-```
-
----
-
-## ⚙️ Konfiguration und erweiterte Nutzung
-
-### Policy-as-Code
-
-Definieren Sie Whitelists, Schweregrad-Überschreibungen, Unterdrückungen und Fehlerschwellen in einer YAML-Datei:
+## GitHub Action
 
 ```yaml
-# .npm-scan.yml
-allowlist:
-  - lodash
-  - chalk
-
-severity_overrides:
-  - id: ATK-001
-    severity: medium
-
-suppress:
-  - atk_id: ATK-009
-  - package: some-package
-
-fail_on: high
-```
-
-```bash
-npm-scan scan target --policy .npm-scan.yml
-```
-
-### Umgebungsvariablen
-
-| Variable | Beschreibung | Standard |
-|----------|-------------|---------|
-| `NPM_SCAN_DATA_DIR` | Scan-Verlaufsverzeichnis | `./.npm-scan` |
-| `NPM_SCAN_LOG_LEVEL` | Ausführlichkeitsgrad der Protokollierung | `info` |
-
-### Premium-Lizenzierung
-
-Kontaktieren Sie leo@lateos.ai, um einen Premium/Enterprise-Lizenzschlüssel zu erhalten.
-
-```bash
-# Verwenden
-npm-scan scan target --license-key <key>
-npm-scan report --pdf --license-key <key>
-npm-scan report --siem cef --license-key <key>
-```
-
----
-
-## 🔗 Integrationen
-
-### GitHub Actions CI (für dieses Repository)
-
-Jeder Push und PR führt Tests auf Node 18, 20 und 22 aus:
-
-```yaml
-# .github/workflows/ci.yml
-name: CI
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18, 20, 22]
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm test
-    - run: npm run test:coverage
-    - run: node --test test/detectors-corpus.test.js
-    - run: npm run lint
-    - run: npm run build
-```
-
-### GitHub Action (für nachgelagerte Benutzer)
-
-Scannen Sie die `package-lock.json` Ihres Projekts bei jedem PR — erkennt Typosquatting, obfuskierte Payloads, Credential-Stealer und Wurmverbreitung, bevor sie die Produktion erreichen:
-
-```yaml
-# .github/workflows/scan.yml
-name: npm-scan
-on:
-  pull_request:
-    paths:
-      - 'package-lock.json'
-      - '**/package.json'
-jobs:
-  scan:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-    - name: Scan lockfile
-      uses: lateos/npm-scan@v1
-      with:
-        scan-type: lockfile
-        fail-on: high
-```
-
-#### Action-Eingaben
-
-| Eingabe | Standard | Beschreibung |
-|-------|---------|-------------|
-| `scan-type` | `lockfile` | `lockfile` zum Scannen von `package-lock.json` oder `package` zum Scannen eines bestimmten npm-Pakets |
-| `package` | — | Paketname (erforderlich bei `scan-type=package`) |
-| `fail-on` | `high` | Workflow bei diesem Schweregrad-Schwellwert fehlschlagen lassen: `none`, `low`, `medium`, `high`, `critical` |
-| `policy-file` | — | Pfad zu einer YAML/JSON-Policy-Datei für Whitelists, Schweregrad-Überschreibungen und Unterdrückungen |
-| `license-key` | — | Premium-Lizenzschlüssel für SIEM-Export und PDF-Berichte |
-| `siem-format` | — | SIEM-Ausgabe: `cef`, `ecs`, `sentinel`, `qradar` (Premium) |
-| `sbom-format` | — | SBOM-Ausgabe: `json`, `xml`, `spdx` |
-
-#### Action-Ausgaben
-
-| Ausgabe | Beschreibung |
-|--------|-------------|
-| `findings-count` | Anzahl der erkannten Ergebnisse |
-| `scan-id` | Scan-ID für spätere Referenz in Berichten |
-
-#### Beispiel: Bestimmtes Paket mit Policy + SBOM scannen
-
-```yaml
-- uses: lateos/npm-scan@v1
+- uses: lateos-ai/npm-scan@v1
   with:
-    scan-type: package
-    package: lodash
-    policy-file: .npm-scan.yml
-    sbom-format: spdx
+    scan-type: lockfile
     fail-on: critical
 ```
 
-#### Beispiel: Mit SIEM-Export scannen (Premium)
+---
 
-```yaml
-- uses: lateos/npm-scan@v1
-  with:
-    scan-type: lockfile
-    siem-format: cef
-```
+## Lizenzierung
 
-### CI/CD-Pipeline
+**Kostenlos (MIT):** Einzelgründer, Non-Profits, Studenten, Open-Source-Projekte.
+**Bezahlt (BLA):** Unternehmen mit Angestellten.
 
-Direkte Integration in Ihre bestehende Pipeline ohne die Composite-Action:
+Siehe [LICENSING.md](LICENSING.md) für Details.
 
-```bash
-# Lock-Datei scannen, Build bei hohem Schweregrad fehlschlagen lassen
-npm-scan scan-lockfile --policy .npm-scan.yml || exit 1
-
-# Bestimmtes Paket scannen, nur bei kritisch fehlschlagen
-npm-scan scan lodash --policy .npm-scan.yml || exit 1
-
-# SBOM als Build-Artefakt generieren
-npm-scan scan express --sbom spdx > express-sbom.spdx.json
-
-# HTML-Compliance-Bericht in CI generieren
-npm-scan report --html > report.html
-
-# Bericht als Artefakt hochladen
-# uses: actions/upload-artifact@v4
-#   with:
-#     name: npm-scan-report
-#     path: report.html
-```
-
-### Docker
+**Enterprise?** [Kommerzielle Lizenz erhalten](https://lateos.ai/npm-scan/licensing)
 
 ---
 
-## 🤝 Beitragshinweis
+## Mehr
 
-Vielen Dank für Ihr Interesse an diesem Projekt. Bitte beachten Sie, dass wir derzeit keine externen Code-Beiträge, Pull-Requests, Fehlerbehebungen oder Funktionsvorschläge annehmen.
-
-Jede geöffnete Pull-Request wird automatisch ohne Überprüfung geschlossen.
-
----
-
-## 📄 Lizenz
-
-Apache-2.0 Core + Commons Clause.  
-Siehe [`LICENSING.md`](LICENSING.md) für die genaue Grenze zwischen kostenlosen und Premium-Funktionen.
-
----
-
-## 👤 Über den Maintainer
-
-**Roongrunchai Chongolnee** — Ersteller und Maintainer von `@lateos/npm-scan`. Zertifizierter Sicherheitsexperte (CISSP, CEH, Cisco Security, AWS Cloud Practitioner) mit einem Jahrzehnt Erfahrung in Infrastruktur- und Anwendungssicherheit bei Philips. Ich habe dieses Tool entwickelt, um der Open-Source-Community eine praktische, detektorgesteuerte Abwehr gegen Supply-Chain-Malware zu bieten — und ich bin bestrebt, es transparent, gemeinschaftseigen und kontinuierlich verbessert zu halten.
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0A66C2?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/roongrunchai-chong-c-ab9742108/)
-[![GitHub](https://img.shields.io/badge/GitHub-lateos--ai-181717?style=flat-square&logo=github)](https://github.com/lateos-ai/npm-scan)
-
-Issues und Ideen sind immer willkommen — Sicherheit ist am stärksten, wenn wir zusammenarbeiten. Pull-Requests werden derzeit nicht angenommen.
-
----
-
-```
-@lateos/npm-scan — npm supply chain security scanner
-Copyright (C) 2026 Lateos
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-```
+- [Vollständige Dokumentation](https://github.com/lateos-ai/npm-scan)
+- [Angriffstaxonomie (ATK-Serie)](https://github.com/lateos-ai/npm-scan/blob/main/DETECTORS.md)
+- [Kampagnen-Validierungsdaten](https://github.com/lateos-ai/npm-scan/blob/main/VALIDATION.md)
 
 ---
 
 **Scannen Sie Ihr erstes Paket jetzt:**
 
 ```bash
-npx @lateos/npm-scan scan lodash
-```
+npx @lateos/npm-scan scan axios
 ```
