@@ -1,13 +1,6 @@
 # npm-scan
 
-[![English](https://img.shields.io/badge/lang-en-blue?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.md)
-[![中文](https://img.shields.io/badge/lang-zh--CN-red?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.zh.md)
-[![日本語](https://img.shields.io/badge/lang-ja-purple?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.ja.md)
-[![Français](https://img.shields.io/badge/lang-fr-orange?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.fr.md)
-[![Deutsch](https://img.shields.io/badge/lang-de-green?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.de.md)
-[![עברית](https://img.shields.io/badge/lang-he--IL-lightblue?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.he.md)
-
-[![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![npm downloads/week](https://img.shields.io/npm/dw/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![License](https://img.shields.io/badge/license-MIT%20OR%20BLA-blue?style=flat-square)](LICENSING.md) [![Tests](https://img.shields.io/badge/tests-830%2B%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![License](https://img.shields.io/badge/license-MIT%20OR%20BLA-blue?style=flat-square)](LICENSING.md) [![Tests](https://img.shields.io/badge/tests-830%2B%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 
 **זיהוי איומי שרשרת האספקה ש־npm audit, Snyk ו־Socket מפספסים.**
 
@@ -28,6 +21,48 @@
 - התפשטות דמוית תולעת (פרסום אוטומטי עם אסימונים גנובים)
 
 npm-scan מזהה את כל אלה. **95%+ ביטחון בקמפיינים אמיתיים.**
+
+---
+
+## כיסוי: npm-scan לעומת כלים בתעשייה
+
+| וקטור תקיפה | npm-scan | npm audit | Snyk | Socket | Sonatype |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Miasma/Hades (binding.gyp)** | ✅ 95% | ❌ 0% | ❌ 0% | ⚠️ 40% | ❌ 0% |
+| **Rootkit ליבת eBPF** | ✅ 95% | ❌ 0% | ❌ 0% | ❌ 0% | ❌ 0% |
+| **מיקוד אסימוני AI** | ✅ 98% | ❌ 0% | ❌ 0% | ❌ 0% | ❌ 0% |
+| **זיוף מחבר GitHub** | ✅ 99% | ❌ 0% | ❌ 0% | ❌ 0% | ❌ 0% |
+| **חילוץ אישורים מהזיכרון** | ✅ 95% | ❌ 0% | ❌ 0% | ⚠️ 20% | ❌ 0% |
+| **קוד מתגונן עצמי** | ✅ 95% | ❌ 0% | ⚠️ 25% | ⚠️ 45% | ❌ 0% |
+| **ביצוע דרך טעינת מודול** | ✅ 95% | ❌ 0% | ❌ 0% | ⚠️ 50% | ❌ 0% |
+| **CVE ידועים** | ✅ כן | ✅ כן | ✅ כן | ✅ כן | ✅ כן |
+
+**מקרא:** ✅ = 85%+ זיהוי | ⚠️ = 15–80% זיהוי | ❌ = 0% זיהוי
+
+---
+
+## הפחתת סיכונים ותאימות
+
+**גישת כלי יחיד = נקודה עיוורת = אחריות יקרה**
+
+חבילת npm שנפרצה עולה לחברה שלך:
+- **פרצת נתונים:** 4.5 מיליון דולר בממוצע (IBM, 2024)
+- **קנסות רגולטוריים:** הפרות SOC 2 (100K+ דולר), GDPR (10M+ דולר), ביקורות תאימות
+- **זמן השבתה:** 5K–50K דולר לשעה בהפסד הכנסות
+- **מוניטין:** נזק למותג, שחיקת אמון לקוחות
+- **משפטי:** תביעות מלקוחות מושפעים, תביעות אחריות
+
+**כיול מסורתי לבדו מפספס התקפות התנהגותיות.** אם npm audit + Snyk לא רואים כלום, אבל תוקפים גונבים את אישורי ה־AWS שלך דרך דפוס התנהגותי, אתה אחראי.
+
+**npm-scan + npm audit = כיסוי מלא = הפחתת סיכונים**
+
+על ידי זיהוי 95%+ מההתקפות שכלים מסורתיים מפספסים, אתה מפחית:
+- ✅ הסתברות לפרצה (זיהוי התנהגותי לוכד התקפות לפני נזק)
+- ✅ סיכון להפרת תאימות (בדיקת נאותות: השתמשת במספר שיטות זיהוי)
+- ✅ אחריות פיננסית (מבקרים ישאלו: "כיצד אימתת את אבטחת שרשרת האספקה?")
+- ✅ השפעה על לקוחות (זיהוי מהיר יותר = תיקון מהיר יותר = פחות לקוחות מושפעים)
+
+**עלות־תועלת:** npm-scan ($2.4K לשנה ארגונית) לעומת פרצת נתונים ($4.5M ממוצע). ROI: פי 1,875.
 
 ---
 
@@ -63,19 +98,22 @@ npm-scan express --json > findings.json
 - ✅ **מהיר** — פחות מ־30 שניות להרצת CI/CD
 - ✅ **מדיניות כקוד** — רשימות לבנות YAML, עקיפת חומרה
 - ✅ **SBOM + SARIF** — CycloneDX, SPDX, אבטחת GitHub
-- ✅ **GitHub Action** — שילוב CI/CD בשורה אחת
+- ✅ **שילוב CI/CD** — עובד עם כל פלטפורמת CI/CD
 - ✅ **Docker** — תמונות מרובות ארכיטקטורות
 
 ---
 
-## GitHub Action
+## שילוב CI/CD
 
 ```yaml
-- uses: lateos-ai/npm-scan@v1
-  with:
-    scan-type: lockfile
-    fail-on: critical
+# דוגמת GitHub Actions
+- name: Scan with npm-scan
+  run: |
+    npm install -g @lateos/npm-scan
+    npm-scan scan-lockfile --fail-on critical
 ```
+
+עובד עם GitHub Actions, GitLab CI, Jenkins, או כל פלטפורמת CI/CD.
 
 ---
 

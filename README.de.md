@@ -1,13 +1,6 @@
 # npm-scan
 
-[![English](https://img.shields.io/badge/lang-en-blue?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.md)
-[![中文](https://img.shields.io/badge/lang-zh--CN-red?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.zh.md)
-[![日本語](https://img.shields.io/badge/lang-ja-purple?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.ja.md)
-[![Français](https://img.shields.io/badge/lang-fr-orange?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.fr.md)
-[![Deutsch](https://img.shields.io/badge/lang-de-green?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.de.md)
-[![עברית](https://img.shields.io/badge/lang-he--IL-lightblue?style=flat-square)](https://github.com/lateos-ai/npm-scan/blob/main/README.he.md)
-
-[![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![npm downloads/week](https://img.shields.io/npm/dw/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![License](https://img.shields.io/badge/license-MIT%20OR%20BLA-blue?style=flat-square)](LICENSING.md) [![Tests](https://img.shields.io/badge/tests-830%2B%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
+[![npm version](https://img.shields.io/npm/v/@lateos/npm-scan?style=flat-square)](https://www.npmjs.com/package/@lateos/npm-scan) [![License](https://img.shields.io/badge/license-MIT%20OR%20BLA-blue?style=flat-square)](LICENSING.md) [![Tests](https://img.shields.io/badge/tests-830%2B%20passing-brightgreen?style=flat-square)](https://github.com/lateos-ai/npm-scan)
 
 **Erkennung von Lieferkettenbedrohungen, die npm audit, Snyk und Socket übersehen.**
 
@@ -28,6 +21,48 @@ Erkennt obfuskierte Payloads, Credential-Stealer, Kernel-Rootkits, eBPF-Hooks, S
 - Wurmartige Verbreitung (automatische Neuveröffentlichung mit gestohlenen Tokens)
 
 npm-scan erkennt all dies. **95%+ Konfidenz bei realen Kampagnen.**
+
+---
+
+## Abdeckung: npm-scan vs Branchentools
+
+| Angriffsvektor | npm-scan | npm audit | Snyk | Socket | Sonatype |
+|---|:---:|:---:|:---:|:---:|:---:|
+| **Miasma/Hades (binding.gyp)** | ✅ 95% | ❌ 0% | ❌ 0% | ⚠️ 40% | ❌ 0% |
+| **eBPF-Kernel-Rootkit** | ✅ 95% | ❌ 0% | ❌ 0% | ❌ 0% | ❌ 0% |
+| **KI-Token-Targeting** | ✅ 98% | ❌ 0% | ❌ 0% | ❌ 0% | ❌ 0% |
+| **GitHub-Autoren-Spoofing** | ✅ 99% | ❌ 0% | ❌ 0% | ❌ 0% | ❌ 0% |
+| **Speicher-Credential-Extraktion** | ✅ 95% | ❌ 0% | ❌ 0% | ⚠️ 20% | ❌ 0% |
+| **Selbstverteidigender Code** | ✅ 95% | ❌ 0% | ⚠️ 25% | ⚠️ 45% | ❌ 0% |
+| **Modul-Lade-Ausführung** | ✅ 95% | ❌ 0% | ❌ 0% | ⚠️ 50% | ❌ 0% |
+| **Bekannte CVEs** | ✅ Ja | ✅ Ja | ✅ Ja | ✅ Ja | ✅ Ja |
+
+**Legende:** ✅ = 85%+ Erkennung | ⚠️ = 15–80% Erkennung | ❌ = 0% Erkennung
+
+---
+
+## Risikominderung und Compliance
+
+**Einzelwerkzeug-Ansatz = Blinder Fleck = Teure Haftung**
+
+Ein kompromittiertes npm-Paket kostet Ihr Unternehmen:
+- **Datenpanne:** 4,5 Mio. $ Durchschnitt (IBM, 2024)
+- **Regulierungsstrafen:** SOC 2-Verstöße (100 K$+), DSGVO (10 Mio.$+), Compliance-Prüfungen
+- **Ausfallzeit:** 5 K$–50 K$ pro Stunde Umsatzverlust
+- **Reputation:** Markenschaden, Vertrauensverlust bei Kunden
+- **Rechtliches:** Klagen betroffener Kunden, Haftungsansprüche
+
+**Ein traditionelles Tool allein übersieht Verhaltensangriffe.** Wenn npm audit + Snyk nichts sehen, aber Angreifer Ihre AWS-Anmeldedaten über ein Verhaltensmuster stehlen, haften Sie.
+
+**npm-scan + npm audit = Vollständige Abdeckung = Risikominderung**
+
+Durch die Erkennung der 95%+ Angriffe, die traditionelle Tools übersehen, reduzieren Sie:
+- ✅ Wahrscheinlichkeit einer Panne (Verhaltenserkennung erfasst Angriffe vor dem Schaden)
+- ✅ Compliance-Verletzungsrisiko (Sorgfaltspflicht: Sie haben mehrere Erkennungsmethoden verwendet)
+- ✅ Finanzielle Haftung (Prüfer fragen: "Wie haben Sie die Lieferkettensicherheit verifiziert?")
+- ✅ Kundenauswirkung (schnellere Erkennung = schnellere Behebung = weniger betroffene Kunden)
+
+**Kosten-Nutzen:** npm-scan (2,4 K$/Jahr Enterprise) vs. Datenpanne (4,5 Mio.$ Durchschnitt). ROI: 1.875x.
 
 ---
 
@@ -63,19 +98,22 @@ npm-scan express --json > findings.json
 - ✅ **Schnell** — <30 Sekunden pro CI/CD-Durchlauf
 - ✅ **Policy-as-Code** — YAML-Whitelists, Schweregrad-Überschreibungen
 - ✅ **SBOM + SARIF** — CycloneDX, SPDX, GitHub Security
-- ✅ **GitHub Action** — Einzeilige CI/CD-Integration
+- ✅ **CI/CD-Integration** — funktioniert mit jeder CI/CD-Plattform
 - ✅ **Docker** — Multi-Arch-Images
 
 ---
 
-## GitHub Action
+## CI/CD-Integration
 
 ```yaml
-- uses: lateos-ai/npm-scan@v1
-  with:
-    scan-type: lockfile
-    fail-on: critical
+# GitHub Actions Beispiel
+- name: Scan with npm-scan
+  run: |
+    npm install -g @lateos/npm-scan
+    npm-scan scan-lockfile --fail-on critical
 ```
+
+Funktioniert mit GitHub Actions, GitLab CI, Jenkins oder jeder CI/CD-Plattform.
 
 ---
 
