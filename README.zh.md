@@ -119,12 +119,14 @@ npm-scan express --json > findings.json
 
 ## 许可
 
-**免费（MIT）：** 独立创始人、非营利组织、学生、开源项目。
-**付费（BLA）：** 有员工的公司。
+**免费 (MIT)：** 个人、开源项目、以及评估生产环境的团队 — 无时间限制。
+**付费 (BLA)：** 当您的团队商业化发布到生产环境时需要。
+
+免费评估。准备发布时再购买。
 
 详情请参阅 [LICENSING.md](LICENSING.md)。
 
-**企业版？** [获取商业许可](https://lateos.ai/npm-scan/licensing)
+**商业用途？** [查看许可层级](https://lateos.ai/npm-scan/licensing) — $799/年（小团队）至 $9,900/年（企业）。批量折扣可用。
 
 ---
 
