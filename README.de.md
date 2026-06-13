@@ -119,12 +119,14 @@ Funktioniert mit GitHub Actions, GitLab CI, Jenkins oder jeder CI/CD-Plattform.
 
 ## Lizenzierung
 
-**Kostenlos (MIT):** Einzelgründer, Non-Profits, Studenten, Open-Source-Projekte.
-**Bezahlt (BLA):** Unternehmen mit Angestellten.
+**Kostenlos (MIT):** Einzelpersonen, Open-Source-Projekte und Teams, die für die Produktion evaluieren — ohne Zeitlimit.
+**Bezahlt (BLA):** Erforderlich, wenn Ihr Team kommerziell in die Produktion geht.
+
+Frei evaluieren. Kaufen, wenn Sie bereit sind, zu versenden.
 
 Siehe [LICENSING.md](LICENSING.md) für Details.
 
-**Enterprise?** [Kommerzielle Lizenz erhalten](https://lateos.ai/npm-scan/licensing)
+**Kommerzielle Nutzung?** [Lizenzstufen ansehen](https://lateos.ai/npm-scan/licensing) — 799 €/Jahr (kleines Team) bis 9.900 €/Jahr (Enterprise). Volumenrabatte verfügbar.
 
 ---
 

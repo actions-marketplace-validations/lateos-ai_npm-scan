@@ -128,12 +128,14 @@ Works with GitHub Actions, GitLab CI, Jenkins, or any CI/CD platform.
 
 ## Licensing
 
-**Free (MIT):** Solo founders, non-profits, students, open-source projects.
-**Paid (BLA):** Companies with employees.
+**Free (MIT):** Individuals, open-source projects, and teams evaluating for production — no time limit.
+**Paid (BLA):** Required when your team ships to production commercially.
+
+Evaluate freely. Purchase when you're ready to ship.
 
 See [LICENSING.md](LICENSING.md) for details.
 
-**Enterprise?** [Get a commercial license](https://lateos.ai/npm-scan/licensing) — flexible pricing, volume discounts available.
+**Commercial use?** [See licensing tiers](https://lateos.ai/npm-scan/licensing) — $799/yr (small team) to $9,900/yr (enterprise). Volume discounts available.
 
 ---
 
