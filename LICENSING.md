@@ -1,20 +1,39 @@
 # LICENSING.md
 
-## Model: MIT OR BLA (Business License Agreement)
+## Model: MIT + Business License Agreement (BLA)
 
-### MIT License (Free):
-Solo founders, non-profits, students, open-source projects.
+All features are available to everyone. No code gatekeeping.
+No feature gates. No license key required to unlock functionality.
 
-Coverage: Static analysis engine, ATK-001–007 detectors, CLI, lockfile scanner, SBOM output (CycloneDX), GitHub Action, Docker images, JSON output, SQLite-backed local storage, basic HTML report.
+### MIT License (Free)
 
-### BLA (Business License Agreement — Paid):
-Companies with employees.
+**Who:** Individuals, open-source projects, and teams evaluating
+for production — no time limit.
 
-Coverage: Everything in MIT + dynamic sandbox (ATK-008+), advanced compliance reports (PDF, regulatory templates), SIEM connectors, reachability analysis, team dashboard, SSO, audit logs, API/webhooks, on-prem/air-gapped licenses, priority support.
+**Covers:** All features, unlimited use, full CLI, all detectors
+(D1–D25), SBOM output, GitHub Action, Docker images, JSON output.
 
-## Feature Flags
-Premium features gated by license key validated at runtime. Keys issued per-seat CLI, per-org hosted.
+**Support:** Community (GitHub issues)
 
-Full MIT license in LICENSE file (TBD).
+### Business License Agreement (Paid)
 
-Licensing boundaries defined before external contributions. Changes require PR updating this file.
+**Who:** Required when your team ships to production commercially
+(any company with employees using the tool as part of their work).
+
+**Covers:** Everything in MIT license, plus email support and
+legal documentation for compliance auditing.
+
+**Tiers:**
+- Small Team (1–10 developers): $799/year
+- Mid-Market (10–50 developers): $2,499/year
+- Enterprise (50+ developers): $9,900/year
+
+**Simple rule:** Evaluate freely, no time limit. Purchase when
+your team ships to production.
+
+Questions? [licensing@lateos.ai](mailto:licensing@lateos.ai)
+Full terms: [lateos.ai/npm-scan/licensing](https://lateos.ai/npm-scan/licensing)
+
+---
+
+Full MIT license text is in the LICENSE file.
