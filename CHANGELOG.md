@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- **TIER1-CRYPTO-TAMPER** (`tier1-crypto-primitive-tamper.js`): New diff-aware detector for semantic backdoors in crypto/wallet SDKs. Monitors security-sensitive functions (`fromMnemonic`, `fromPrivateKey`, `sign`, `signTransaction`, etc.) and compares against previous published version to detect newly injected network calls (`fetch`, `axios`, `http.request`) or dynamic code execution (`eval`, `new Function`). Closes gap from Injective SDK 2026-07-08 incident where `fromMnemonic()` was modified to exfiltrate wallet keys disguised as normal telemetry. confidenceScore 85, severity high. Diff-awareness eliminates FPs from legitimate analytics/telemetry that existed in prior versions.
 - **TIER1-HOOK-FOLLOWTHROUGH** (`tier1-lifecycle-hook-followthrough.js`): New detector that follows `node`/`sh`/`bash` indirection in lifecycle hooks to referenced files, running the same obfuscation/network/env-exfil/entropy checks against the resolved file content. Chains up to 2 levels of indirection (script A requires/spawns script B). Closes gap where hooks like `"postinstall": "node scripts/postinstall.js"` scored zero because the payload lived in the referenced file.
 - **TIER1-VERSION-BACKFILL** (`tier1-version-backfill.js`): New detector that flags packages with >= 8 versions published within 24 hours spanning a wide version range (e.g. 0.1.0 through 1.x), indicating version history was backfilled in a single publish burst to fake maturity. confidenceScore 80, severity high.
 - **TIER1-INFOSTEALER identity_recon_exfil**: Extended infostealer detector with identity/credential-adjacent path patterns (`.gitconfig`, `.ssh/*.pub`, `.aws/config`, `.config/gcloud/properties`, `/etc/resolv.conf`, `git config user.email` exec). Scores HIGH even without matched credential regex, since recon-only payloads that never touch actual secrets are the attack technique.
@@ -14,12 +15,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Shared obfuscation utilities** (`lib/obfuscation-check.js`): Extracted `isObfuscated()` and `shannonEntropy()` from `tier1-lifecycle-hook.js` into shared lib for reuse across detectors.
 - **Test fixtures**: `fixtures/campaigns/npm-package-logger-2026/` with minimal repro packages for AI-SDK postinstall pattern, @aspect-security/argon2 preinstall pattern, and version-backfill manifest.
 - **27 new tests** across 3 test files: `tier1-lifecycle-hook-followthrough.test.js` (10), `tier1-version-backfill.test.js` (8), `tier1-infostealer-identity-recon.test.js` (9).
+- **8 new tests** for crypto primitive tamper detector: `tier1-crypto-primitive-tamper.test.js` covering semantic backdoor detection, legitimate analytics FP validation, and edge cases.
 - **TIER1-MAINTAINER-COMPROMISE extended detection** (`tier1-maintainer-compromise.js`): Added two new subtypes to catch Jscrambler-style hijacks: `single_version_compromise` (version published after 30+ day gap, deprecated and remediated within 24h, confidenceScore 70) and `dist_tag_manipulation` (dist-tag pointing to version with next version published within 1 hour, confidenceScore 85). Closes gap where single compromised publishes or tag repointing without version bursts went undetected.
 - **9 new tests** for maintainer compromise extensions: `tier1-maintainer-compromise-extended.test.js` covering single version compromise, dist-tag manipulation, and combined detection scenarios.
 
 ### Changed
-- **Thresholds**: Added `TIER1-HOOK-FOLLOWTHROUGH`, `TIER1-VERSION-BACKFILL`, and `SERVERLESS_PAAS_WATCHLIST` entries to `config/thresholds.js`.
-- **Detector index**: Wired `tier1-lifecycle-hook-followthrough` and `tier1-version-backfill` into `backend/detectors/index.js` via `runTier1`.
+- **Thresholds**: Added `TIER1-HOOK-FOLLOWTHROUGH`, `TIER1-VERSION-BACKFILL`, `TIER1-CRYPTO-TAMPER`, and `SERVERLESS_PAAS_WATCHLIST` entries to `config/thresholds.js`.
+- **Detector index**: Wired `tier1-lifecycle-hook-followthrough`, `tier1-version-backfill`, and `tier1-crypto-primitive-tamper` into `backend/detectors/index.js` via `runTier1`.
 
 ## [1.0.0] — 2026-06-03
 

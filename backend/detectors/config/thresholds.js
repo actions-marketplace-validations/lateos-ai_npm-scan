@@ -387,6 +387,12 @@ export default {
     max_spread_hours: 24,
     notes: 'Detects version history backfilled in a single publish burst to fake package maturity',
   },
+  'TIER1-CRYPTO-TAMPER': {
+    flag_threshold: 85,
+    warn_threshold: 70,
+    notes:
+      'Diff-aware detection of semantic backdoors in crypto/wallet primitives. Compares security-sensitive functions (fromMnemonic, sign, etc.) against previous version to detect newly injected network calls or dynamic code execution. High threshold justified by diff-awareness eliminating FPs from legitimate telemetry.',
+  },
   SERVERLESS_PAAS_WATCHLIST: {
     domains: ['*.run.app', '*.web.app', '*.vercel.app', '*.netlify.app', '*.workers.dev'],
     confidence_boost: 15,
