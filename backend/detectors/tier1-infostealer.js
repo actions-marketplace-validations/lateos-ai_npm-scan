@@ -1,5 +1,6 @@
 import { KNOWN_REPUTABLE_PACKAGES } from '../policy.js';
 import * as acorn from 'acorn';
+import { extractPaasDomains, PAAS_CONFIDENCE_BOOST } from './lib/paas-domains.js';
 
 const FS_READ_RE = /fs\.(?:readFile|readFileSync|readdir|readdirSync)\s*\(/g;
 const HTTP_FETCH_RE = /\b(?:fetch|axios|got|superagent|request)\s*\(/g;
@@ -20,6 +21,11 @@ const ENV_DUMP_RE = /process\.env\.(?:AWS_[A-Z_]+|NPM_TOKEN|NPM_AUTH_TOKEN|GIT_T
 const EVAL_RE = /\beval\s*\(/g;
 const FUNCTION_CTOR_RE = /\bFunction\s*\(/g;
 const _B64_STRING_RE = /['"`]([A-Za-z0-9+/]{40,}={0,2})['"`]/g;
+
+const IDENTITY_PATH_RE =
+  /(?:['"`](?:~\/\.gitconfig|~\/\.config\/git\/config|\.git\/config|\.git\/logs\/HEAD|~\/\.ssh\/[^'"`]*\.pub|~\/\.aws\/config|~\/\.config\/gcloud\/properties|\/etc\/resolv\.conf)[`'"]|\.gitconfig|\.ssh\/|\.aws\/config|\.config\/git\/config|\.config\/gcloud\/properties|resolv\.conf)/g;
+const GIT_CONFIG_EXEC_RE =
+  /(?:(?:exec|execSync|spawn|spawnSync)\s*\(\s*['"]git['"]\s*,\s*\[\s*['"]config['"]|(?:exec|execSync)\s*\(\s*['"]git\s+config\b)/g;
 
 // Named malware signatures — zero-FP string literals for confirmed campaigns
 const NAMED_SIGNATURES = [
@@ -187,6 +193,30 @@ function patternMatcher(f, content) {
     result.evidence.push('pattern: process.env.AWS_* dump');
   }
 
+  IDENTITY_PATH_RE.lastIndex = 0;
+  GIT_CONFIG_EXEC_RE.lastIndex = 0;
+  const identityMatch = IDENTITY_PATH_RE.exec(content);
+  const gitConfigExec = GIT_CONFIG_EXEC_RE.exec(content);
+  if (identityMatch || gitConfigExec) {
+    result.hasPattern = true;
+    const hitIndex = identityMatch ? identityMatch.index : gitConfigExec.index;
+    result.patterns.push({ subtype: 'identity_recon_exfil', baseScore: 80 });
+    const lc = getLineColumn(content, hitIndex);
+    result.locations.push({ file, line: lc.line, column: lc.column });
+    if (identityMatch) {
+      result.evidence.push(`pattern: identity/credential-adjacent path read (${identityMatch[0]})`);
+    }
+    if (gitConfigExec) {
+      result.evidence.push('pattern: git config exec for identity harvesting');
+    }
+  }
+
+  const paasDomains = extractPaasDomains(content);
+  if (paasDomains.length > 0) {
+    result.domainsFound.push(...paasDomains.map((d) => `https://${d}`));
+    result.evidence.push(`paas_domain: ${paasDomains[0]}`);
+  }
+
   return result;
 }
 
@@ -307,6 +337,17 @@ export async function scan(pkgJson, jsFiles, _registryMeta, _allFiles) {
     baseScore = Math.min(100, Math.round(baseScore * 1.3));
   }
 
+  const anyPaasDomain = filesWithPatterns.some((f) =>
+    f.evidence.some((e) => e.startsWith('paas_domain:'))
+  );
+  if (anyPaasDomain) {
+    baseScore = Math.min(100, baseScore + PAAS_CONFIDENCE_BOOST);
+  }
+
+  const anyIdentityRecon = filesWithPatterns.some((f) =>
+    f.patterns.some((p) => p.subtype === 'identity_recon_exfil')
+  );
+
   const confidenceScore = Math.max(50, Math.min(100, baseScore));
 
   function confidenceLabel(score) {
@@ -343,6 +384,8 @@ export async function scan(pkgJson, jsFiles, _registryMeta, _allFiles) {
   let message;
   if (anyCredPattern) {
     message = `Hardcoded credentials detected (${credCount} found)`;
+  } else if (anyIdentityRecon) {
+    message = 'Identity/credential-adjacent file reconnaissance detected';
   } else if (involvedFiles.length > 1) {
     message = `Cross-file exfiltration detected across ${involvedFiles.length} files`;
   } else if (mainSubtype === 'env_dump') {

@@ -7,6 +7,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- **TIER1-HOOK-FOLLOWTHROUGH** (`tier1-lifecycle-hook-followthrough.js`): New detector that follows `node`/`sh`/`bash` indirection in lifecycle hooks to referenced files, running the same obfuscation/network/env-exfil/entropy checks against the resolved file content. Chains up to 2 levels of indirection (script A requires/spawns script B). Closes gap where hooks like `"postinstall": "node scripts/postinstall.js"` scored zero because the payload lived in the referenced file.
+- **TIER1-VERSION-BACKFILL** (`tier1-version-backfill.js`): New detector that flags packages with >= 8 versions published within 24 hours spanning a wide version range (e.g. 0.1.0 through 1.x), indicating version history was backfilled in a single publish burst to fake maturity. confidenceScore 80, severity high.
+- **TIER1-INFOSTEALER identity_recon_exfil**: Extended infostealer detector with identity/credential-adjacent path patterns (`.gitconfig`, `.ssh/*.pub`, `.aws/config`, `.config/gcloud/properties`, `/etc/resolv.conf`, `git config user.email` exec). Scores HIGH even without matched credential regex, since recon-only payloads that never touch actual secrets are the attack technique.
+- **Serverless PaaS domain watchlist** (`lib/paas-domains.js`): `*.run.app`, `*.web.app`, `*.vercel.app`, `*.netlify.app`, `*.workers.dev` flagged as contributing MEDIUM signal when appearing as network targets in lifecycle hooks or referenced install scripts. Boosts aggregate score when co-occurring with identity file reads.
+- **Shared obfuscation utilities** (`lib/obfuscation-check.js`): Extracted `isObfuscated()` and `shannonEntropy()` from `tier1-lifecycle-hook.js` into shared lib for reuse across detectors.
+- **Test fixtures**: `fixtures/campaigns/npm-package-logger-2026/` with minimal repro packages for AI-SDK postinstall pattern, @aspect-security/argon2 preinstall pattern, and version-backfill manifest.
+- **27 new tests** across 3 test files: `tier1-lifecycle-hook-followthrough.test.js` (10), `tier1-version-backfill.test.js` (8), `tier1-infostealer-identity-recon.test.js` (9).
+
+### Changed
+- **Thresholds**: Added `TIER1-HOOK-FOLLOWTHROUGH`, `TIER1-VERSION-BACKFILL`, and `SERVERLESS_PAAS_WATCHLIST` entries to `config/thresholds.js`.
+- **Detector index**: Wired `tier1-lifecycle-hook-followthrough` and `tier1-version-backfill` into `backend/detectors/index.js` via `runTier1`.
 
 ## [1.0.0] — 2026-06-03
 

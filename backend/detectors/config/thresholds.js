@@ -370,4 +370,23 @@ export default {
     },
     notes: 'D25: Split/Dynamic Payload (Miasma/Hades campaign)',
   },
+  'TIER1-HOOK-FOLLOWTHROUGH': {
+    flag_threshold: 70,
+    warn_threshold: 55,
+    notes:
+      'Follows node/sh/bash indirection in lifecycle hooks to referenced files; chains up to 2 levels',
+  },
+  'TIER1-VERSION-BACKFILL': {
+    flag_threshold: 80,
+    warn_threshold: 65,
+    min_versions: 8,
+    max_spread_hours: 24,
+    notes: 'Detects version history backfilled in a single publish burst to fake package maturity',
+  },
+  SERVERLESS_PAAS_WATCHLIST: {
+    domains: ['*.run.app', '*.web.app', '*.vercel.app', '*.netlify.app', '*.workers.dev'],
+    confidence_boost: 15,
+    notes:
+      'Serverless PaaS destinations as contributing signal when appearing in lifecycle hooks or install scripts; not standalone critical',
+  },
 };

@@ -1,8 +1,8 @@
 {
-  "total_packages": 7,
-  "total_detections": 26,
-  "total_expected": 17,
-  "total_matched": 11,
+  "total_packages": 10,
+  "total_detections": 32,
+  "total_expected": 22,
+  "total_matched": 16,
   "campaigns": {
     "CAMPAIGN_1": {
       "name": "176-Package Dependency Confusion",
@@ -36,6 +36,17 @@
       "avg_confidence": 0,
       "confidences": [],
       "expected_match_rate": "60.0%"
+    },
+    "CAMPAIGN_NPM_LOGGER_2026": {
+      "name": "npm-package-logger-2026 (OpenSourceMalware 2026-07-09)",
+      "total": 3,
+      "detected": 3,
+      "detection_rate": "100.0%",
+      "total_expected": 5,
+      "total_matched": 5,
+      "avg_confidence": 0,
+      "confidences": [],
+      "expected_match_rate": "100.0%"
     }
   },
   "detectors": {
@@ -71,6 +82,48 @@
         "high",
         "high",
         "critical",
+        "high"
+      ],
+      "precision": "100.0%"
+    },
+    "TIER1-HOOK-FOLLOWTHROUGH": {
+      "total_hits": 2,
+      "expected_count": 2,
+      "avg_confidence": "85.0",
+      "confidences": [
+        85,
+        85
+      ],
+      "severities": [
+        "high",
+        "high"
+      ],
+      "precision": "100.0%"
+    },
+    "TIER1-INFOSTEALER": {
+      "total_hits": 3,
+      "expected_count": 2,
+      "avg_confidence": "85.0",
+      "confidences": [
+        80,
+        85,
+        90
+      ],
+      "severities": [
+        "high",
+        "high",
+        "high"
+      ],
+      "precision": "100.0%"
+    },
+    "TIER1-VERSION-BACKFILL": {
+      "total_hits": 1,
+      "expected_count": 1,
+      "avg_confidence": "80.0",
+      "confidences": [
+        80
+      ],
+      "severities": [
         "high"
       ],
       "precision": "100.0%"
@@ -214,6 +267,11 @@
       "TIER1-LIFECYCLE-HOOK": 1,
       "TRAPDOOR": 1,
       "TYPOSQUAT_VPMDHAJ": 1
+    },
+    "CAMPAIGN_NPM_LOGGER_2026": {
+      "TIER1-HOOK-FOLLOWTHROUGH": 2,
+      "TIER1-INFOSTEALER": 2,
+      "TIER1-VERSION-BACKFILL": 1
     }
   }
 }

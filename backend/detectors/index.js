@@ -45,6 +45,8 @@ import { scan as tier1AiTokenTargetingScan } from './tier1-ai-token-targeting.js
 import { scan as tier1GitHubAuthorSpoofScan } from './tier1-github-author-spoof.js';
 import { scan as tier1BunRuntimeSwapScan } from './tier1-bun-runtime-swap.js';
 import { scan as tier1SplitDynamicPayloadScan } from './tier1-split-dynamic-payload.js';
+import { scan as tier1LifecycleHookFollowthroughScan } from './tier1-lifecycle-hook-followthrough.js';
+import { scan as tier1VersionBackfillScan } from './tier1-version-backfill.js';
 
 function timeout(ms) {
   return new Promise((_, reject) =>
@@ -357,6 +359,26 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
     ...(await runTier1(
       'tier1-split-dynamic-payload',
       tier1SplitDynamicPayloadScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-lifecycle-hook-followthrough',
+      tier1LifecycleHookFollowthroughScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-version-backfill',
+      tier1VersionBackfillScan,
       pkgJson,
       files,
       registryMeta,

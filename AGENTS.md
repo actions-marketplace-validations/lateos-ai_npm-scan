@@ -23,7 +23,7 @@ Run `npm test` (243 tests), `npm run test:coverage` (85%+), `npm run lint`, `npm
 - `backend/sbom.js`: CycloneDX + SPDX SBOM
 - `backend/pdf.js`: PDF report generation (premium)
 - `backend/policy.js`: YAML/JSON policy-as-code engine
-- `test/`: 243 tests across 10 files (db, detectors-edge-cases, detectors-corpus, report, policy, cli, fetch, tier1-bun-runtime-swap, tier1-split-dynamic-payload)
+- `test/`: 270 tests across 13 files (db, detectors-edge-cases, detectors-corpus, report, policy, cli, fetch, tier1-bun-runtime-swap, tier1-split-dynamic-payload, tier1-lifecycle-hook-followthrough, tier1-version-backfill, tier1-infostealer-identity-recon)
 - `test/fixtures/`: Shared mock data for test suites
 - `tests/corpus/`: 33 malicious + 50 clean tarballs for integration testing
 - `deploy/helm/`: Kubernetes Helm chart (enterprise)
@@ -36,13 +36,15 @@ Run `npm test` (243 tests), `npm run test:coverage` (85%+), `npm run lint`, `npm
 | ID | File | Finding ID | Campaign Coverage |
 |---|---|---|---|
 | D1 | `tier1-typosquat.js` | `TIER1-TYPOSQUAT` | Typosquatting, edit-distance spoofing |
-| D2 | `tier1-infostealer.js` | `TIER1-INFOSTEALER` | AI-generated infostealers, GitHub PAT harvesting, named malware signatures |
+| D2 | `tier1-infostealer.js` | `TIER1-INFOSTEALER` | AI-generated infostealers, GitHub PAT harvesting, named malware signatures, identity/credential-adjacent path recon |
 | D3 | `tier1-lifecycle-hook.js` | `TIER1-LIFECYCLE-HOOK` | Obfuscated install scripts, env exfiltration |
+| D3b | `tier1-lifecycle-hook-followthrough.js` | `TIER1-HOOK-FOLLOWTHROUGH` | Hook indirection to referenced files (node/sh/bash), 2-level chain followthrough |
 | D4 | `tier1-binary-embed.js` | `TIER1-BINARY-EMBED` | Bun runtime abuse, IMDSv2/ECS credential targeting |
 | D5 | `tier1-metadata-spoof.js` | `TIER1-METADATA-SPOOF` | Namespace spoofing, cloned repo URLs, Yandex alias pattern |
 | D6a | `tier1-version-confusion.js` | `TIER1-VERSION-CONFUSION` | Sentinel versions (99.99.99 family), high-version heuristic (major≥9) |
 | D6b | `tier1-multistage-postinstall.js` | `TIER1-MULTISTAGE-POSTINSTALL` | Two-stage download+exec, detached background persistence |
 | D6c | `tier1-cloud-imds.js` | `TIER1-CLOUD-IMDS` | GCP metadata server, Azure IMDS endpoint targeting |
+| D6d | `tier1-version-backfill.js` | `TIER1-VERSION-BACKFILL` | Version history backfill in single publish burst to fake maturity |
 | D24 | `tier1-bun-runtime-swap.js` | `D24-BUN-RUNTIME-SWAP` | Bun runtime swap (spawn, API usage, process.argv), bun downloader, credential combo, node-to-bun evasion (Miasma/Hades campaign) |
 | D25 | `tier1-split-dynamic-payload.js` | `D25-SPLIT-DYNAMIC-PAYLOAD` | Split/dynamic payload assembly, sys.path manipulation, eval+fetch chains, buffer assembly, multifile traversal (Miasma/Hades campaign) |
 
@@ -51,6 +53,9 @@ Run `npm test` (243 tests), `npm run test:coverage` (85%+), `npm run lint`, `npm
 - **D6a heuristic** (`major >= 9 && minor >= 5 && patch >= 5`, `major !== 1`): known FP risk area. Tune confidence thresholds once production scan telemetry is available.
 - **D2 named signatures**: zero-FP string literals for confirmed malware campaigns. Safe to add new entries without score recalibration.
 - **D24/D25 pattern weights**: calibrated against Miasma/Hades campaign artifacts. Tune `bun_api_usage` and `buffer_assembly` weights once broader scan telemetry is available, as these patterns may appear in legitimate Bun-based tooling.
+- **D3b hook followthrough**: Only fires on `node <path>` / `sh <path>` / `bash <path>` hooks with no inline eval/URL/exec. Chains up to 2 levels. Reuses `lib/obfuscation-check.js` for entropy/obfuscation scoring.
+- **D6d version backfill**: Requires >= 8 versions, < 24h spread, wide version range (major span >= 1 or >= 4 unique minors). Calibrated against npm-package-logger-2026 campaign.
+- **Serverless PaaS watchlist** (`*.run.app`, `*.web.app`, `*.vercel.app`, `*.netlify.app`, `*.workers.dev`): MEDIUM contributing signal (+15 confidence boost), not standalone critical. Hooks into D2 infostealer and D3b hook-followthrough.
 
 ## Publishing
 - Bump version: `npm version patch && git push origin main --tags`
