@@ -106,7 +106,11 @@ export default {
     duplicate_version_weight: 40,
     unusual_timing_weight: 25,
     cross_package_burst_weight: 50,
-    notes: 'D13: Version velocity anomaly and maintainer compromise detection',
+    single_version_gap_days: 30,
+    single_version_remediation_hours: 24,
+    dist_tag_rapid_succession_hours: 1,
+    notes:
+      'D13: Version velocity anomaly and maintainer compromise detection. Extended with single_version_compromise (30+ day gap, deprecated, remediated within 24h) and dist_tag_manipulation (tag repointed to version with next version within 1h).',
   },
   'D15-MEMORY-EXTRACTION': {
     flag_threshold: 75,

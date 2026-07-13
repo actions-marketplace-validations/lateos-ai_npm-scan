@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **Shared obfuscation utilities** (`lib/obfuscation-check.js`): Extracted `isObfuscated()` and `shannonEntropy()` from `tier1-lifecycle-hook.js` into shared lib for reuse across detectors.
 - **Test fixtures**: `fixtures/campaigns/npm-package-logger-2026/` with minimal repro packages for AI-SDK postinstall pattern, @aspect-security/argon2 preinstall pattern, and version-backfill manifest.
 - **27 new tests** across 3 test files: `tier1-lifecycle-hook-followthrough.test.js` (10), `tier1-version-backfill.test.js` (8), `tier1-infostealer-identity-recon.test.js` (9).
+- **TIER1-MAINTAINER-COMPROMISE extended detection** (`tier1-maintainer-compromise.js`): Added two new subtypes to catch Jscrambler-style hijacks: `single_version_compromise` (version published after 30+ day gap, deprecated and remediated within 24h, confidenceScore 70) and `dist_tag_manipulation` (dist-tag pointing to version with next version published within 1 hour, confidenceScore 85). Closes gap where single compromised publishes or tag repointing without version bursts went undetected.
+- **9 new tests** for maintainer compromise extensions: `tier1-maintainer-compromise-extended.test.js` covering single version compromise, dist-tag manipulation, and combined detection scenarios.
 
 ### Changed
 - **Thresholds**: Added `TIER1-HOOK-FOLLOWTHROUGH`, `TIER1-VERSION-BACKFILL`, and `SERVERLESS_PAAS_WATCHLIST` entries to `config/thresholds.js`.
