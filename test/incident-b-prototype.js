@@ -24,12 +24,7 @@ const NETWORK_CALL_PATTERNS = [
   'WebSocket',
 ];
 
-const DYNAMIC_CODE_PATTERNS = [
-  'eval(',
-  'new Function',
-  'vm.runInContext',
-  'vm.runInNewContext',
-];
+const DYNAMIC_CODE_PATTERNS = ['eval(', 'new Function', 'vm.runInContext', 'vm.runInNewContext'];
 
 async function fetchVersion(version) {
   console.log(`Fetching ${PACKAGE_NAME}@${version}...`);
@@ -46,7 +41,10 @@ function extractFunctionByName(code, funcName) {
   const patterns = [
     new RegExp(`static\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{([^}]*(?:\\{[^}]*\\}[^}]*)*)\\}`, 'm'),
     new RegExp(`function\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{([^}]*(?:\\{[^}]*\\}[^}]*)*)\\}`, 'm'),
-    new RegExp(`${funcName}\\s*:\\s*function\\s*\\([^)]*\\)\\s*\\{([^}]*(?:\\{[^}]*\\}[^}]*)*)\\}`, 'm'),
+    new RegExp(
+      `${funcName}\\s*:\\s*function\\s*\\([^)]*\\)\\s*\\{([^}]*(?:\\{[^}]*\\}[^}]*)*)\\}`,
+      'm'
+    ),
   ];
 
   for (const pattern of patterns) {
@@ -106,8 +104,12 @@ async function main() {
         const dynamicCode = detectDynamicCode(cleanFunc);
         console.log(`  Clean version:`);
         console.log(`    Code length: ${cleanFunc.length} chars`);
-        console.log(`    Network calls: ${networkCalls.length > 0 ? networkCalls.join(', ') : 'none'}`);
-        console.log(`    Dynamic code: ${dynamicCode.length > 0 ? dynamicCode.join(', ') : 'none'}`);
+        console.log(
+          `    Network calls: ${networkCalls.length > 0 ? networkCalls.join(', ') : 'none'}`
+        );
+        console.log(
+          `    Dynamic code: ${dynamicCode.length > 0 ? dynamicCode.join(', ') : 'none'}`
+        );
       } else {
         console.log(`  Clean version: NOT FOUND`);
       }
@@ -117,8 +119,12 @@ async function main() {
         const dynamicCode = detectDynamicCode(maliciousFunc);
         console.log(`  Malicious version:`);
         console.log(`    Code length: ${maliciousFunc.length} chars`);
-        console.log(`    Network calls: ${networkCalls.length > 0 ? networkCalls.join(', ') : 'none'}`);
-        console.log(`    Dynamic code: ${dynamicCode.length > 0 ? dynamicCode.join(', ') : 'none'}`);
+        console.log(
+          `    Network calls: ${networkCalls.length > 0 ? networkCalls.join(', ') : 'none'}`
+        );
+        console.log(
+          `    Dynamic code: ${dynamicCode.length > 0 ? dynamicCode.join(', ') : 'none'}`
+        );
 
         if (cleanFunc) {
           const cleanNetworkCalls = detectNetworkCalls(cleanFunc);
