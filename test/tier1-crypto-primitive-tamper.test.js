@@ -35,7 +35,9 @@ test('detects semantic backdoor in fromMnemonic with new fetch call', async () =
 
   assert.strictEqual(findings.length, 2, 'Should detect backdoor in fromMnemonic and fromHex');
 
-  const fromMnemonicFinding = findings.find((f) => f.evidence.some((e) => e.includes('fromMnemonic')));
+  const fromMnemonicFinding = findings.find((f) =>
+    f.evidence.some((e) => e.includes('fromMnemonic'))
+  );
   assert.ok(fromMnemonicFinding, 'Should detect backdoor in fromMnemonic');
   assert.strictEqual(fromMnemonicFinding.id, 'TIER1-CRYPTO-TAMPER');
   assert.strictEqual(fromMnemonicFinding.severity, 'high');

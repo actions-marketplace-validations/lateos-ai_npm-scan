@@ -25,12 +25,7 @@ const NETWORK_CALL_PATTERNS = [
   'WebSocket',
 ];
 
-const DYNAMIC_CODE_PATTERNS = [
-  'eval',
-  'new Function',
-  'vm.runInContext',
-  'vm.runInNewContext',
-];
+const DYNAMIC_CODE_PATTERNS = ['eval', 'new Function', 'vm.runInContext', 'vm.runInNewContext'];
 
 function extractFunctions(code) {
   const functions = new Map();
@@ -70,7 +65,7 @@ function extractFunctions(code) {
         }
       },
     });
-  } catch (err) {
+  } catch {
     // Silent fail - parsing errors are expected for non-JS files
   }
   return functions;
@@ -123,7 +118,7 @@ export async function scan(pkgJson, _jsFiles, registryMeta, allFiles, options = 
           previousFunctions = extractFunctions(previousAccountsFile.content);
         }
       }
-    } catch (err) {
+    } catch {
       // Silent fail - previous version fetch is optional
     }
   }
