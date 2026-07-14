@@ -128,6 +128,15 @@
       ],
       "precision": "100.0%"
     },
+    "TIER1-CRYPTO-TAMPER": {
+      "total_hits": 0,
+      "expected_count": 0,
+      "avg_confidence": "N/A",
+      "confidences": [],
+      "severities": [],
+      "precision": "N/A",
+      "notes": "New diff-aware detector for semantic backdoors in crypto/wallet primitives. Validated against Injective SDK 2026-07-08 incident."
+    },
     "TIER1-VERSION-CONFUSION": {
       "total_hits": 3,
       "expected_count": 0,

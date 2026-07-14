@@ -47,6 +47,7 @@ import { scan as tier1BunRuntimeSwapScan } from './tier1-bun-runtime-swap.js';
 import { scan as tier1SplitDynamicPayloadScan } from './tier1-split-dynamic-payload.js';
 import { scan as tier1LifecycleHookFollowthroughScan } from './tier1-lifecycle-hook-followthrough.js';
 import { scan as tier1VersionBackfillScan } from './tier1-version-backfill.js';
+import { scan as tier1CryptoPrimitiveTamperScan } from './tier1-crypto-primitive-tamper.js';
 
 function timeout(ms) {
   return new Promise((_, reject) =>
@@ -379,6 +380,16 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
     ...(await runTier1(
       'tier1-version-backfill',
       tier1VersionBackfillScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-crypto-primitive-tamper',
+      tier1CryptoPrimitiveTamperScan,
       pkgJson,
       files,
       registryMeta,
