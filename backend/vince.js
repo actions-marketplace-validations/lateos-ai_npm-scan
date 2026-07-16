@@ -1,5 +1,4 @@
 import https from 'https';
-import http from 'http';
 
 export function formatFindingsForVince(scans) {
   const findings = [];
@@ -25,7 +24,7 @@ export function generateVinceReport(scans) {
 
   const severityCounts = { critical: 0, high: 0, medium: 0, low: 0 };
   for (const finding of findings) {
-    if (severityCounts.hasOwnProperty(finding.severity)) {
+    if (Object.hasOwn(severityCounts, finding.severity)) {
       severityCounts[finding.severity]++;
     }
   }
@@ -70,7 +69,7 @@ function makeRequest(method, path, body = null) {
         try {
           const parsed = JSON.parse(data);
           resolve({ status: res.statusCode, body: parsed });
-        } catch (e) {
+        } catch {
           resolve({ status: res.statusCode, body: data });
         }
       });
