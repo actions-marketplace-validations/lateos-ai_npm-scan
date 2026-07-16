@@ -546,4 +546,71 @@ program
     });
   });
 
+program
+  .command('submit-vince')
+  .description('Submit findings to VINCE (Vulnerability Information and Coordination Environment)')
+  .argument('[scan-result]', 'scan result JSON file or stdin')
+  .option('--auto-approve', 'Skip manual review and submit immediately')
+  .action(async (scanResultPath, options) => {
+    try {
+      const { readFileSync } = await import('fs');
+
+      let scanData;
+      if (scanResultPath) {
+        try {
+          const content = readFileSync(scanResultPath, 'utf-8');
+          scanData = JSON.parse(content);
+        } catch (e) {
+          console.error(`Error reading scan result: ${e.message}`);
+          process.exit(1);
+        }
+      } else {
+        return console.error(
+          'Usage: npm-scan submit-vince <scan-result-file> [--auto-approve]\n' +
+            'Or pipe scan result JSON: npm-scan scan <pkg> | npm-scan submit-vince /dev/stdin'
+        );
+      }
+
+      const { generateVinceReport, generateVinceReviewSummary, submitToVince } =
+        await import('../backend/vince.js');
+
+      const scans = Array.isArray(scanData) ? scanData : [scanData];
+      const report = generateVinceReport(scans);
+
+      if (report.findings_count === 0) {
+        console.log('No findings to report to VINCE.');
+        return;
+      }
+
+      const reviewSummary = generateVinceReviewSummary(report);
+      console.log(reviewSummary);
+      console.log('\n=== VINCE SUBMISSION ===');
+      console.log(`Ready to submit ${report.findings_count} finding(s) to VINCE`);
+
+      if (!options.autoApprove) {
+        console.log(
+          '\n⚠️  NOTICE: This will submit vulnerability findings to VINCE.\n' +
+            'Please review the findings above. Do you want to proceed? (yes/no)\n' +
+            'This requires manual approval via Claude before proceeding.\n'
+        );
+        console.log('\n[Awaiting Claude review in the conversation context...]');
+        process.exit(0);
+      }
+
+      console.log('\nSubmitting to VINCE...');
+      const result = await submitToVince(report);
+
+      if (result.success) {
+        console.log(`✓ Successfully submitted to VINCE`);
+        console.log(`Submission ID: ${result.submission_id}`);
+      } else {
+        console.error(`✗ Submission failed: ${result.message}`);
+        process.exit(1);
+      }
+    } catch (e) {
+      console.error(`Error: ${e.message}`);
+      process.exit(1);
+    }
+  });
+
 program.parse();
