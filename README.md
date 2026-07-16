@@ -105,6 +105,7 @@ npm-scan express --json > findings.json
 - ✅ **Fast** — <30 seconds per CI/CD run
 - ✅ **Policy-as-code** — YAML allowlists, severity overrides
 - ✅ **SBOM + SARIF** — CycloneDX, SPDX, GitHub Security
+- ✅ **VINCE Integration** — Report findings to CISA with manual review
 - ✅ **GitHub Action** — One-liner CI/CD integration
 - ✅ **Docker** — Multi-arch images
 
@@ -126,6 +127,32 @@ Works with GitHub Actions, GitLab CI, Jenkins, or any CI/CD platform.
 
 ---
 
+## VINCE Vulnerability Coordination
+
+Report critical findings to [VINCE](https://www.cisa.gov/vince/) (CISA's Vulnerability Information and Coordination Environment) with built-in manual review workflow:
+
+```bash
+# Scan packages
+npm-scan scan lodash > scan_result.json
+
+# Review findings with Claude before submission
+npm-scan submit-vince scan_result.json
+
+# Submit to VINCE after approval
+npm-scan submit-vince scan_result.json --auto-approve
+```
+
+**Features:**
+- ✅ Manual review required before any submission
+- ✅ Detailed findings summary with evidence
+- ✅ Automatic severity categorization
+- ✅ Submission tracking via VINCE ID
+- ✅ Secure API key handling
+
+[Learn more about VINCE integration →](VINCE_INTEGRATION.md)
+
+---
+
 ## Licensing
 
 **Free (MIT):** Individuals, open-source projects, and teams evaluating for production — no time limit.
@@ -142,6 +169,7 @@ See [LICENSING.md](LICENSING.md) for details.
 ## More
 
 - [Full documentation](https://github.com/lateos-ai/npm-scan)
+- [VINCE Integration Guide](VINCE_INTEGRATION.md)
 - [Attack taxonomy (ATK series)](https://github.com/lateos-ai/npm-scan/blob/main/DETECTORS.md)
 - [Campaign validation data](https://github.com/lateos-ai/npm-scan/blob/main/VALIDATION.md)
 
