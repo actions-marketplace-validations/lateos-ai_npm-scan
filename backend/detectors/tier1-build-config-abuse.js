@@ -1,4 +1,6 @@
 import thresholds from './config/thresholds.js';
+import { parseGyp } from './lib/gyp-parser.js';
+import { verifyProvenance, applyProvenanceDiscount } from './lib/slsa-verifier.js';
 
 const cfg = thresholds['D14-BUILD-CONFIG-ABUSE'];
 const PATTERN_WEIGHTS = cfg.pattern_weights;
@@ -35,8 +37,12 @@ export const name = 'tier1-build-config-abuse';
 
 export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   const pkgName = pkgJson?.name;
+  const provenance = await verifyProvenance(pkgName, pkgJson?.version, registryMeta);
+
+  // Known reputable packages skip D14 analysis (provenance verification handled separately)
   if (
     pkgName &&
+    !provenance.verified &&
     cfg.known_reputable_packages?.some((r) => pkgName === r || pkgName.startsWith(r + '/'))
   ) {
     return [];
@@ -77,7 +83,7 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
     aggregatedRisk += 20;
   }
 
-  // Step 2: Parse binding.gyp for suspicious patterns
+  // Step 2: Parse binding.gyp for suspicious patterns (enhanced)
   if (hasGypFile) {
     const gypFile = fileByName(files, 'binding.gyp');
     const gypContent = gypFile?.content || '';
@@ -90,6 +96,9 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
         fs_access: /\bfs\.(read|write|readFile|writeFile|readdir|exists|stat|mkdir|rm|unlink)/g,
         http_request: /\b(http|https|curl|wget|fetch)\b/gi,
         path_traversal: /\.\.\//g,
+        compile_macro_injection: /-D\s*['"]?[A-Z_]+=(system|exec|shell|popen|fork)/g,
+        include_path_manipulation: /-I\s*\.\.\/\.\.\/(?:tmp|var|dev|private|etc)/g,
+        linker_library_injection: /['"](?:-lcurl|libcurl|-lssl|libssl|-lpcap|libpcap|-lkqueue)['"]/g,
       };
 
       for (const [patternName, regex] of Object.entries(gypPatterns)) {
@@ -109,6 +118,74 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
           });
           aggregatedRisk += PATTERN_WEIGHTS[patternName] || 30;
         }
+      }
+
+      // Gyp AST structural analysis
+      const gypAST = parseGyp(gypContent);
+      if (gypAST.shellExecs.length > 0) {
+        for (const se of gypAST.shellExecs) {
+          findings.push({
+            detector: 'tier1-build-config-abuse',
+            id: 'D14-BUILD-CONFIG-ABUSE',
+            severity: 'high',
+            confidence: 'HIGH',
+            confidenceScore: PATTERN_WEIGHTS.shell_exec || 50,
+            message: `binding.gyp shell execution via <!(command)`,
+            evidence: [`pattern: gyp_shell_exec`, `command: ${se.command.slice(0, 120)}`],
+            locations: [{ file: 'binding.gyp', line: se.line }],
+          });
+          aggregatedRisk += PATTERN_WEIGHTS.shell_exec || 50;
+        }
+      }
+      if (gypAST.linkerFlags.length > 0) {
+        for (const lf of gypAST.linkerFlags) {
+          findings.push({
+            detector: 'tier1-build-config-abuse',
+            id: 'D14-BUILD-CONFIG-ABUSE',
+            severity: 'medium',
+            confidence: 'MEDIUM',
+            confidenceScore: 35,
+            message: `binding.gyp linker flag: ${lf.flag}`,
+            evidence: [`pattern: linker_flag`, `flag: ${lf.flag}`],
+            locations: [{ file: 'binding.gyp', line: lf.line }],
+          });
+          aggregatedRisk += 35;
+        }
+      }
+    }
+  }
+
+  // Step 2b: Analyze Makefile / CMakeLists.txt / configure scripts
+  const buildFiles = filesByExt(files, ['.mk', 'Makefile', 'CMakeLists.txt', 'configure', '.cmake']);
+  for (const bf of buildFiles) {
+    const content = bf.content || '';
+    if (!content) continue;
+
+    const buildPatterns = {
+      makefile_shell_exec: /\$\(shell\s+[^)]+\)/g,
+      cmake_execute_process: /\bexecute_process\s*\([^)]*COMMAND\b/g,
+      cmake_custom_command: /\badd_custom_command\s*\([^)]*(COMMAND|DEPENDS)/g,
+      cmake_custom_target: /\badd_custom_target\s*\([^)]*(COMMAND|DEPENDS)/g,
+      makefile_curl_download: /\b(curl|wget|fetch)\s+(--insecure|-k\s+)?(http|https):/g,
+      makefile_npm_publish: /\bnpm\s+(publish|version|dist-tag)/g,
+    };
+
+    for (const [patternName, regex] of Object.entries(buildPatterns)) {
+      regex.lastIndex = 0;
+      let match;
+      while ((match = regex.exec(content)) !== null) {
+        const line = extractLines(content, match.index);
+        findings.push({
+          detector: 'tier1-build-config-abuse',
+          id: 'D14-BUILD-CONFIG-ABUSE',
+          severity: 'high',
+          confidence: 'HIGH',
+          confidenceScore: 50,
+          message: `${bf.path || bf.name || 'build file'} contains ${patternName.replace(/_/g, ' ')} pattern`,
+          evidence: [`pattern: ${patternName}`, `match: ${match[0].slice(0, 120)}`],
+          locations: [{ file: bf.path || bf.name || 'unknown', line }],
+        });
+        aggregatedRisk += 50;
       }
     }
   }
@@ -195,6 +272,46 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       locations: [{ file: 'binding.gyp', line: 1 }],
     });
     aggregatedRisk += cfg.undeclared_gyp_weight;
+  }
+
+  // Step 6: Lifecycle hook + binding.gyp cross-reference
+  if (hasGypFile && pkgJson?.scripts) {
+    const lifecycleScripts = ['preinstall', 'install', 'postinstall', 'prepare', 'prepublish'];
+    const hasNodeGypInHook = lifecycleScripts.some((hook) => {
+      const script = pkgJson.scripts[hook];
+      return typeof script === 'string' && script.includes('node-gyp rebuild');
+    });
+    const hasMaliciousGypPattern = findings.some((f) =>
+      f.evidence?.some((e) => e.includes('shell_exec') || e.includes('compile_macro') || e.includes('gyp_shell_exec'))
+    );
+
+    if (hasNodeGypInHook && hasMaliciousGypPattern) {
+      findings.push({
+        detector: 'tier1-build-config-abuse',
+        id: 'D14-BUILD-CONFIG-ABUSE',
+        severity: 'critical',
+        confidence: 'CRITICAL',
+        confidenceScore: 99,
+        message: 'Lifecycle hook triggers node-gyp rebuild on binding.gyp with malicious patterns',
+        evidence: [
+          'lifecycle_hook: node-gyp rebuild',
+          'binding.gyp: contains malicious build patterns',
+          'execution confirmed at install time',
+        ],
+        locations: [{ file: 'binding.gyp', line: 1 }],
+        recommendation: 'BLOCK - Malicious native build will execute during npm install',
+      });
+      aggregatedRisk += 99;
+    }
+  }
+
+  // Apply provenance discount if verified
+  const hasMaliciousFindings = findings.length > 0;
+  if (provenance.verified && hasMaliciousFindings) {
+    const discounted = applyProvenanceDiscount(findings, provenance);
+    findings.length = 0;
+    findings.push(...discounted);
+    aggregatedRisk = Math.round(aggregatedRisk * (1 - Math.min(0.3, provenance.slsaLevel * 0.1)));
   }
 
   if (findings.length === 0) return [];

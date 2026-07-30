@@ -144,6 +144,13 @@ function matchesContext(finding, rule) {
     return false;
   }
 
+  if (rule.context?.provenance_verified === true && !ctx.provenance_verified) {
+    return false;
+  }
+  if (rule.context?.provenance_verified === false && ctx.provenance_verified) {
+    return false;
+  }
+
   if (rule.context?.file_path && !matchesFilePath(ctx.file_path, rule.context.file_path)) {
     return false;
   }
@@ -265,6 +272,7 @@ function sanitizePolicy(policy) {
       reason: r.reason || '',
       context: r.context || null,
       reputation_tier: r.reputation_tier || null,
+      provenance_verified: r.provenance_verified ?? null,
     })),
   };
 }

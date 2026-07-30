@@ -48,6 +48,7 @@ import { scan as tier1SplitDynamicPayloadScan } from './tier1-split-dynamic-payl
 import { scan as tier1LifecycleHookFollowthroughScan } from './tier1-lifecycle-hook-followthrough.js';
 import { scan as tier1VersionBackfillScan } from './tier1-version-backfill.js';
 import { scan as tier1CryptoPrimitiveTamperScan } from './tier1-crypto-primitive-tamper.js';
+import { scanPromptInjection } from './lib/prompt-injection.js';
 
 function timeout(ms) {
   return new Promise((_, reject) =>
@@ -96,6 +97,7 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
   findings.push(...(await mshSupplementScan(pkgJson, files, registryMeta, allFiles || files)));
   findings.push(...(await typosquatScan(pkgJson, files, registryMeta, allFiles || files)));
   findings.push(...(await axiosPoisoningScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await runTier1('prompt-injection', scanPromptInjection, pkgJson, files, registryMeta, allFiles || files)));
   findings.push(
     ...(await runTier1(
       'tier1-typosquat',

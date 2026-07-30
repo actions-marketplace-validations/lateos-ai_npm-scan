@@ -184,6 +184,11 @@ export default {
       credential_scan: 50,
       socket_call: 40,
       environ_access: 35,
+      compile_macro_injection: 60,
+      include_path_manipulation: 55,
+      linker_library_injection: 50,
+      makefile_shell_exec: 55,
+      cmake_execute_process: 55,
     },
     legitimate_native_addons: [
       'node-sass',
@@ -203,6 +208,9 @@ export default {
       env_access: 0.6,
       getenv_call: 0.7,
       curl_call: 0.85,
+      compile_macro_injection: 0.9,
+      makefile_shell_exec: 0.9,
+      cmake_execute_process: 0.85,
     },
     max_binary_size_bytes: 10 * 1024 * 1024,
     binary_size_weight: 30,
@@ -221,7 +229,7 @@ export default {
       'vite',
       'rollup',
     ],
-    notes: 'D14: Build Configuration Abuse (Phantom Gyp / Miasma variant)',
+    notes: 'D14: Build Configuration Abuse (Phantom Gyp / Miasma variant) — enhanced with GypParser, build file analysis, lifecycle hook cross-reference',
   },
   'D18-SELF-DEFENDING': {
     flag_threshold: 170,
@@ -392,6 +400,38 @@ export default {
     warn_threshold: 70,
     notes:
       'Diff-aware detection of semantic backdoors in crypto/wallet primitives. Compares security-sensitive functions (fromMnemonic, sign, etc.) against previous version to detect newly injected network calls or dynamic code execution. High threshold justified by diff-awareness eliminating FPs from legitimate telemetry.',
+  },
+  'PROMPT-INJECTION': {
+    flag_threshold: 80,
+    warn_threshold: 60,
+    pattern_weights: {
+      instruction_override: 75,
+      command_execution: 95,
+      data_exfiltration_context: 85,
+      hidden_directives: 70,
+    },
+    notes:
+      'D26: Detects prompt injection patterns in LLM/AI agent context files (.cursorrules, CLAUDE.md, AGENTS.md). Command execution patterns always flag critical.',
+  },
+  'TIER1-WORM-PROPAGATION': {
+    flag_threshold: 80,
+    warn_threshold: 60,
+    pattern_weights: {
+      npmrc_exfil: 95,
+      github_ssh_exfil: 95,
+      cloud_cred_exfil: 90,
+      self_publish: 85,
+      immediate_exfil_no_delay: 90,
+    },
+    pattern_confidence: {
+      npmrc_exfil: 0.98,
+      github_ssh_exfil: 0.98,
+      cloud_cred_exfil: 0.95,
+      self_publish: 0.9,
+      immediate_exfil_no_delay: 0.85,
+    },
+    notes:
+      'D27: Detects static patterns enabling ultra-fast wormable self-propagation (credential scraping + auto-publish capability in install-time code).',
   },
   SERVERLESS_PAAS_WATCHLIST: {
     domains: ['*.run.app', '*.web.app', '*.vercel.app', '*.netlify.app', '*.workers.dev'],
