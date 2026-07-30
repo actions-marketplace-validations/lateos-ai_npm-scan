@@ -229,7 +229,8 @@ export default {
       'vite',
       'rollup',
     ],
-    notes: 'D14: Build Configuration Abuse (Phantom Gyp / Miasma variant) — enhanced with GypParser, build file analysis, lifecycle hook cross-reference',
+    notes:
+      'D14: Build Configuration Abuse (Phantom Gyp / Miasma variant) — enhanced with GypParser, build file analysis, lifecycle hook cross-reference',
   },
   'D18-SELF-DEFENDING': {
     flag_threshold: 170,
