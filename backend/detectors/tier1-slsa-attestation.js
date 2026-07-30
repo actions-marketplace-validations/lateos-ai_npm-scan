@@ -1,11 +1,8 @@
-import thresholds from './config/thresholds.js';
 import { verifyProvenance, fetchProvenanceFromRegistry } from './lib/slsa-verifier.js';
-
-const cfg = thresholds['TIER1-SLSA-ATTESTATION'];
 
 export const name = 'tier1-slsa-attestation';
 
-export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+export async function scan(pkgJson, _jsFiles, registryMeta, _allFiles) {
   const pkgName = pkgJson?.name;
   const version = pkgJson?.version;
   if (!pkgName || !version) return [];

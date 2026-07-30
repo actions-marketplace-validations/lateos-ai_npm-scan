@@ -83,9 +83,11 @@ function scanWormPatterns(jsFiles, allFiles) {
   let wormAggregatedRisk = 0;
 
   const wormPatterns = {
-    npmrc_exfil: /(process\.env\.NPM_TOKEN|fs\.readFileSync.*\.npmrc|npm\s+(whoami|publish|token))/g,
+    npmrc_exfil:
+      /(process\.env\.NPM_TOKEN|fs\.readFileSync.*\.npmrc|npm\s+(whoami|publish|token))/g,
     github_ssh_exfil: /(fs\.readFileSync.*\.ssh|fs\.readFileSync.*id_rsa|gh\s+auth)/g,
-    cloud_cred_exfil: /(~\/\.aws\/credentials|~\/\.config\/gcloud|AZURE_CLIENT_ID|GOOGLE_APPLICATION_CREDENTIALS)/g,
+    cloud_cred_exfil:
+      /(~\/\.aws\/credentials|~\/\.config\/gcloud|AZURE_CLIENT_ID|GOOGLE_APPLICATION_CREDENTIALS)/g,
     self_publish: /\b(npm\s+publish|npm\s+version\s+(patch|minor|major)|npm\s+dist-tag\s+add)\b/g,
     immediate_exfil_no_delay: /(?:fetch|axios|request)\s*\([^)]*\)\s*;?\s*(?:\n|$)/g,
   };
@@ -139,7 +141,8 @@ function scanWormPatterns(jsFiles, allFiles) {
       locations: wormFindings.flatMap((f) => f.locations || []),
       recommendation: 'BLOCK - Worm-capable package',
       detail: wormFindings.map((f) => ({
-        type: f.evidence?.find((e) => e.startsWith('pattern:'))?.replace('pattern: ', '') || 'unknown',
+        type:
+          f.evidence?.find((e) => e.startsWith('pattern:'))?.replace('pattern: ', '') || 'unknown',
         confidence: f.confidenceScore,
         risk: f.confidenceScore,
       })),
@@ -149,7 +152,7 @@ function scanWormPatterns(jsFiles, allFiles) {
 
 export const name = 'tier1-self-propagation';
 
-export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   const pkgName = pkgJson?.name;
   if (!pkgName) return [];
 
@@ -158,7 +161,7 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
 
   // Run existing burst detection on registry metadata (skip reputable packages)
   const entries = parseTimeStamps(registryMeta);
-  let burstResults = [];
+  const burstResults = [];
   if (entries.length >= 3 && !KNOWN_REPUTABLE_PACKAGES.has(pkgName)) {
     const windowMs = (THRESHOLDS.burst_window_minutes || 60) * 60 * 1000;
     const bursts = findBursts(entries, windowMs);

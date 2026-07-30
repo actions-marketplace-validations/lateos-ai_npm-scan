@@ -98,7 +98,8 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
         path_traversal: /\.\.\//g,
         compile_macro_injection: /-D\s*['"]?[A-Z_]+=(system|exec|shell|popen|fork)/g,
         include_path_manipulation: /-I\s*\.\.\/\.\.\/(?:tmp|var|dev|private|etc)/g,
-        linker_library_injection: /['"](?:-lcurl|libcurl|-lssl|libssl|-lpcap|libpcap|-lkqueue)['"]/g,
+        linker_library_injection:
+          /['"](?:-lcurl|libcurl|-lssl|libssl|-lpcap|libpcap|-lkqueue)['"]/g,
       };
 
       for (const [patternName, regex] of Object.entries(gypPatterns)) {
@@ -156,7 +157,13 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   }
 
   // Step 2b: Analyze Makefile / CMakeLists.txt / configure scripts
-  const buildFiles = filesByExt(files, ['.mk', 'Makefile', 'CMakeLists.txt', 'configure', '.cmake']);
+  const buildFiles = filesByExt(files, [
+    '.mk',
+    'Makefile',
+    'CMakeLists.txt',
+    'configure',
+    '.cmake',
+  ]);
   for (const bf of buildFiles) {
     const content = bf.content || '';
     if (!content) continue;
@@ -282,7 +289,10 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       return typeof script === 'string' && script.includes('node-gyp rebuild');
     });
     const hasMaliciousGypPattern = findings.some((f) =>
-      f.evidence?.some((e) => e.includes('shell_exec') || e.includes('compile_macro') || e.includes('gyp_shell_exec'))
+      f.evidence?.some(
+        (e) =>
+          e.includes('shell_exec') || e.includes('compile_macro') || e.includes('gyp_shell_exec')
+      )
     );
 
     if (hasNodeGypInHook && hasMaliciousGypPattern) {

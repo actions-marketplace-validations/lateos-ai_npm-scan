@@ -97,7 +97,16 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
   findings.push(...(await mshSupplementScan(pkgJson, files, registryMeta, allFiles || files)));
   findings.push(...(await typosquatScan(pkgJson, files, registryMeta, allFiles || files)));
   findings.push(...(await axiosPoisoningScan(pkgJson, files, registryMeta, allFiles || files)));
-  findings.push(...(await runTier1('prompt-injection', scanPromptInjection, pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(
+    ...(await runTier1(
+      'prompt-injection',
+      scanPromptInjection,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
   findings.push(
     ...(await runTier1(
       'tier1-typosquat',
