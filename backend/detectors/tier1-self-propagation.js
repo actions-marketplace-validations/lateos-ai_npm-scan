@@ -75,9 +75,23 @@ function extractLines(content, matchIndex) {
   return (before.match(/\n/g) || []).length + 1;
 }
 
-function scanWormPatterns(jsFiles, allFiles) {
-  const files = allFiles || jsFiles || [];
-  if (!files.length) return [];
+const LIFECYCLE_HOOKS = ['preinstall', 'install', 'postinstall', 'prepare', 'prepublish'];
+
+function getHookScripts(pkgJson) {
+  if (!pkgJson?.scripts) return [];
+  const hookScripts = [];
+  for (const hook of LIFECYCLE_HOOKS) {
+    const script = pkgJson.scripts[hook];
+    if (typeof script === 'string') {
+      hookScripts.push({ hook, content: script });
+    }
+  }
+  return hookScripts;
+}
+
+function scanWormPatterns(pkgJson) {
+  const hookScripts = getHookScripts(pkgJson);
+  if (!hookScripts.length) return [];
 
   const wormFindings = [];
   let wormAggregatedRisk = 0;
@@ -89,10 +103,10 @@ function scanWormPatterns(jsFiles, allFiles) {
     cloud_cred_exfil:
       /(~\/\.aws\/credentials|~\/\.config\/gcloud|AZURE_CLIENT_ID|GOOGLE_APPLICATION_CREDENTIALS)/g,
     self_publish: /\b(npm\s+publish|npm\s+version\s+(patch|minor|major)|npm\s+dist-tag\s+add)\b/g,
-    immediate_exfil_no_delay: /(?:fetch|axios|request)\s*\([^)]*\)\s*;?\s*(?:\n|$)/g,
+    immediate_exfil: /(?:fetch|axios|request)\s*\([^)]+https?:\/\//g,
   };
 
-  const source = files.map((f) => f.content || '').join('\n');
+  const source = hookScripts.map((s) => s.content).join('\n');
 
   for (const [patternName, regex] of Object.entries(wormPatterns)) {
     regex.lastIndex = 0;
@@ -152,12 +166,12 @@ function scanWormPatterns(jsFiles, allFiles) {
 
 export const name = 'tier1-self-propagation';
 
-export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+export function scan(pkgJson, _jsFiles, registryMeta, _allFiles) {
   const pkgName = pkgJson?.name;
   if (!pkgName) return [];
 
-  // Run worm pattern detection on source files (applies to all packages)
-  const wormResults = scanWormPatterns(jsFiles, allFiles);
+  // Run worm pattern detection on lifecycle hook scripts only
+  const wormResults = scanWormPatterns(pkgJson);
 
   // Run existing burst detection on registry metadata (skip reputable packages)
   const entries = parseTimeStamps(registryMeta);
