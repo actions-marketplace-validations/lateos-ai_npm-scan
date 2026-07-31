@@ -238,7 +238,21 @@ export function generateCSV(scans) {
 
 export function calculateRiskScore(findings, totalPackages = 1) {
   const weights = { low: 1, medium: 3, high: 7, critical: 10 };
-  const rawScore = findings.reduce((sum, f) => sum + (weights[f.severity] || 0), 0) / totalPackages;
+  let rawScore = findings.reduce((sum, f) => sum + (weights[f.severity] || 0), 0) / totalPackages;
+
+  // Apply provenance discount: if any finding has provenance_verified context, reduce score
+  const hasProvenance = findings.some((f) => f.context?.provenance_verified === true);
+  if (hasProvenance) {
+    const maxSlsaLevel = Math.max(
+      0,
+      ...findings
+        .filter((f) => f.context?.provenance_verified)
+        .map((f) => f.context?.slsa_level || 0)
+    );
+    const provenanceCredit = Math.min(0.25, maxSlsaLevel * 0.08);
+    rawScore = Math.max(0, rawScore - rawScore * provenanceCredit);
+  }
+
   return Math.min(rawScore, 10).toFixed(1);
 }
 

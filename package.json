@@ -47,6 +47,9 @@
     "**/yarn.lock": "sh -c 'node cli/cli.js scan-lockfile --fail-on high --yarn'",
     "**/pnpm-lock.yaml": "sh -c 'node cli/cli.js scan-lockfile --fail-on high --pnpm'"
   },
+  "overrides": {
+    "brace-expansion": "5.0.9"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
