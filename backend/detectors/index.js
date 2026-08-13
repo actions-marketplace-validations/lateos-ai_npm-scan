@@ -48,6 +48,7 @@ import { scan as tier1SplitDynamicPayloadScan } from './tier1-split-dynamic-payl
 import { scan as tier1LifecycleHookFollowthroughScan } from './tier1-lifecycle-hook-followthrough.js';
 import { scan as tier1VersionBackfillScan } from './tier1-version-backfill.js';
 import { scan as tier1CryptoPrimitiveTamperScan } from './tier1-crypto-primitive-tamper.js';
+import { scan as tier1AiSlopDropperScan } from './tier1-ai-slop-dropper.js';
 import { scanPromptInjection } from './lib/prompt-injection.js';
 
 function timeout(ms) {
@@ -401,6 +402,16 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
     ...(await runTier1(
       'tier1-crypto-primitive-tamper',
       tier1CryptoPrimitiveTamperScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-ai-slop-dropper',
+      tier1AiSlopDropperScan,
       pkgJson,
       files,
       registryMeta,
