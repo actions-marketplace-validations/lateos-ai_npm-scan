@@ -1,6 +1,5 @@
 import thresholds from './config/thresholds.js';
 import { parseGyp } from './lib/gyp-parser.js';
-import { verifyProvenance, applyProvenanceDiscount } from './lib/slsa-verifier.js';
 
 const cfg = thresholds['D14-BUILD-CONFIG-ABUSE'];
 const PATTERN_WEIGHTS = cfg.pattern_weights;
@@ -35,14 +34,15 @@ function extractLines(content, matchIndex) {
 
 export const name = 'tier1-build-config-abuse';
 
-export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
+export function scan(pkgJson, jsFiles, registryMeta, allFiles) {
   const pkgName = pkgJson?.name;
-  const provenance = await verifyProvenance(pkgName, pkgJson?.version, registryMeta);
 
-  // Known reputable packages skip D14 analysis (provenance verification handled separately)
+  // No provenance gating here: structural provenance grants no trust, so
+  // consulting it cost an attestation fetch per scan for a flag that is always
+  // false. Re-introduce once signature verification lands and can justify a
+  // discount. See lib/slsa-verifier.js trust-model note.
   if (
     pkgName &&
-    !provenance.verified &&
     cfg.known_reputable_packages?.some((r) => pkgName === r || pkgName.startsWith(r + '/'))
   ) {
     return [];
@@ -313,15 +313,6 @@ export async function scan(pkgJson, jsFiles, registryMeta, allFiles) {
       });
       aggregatedRisk += 99;
     }
-  }
-
-  // Apply provenance discount if verified
-  const hasMaliciousFindings = findings.length > 0;
-  if (provenance.verified && hasMaliciousFindings) {
-    const discounted = applyProvenanceDiscount(findings, provenance);
-    findings.length = 0;
-    findings.push(...discounted);
-    aggregatedRisk = Math.round(aggregatedRisk * (1 - Math.min(0.3, provenance.slsaLevel * 0.1)));
   }
 
   if (findings.length === 0) return [];
