@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-08-20
+
 ### Added
 - **D29-RUNTIME-EVASION** (`tier1-runtime-evasion.js`): AST detector for alternative-runtime evasion (Mini Shai-Hulud / Miasma, ChainDrop). Covers Bun, Deno and QuickJS process primitives (`Bun.$`, `Bun.spawn`/`spawnSync`, `Deno.Command`, `Deno.run`, `std.popen`), native FFI (`bun:ffi` `dlopen`, `Deno.dlopen`), outbound network (`Bun.connect`, `Deno.connect`), credential env and file access, and runtime *binary downloads* in lifecycle hooks — including hooks that indirect through a script file (`"preinstall": "node setup.mjs"`). Blocks at aggregate 80, warns at 55; a finding requires an anchor signal (download / exec / FFI / alt-runtime hook interpreter) so ordinary Bun tooling does not fire. **Closes the headline gap: a Deno-idiom credential stealer previously produced zero findings across the entire pipeline while the byte-identical Node version scored HIGH.**
 - **D30-WORKSPACE-PERSISTENCE** (`tier1-workspace-persistence.js`): Detects agent/IDE workspace persistence against `.claude/*`, `.cursor/rules/*`, `.vscode/*` and `.github/workflows/*`. Two directions: code that *writes* to a surface, and executable agent config *shipped* in the tarball (MCP `command`+`args`, `.vscode/tasks.json` `runOn: folderOpen`, workflows with `pull_request_target`/`workflow_run`). Write targets are constant-folded first, so `['.','claude'].join('')`, `path.join(process.cwd(),'.cursor','rules')`, `String.fromCharCode(46,99,…)` and single-assignment variable indirection all resolve to the same target as a literal path. Severity follows the surface band — an injected instruction is `high`, an injected server command is `critical`.
@@ -24,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Fixed
 - **SARIF conformance for every tier-1 detector** (`backend/report.js`): `generateSARIF` assumed the ATK-* finding shape (`title`/`description`/`evidence: string`). Tier-1 detectors emit `message`/`evidence: string[]`/`locations: [{file,line}]`, which serialized to `message: {}` — SARIF requires `message.text` — and put an *array* in `artifactLocation.uri`, which requires a string. Every D-series finding therefore produced a non-conformant result. Both shapes are now normalized: real file/line locations are used when present, evidence lines move to `properties.evidence`, and rule `name` no longer produces `ATK-D28-…` for non-ATK rules.
+- **js-yaml bumped to 4.3.1** to resolve GHSA-5p4m-2wfm-xmqj (quadratic CPU consumption in `!!omap` resolution, CVE-2026-59870 not backported to 3.x/4.x). Vulnerable range is 4.0.0–4.3.0 and the lockfile pinned 4.3.0. Both consumers — this package directly and eslint via `@eslint/eslintrc` — declare `^4.1.1`, so 4.3.1 satisfies each and still dedupes to a single copy; no major upgrade and no `overrides` entry needed. `package.json` was bumped alongside the lockfile so the floor survives a lockfile regeneration.
 - **`runTier1` timeout is now per-detector** (`backend/detectors/index.js`): the fixed 800 ms budget is unchanged for existing detectors, but network-bound detectors can declare their own. `runAll` also accepts an `options` argument for detector-specific configuration.
 
 ### Calibration
