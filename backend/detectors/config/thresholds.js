@@ -434,6 +434,80 @@ export default {
     notes:
       'D27: Detects static patterns enabling ultra-fast wormable self-propagation (credential scraping + auto-publish capability in install-time code).',
   },
+  'D28-AI-SLOP-DROPPER': {
+    enabled: true,
+    flag_threshold: 80,
+    warn_threshold: 55,
+    // Calibrated against the 50-package clean corpus with the reputable-package
+    // bail defeated. Literals >= 64 chars: 1050 clean literals exceed 4.5 bits
+    // (prettier's HTML attribute tables peak at 4.76), so the 4.5 the campaign
+    // write-up suggests is too low. Random base64 payloads score 5.0-5.4.
+    entropy_threshold: 5.0,
+    min_literal_length: 64,
+    min_high_entropy_literals: 3,
+    // A base64 *shape* test alone matches ordinary camelCase identifiers
+    // ('doExpressions', 'RegExpLiteral'). Of 12,708 base64-shaped literals in
+    // the clean corpus only 43 reach 4.5 bits, so the entropy gate is what
+    // separates encoded payloads from identifier arrays.
+    base64_min_length: 16,
+    base64_min_entropy: 4.5,
+    min_encoded_array_size: 8,
+    encoded_array_ratio: 0.8,
+    max_file_bytes: 512000,
+    // Only anchor_signals can justify a finding on their own. The supporting
+    // signals raise severity but never fire alone — Next.js couples
+    // process.platform with its dev-server network code, and prebuilt-binary
+    // installers pair platform/arch with an HTTP fetch by design.
+    anchor_signals: ['dns_payload_assembly', 'dns_txt_oob', 'encoded_string_array'],
+    pattern_weights: {
+      dns_payload_assembly: 95,
+      encoded_string_array: 60,
+      dns_txt_oob: 55,
+      string_array_decoder: 50,
+      fingerprint_network_coupling: 40,
+      readme_directed_entry: 30,
+      high_entropy_literals: 20,
+      paas_stage_resolution: 20,
+      env_fingerprint: 10,
+    },
+    // DNS TXT/ANY lookups are the documented job of these packages, so the
+    // dns_txt_oob signal is suppressed for them. dns_payload_assembly is never
+    // suppressed — decoding TXT records into executable code is not legitimate
+    // even for a mail utility.
+    network_utility_safelist: [
+      'dns2',
+      'native-dns',
+      'dns-packet',
+      'dns-socket',
+      'dig.js',
+      'nodemailer',
+      'mailauth',
+      'spf-check',
+      'spf-record-check',
+      'dkim-signer',
+      'mailparser',
+      'acme-client',
+      'greenlock',
+      'node-dig-dns',
+      'whois',
+      'is-online',
+    ],
+    network_utility_keywords: [
+      'dns',
+      'spf',
+      'dkim',
+      'dmarc',
+      'mx record',
+      'whois',
+      'resolver',
+      'nameserver',
+      'smtp',
+      'acme',
+      'letsencrypt',
+    ],
+    notes:
+      'D28: "AI Slop" / WEL1DROPPER 800-package campaign. README-directed require()/import entry (no lifecycle hooks) + hex/base64 string-array obfuscation + process.platform/arch fingerprinting coupled to out-of-band DNS TXT stage-2 resolution. Findings require an anchor signal; supporting signals only modulate severity. dns_txt_oob is suppressed for genuine DNS/mail utilities (network_utility_safelist/keywords); dns_payload_assembly never is. Verified 0 FPs across the 50-package clean corpus with the reputable-package bail defeated.',
+  },
   SERVERLESS_PAAS_WATCHLIST: {
     domains: ['*.run.app', '*.web.app', '*.vercel.app', '*.netlify.app', '*.workers.dev'],
     confidence_boost: 15,

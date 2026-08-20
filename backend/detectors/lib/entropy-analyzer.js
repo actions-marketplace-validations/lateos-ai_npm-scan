@@ -15,6 +15,27 @@ export function shannonEntropy(str) {
   return Math.round(entropy * 100) / 100;
 }
 
+/**
+ * Filter a list of string literals down to those long and random enough to be
+ * encoded payload rather than prose. Hex-only alphabets top out at 4.0 bits, so
+ * a threshold above that deliberately selects base64/randomized encodings.
+ */
+export function highEntropyStrings(literals, options = {}) {
+  const minLength = options.minLength ?? 40;
+  const threshold = options.threshold ?? 4.5;
+  const out = [];
+  for (const value of literals || []) {
+    if (typeof value !== 'string' || value.length < minLength) {
+      continue;
+    }
+    const entropy = shannonEntropy(value);
+    if (entropy > threshold) {
+      out.push({ value, entropy });
+    }
+  }
+  return out;
+}
+
 export function isMinified(code) {
   if (code.length < 100) {
     return false;

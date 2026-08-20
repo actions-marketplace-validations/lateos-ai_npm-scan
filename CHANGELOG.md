@@ -7,6 +7,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ## [Unreleased]
 
 ### Added
+- **D28-AI-SLOP-DROPPER** (`tier1-ai-slop-dropper.js`): New AST-based detector for the "AI Slop" / WEL1DROPPER 800-package campaign (Aug 2026). The campaign ships no lifecycle hooks — the README instructs the victim to `require()`/`import` the package explicitly — so hook-only detectors see a clean `package.json`. Detects the multi-stage downloader through nine signals: `dns_payload_assembly` (95), `encoded_string_array` (60), `dns_txt_oob` (55), `string_array_decoder` (50), `fingerprint_network_coupling` (40), `readme_directed_entry` (30), `high_entropy_literals` (20), `paas_stage_resolution` (20), `env_fingerprint` (10). Blocks at aggregate 80, warns at 55. A finding requires one of the three `anchor_signals` (`dns_payload_assembly`, `dns_txt_oob`, `encoded_string_array`); the rest modulate severity but never fire alone.
+- **Scope-aware fingerprint/network coupling**: `process.platform`/`process.arch`/`os.*` reads are correlated with network and DNS calls via acorn lexical scope chains. Module-scope fingerprints only couple when the network call's enclosing function actually references the fingerprint variable, so `const isWindows = process.platform === 'win32'` plus an unrelated `https.get` does not fire.
+- **DNS out-of-band profiling**: `dns.resolveTxt`/`resolveAny` and `dns.resolve(host, 'TXT'|'ANY')` are elevated to high outside safelisted network utilities (`network_utility_safelist` + `network_utility_keywords` in thresholds). TXT responses decoded into an execution sink (`dns_payload_assembly`) always block, safelist included.
+- **`highEntropyStrings()`** (`lib/entropy-analyzer.js`): Per-string-literal Shannon entropy filter applied to AST string literals in non-minified files. Complements the existing whole-file entropy check in `tier1-obfuscation-heuristics.js`.
+- **Test fixtures**: `test/fixtures/campaigns/ai-slop-wel1dropper/` (full dropper + three FP controls: a real DNS/SPF utility, an ordinary README `require()` example, a prebuilt-binary installer) and `fixtures/campaigns/d28-ai-slop-wel1dropper.jsonl` (7 packages with expected BLOCK/WARN/PASS verdicts).
+- **24 new tests**: `test/tier1-ai-slop-dropper.test.js` covering each signal, the FP controls, safelist behaviour, pipeline integration, and the campaign fixture verdicts.
+
+### Calibration
+- **D28 thresholds measured against the clean corpus with the reputable-package bail defeated** (the bail otherwise masks FPs on large packages). Initial calibration produced two critical FPs — prettier (arrays of camelCase identifiers matched a base64 *shape* test; HTML attribute tables reached 4.76 bits) and Next.js (dev-server code couples `process.platform` with network calls). Fixed by the anchor-signal gate, raising `entropy_threshold` to 5.0 at `min_literal_length` 64, and requiring base64-shaped literals to clear `base64_min_entropy` 4.5. Final: 0 FPs across all 50 clean packages.
+- **D28 performance**: prefilter markers were retargeted from single literals to encoded-literal *runs*, and ubiquitous decode calls (`Buffer.from`, `atob`, `fromCharCode`) dropped from the prefilter — files reaching acorn fell from 4.3% to 1.3% of corpus JS. Worst-case cost went from 5.08 s to 1.15 s against a ~30 s full-pipeline pass (3.8%, inside the 5% budget); with normal exemptions the A/B delta is within run-to-run noise.
 - **VINCE Integration** (`backend/vince.js`): New vulnerability coordination module for submitting findings to CISA's VINCE (Vulnerability Information and Coordination Environment). Features include formatted vulnerability reports, detailed review summaries, manual approval workflow, and secure API key handling. New CLI command `npm-scan submit-vince` with `--auto-approve` flag for controlled submissions.
 - **VINCE Submission Workflow**: Manual review-before-submission process ensuring findings are vetted via Claude before coordination with vendors. Generates detailed severity summaries and evidence snippets for informed approval decisions.
 - **VINCE Integration Documentation** (`VINCE_INTEGRATION.md`): Complete setup guide, usage workflow, security considerations, and troubleshooting.
@@ -23,8 +33,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - **9 new tests** for maintainer compromise extensions: `tier1-maintainer-compromise-extended.test.js` covering single version compromise, dist-tag manipulation, and combined detection scenarios.
 
 ### Changed
-- **Thresholds**: Added `TIER1-HOOK-FOLLOWTHROUGH`, `TIER1-VERSION-BACKFILL`, `TIER1-CRYPTO-TAMPER`, and `SERVERLESS_PAAS_WATCHLIST` entries to `config/thresholds.js`.
-- **Detector index**: Wired `tier1-lifecycle-hook-followthrough`, `tier1-version-backfill`, and `tier1-crypto-primitive-tamper` into `backend/detectors/index.js` via `runTier1`.
+- **Thresholds**: Added `TIER1-HOOK-FOLLOWTHROUGH`, `TIER1-VERSION-BACKFILL`, `TIER1-CRYPTO-TAMPER`, `D28-AI-SLOP-DROPPER`, and `SERVERLESS_PAAS_WATCHLIST` entries to `config/thresholds.js`.
+- **Detector index**: Wired `tier1-lifecycle-hook-followthrough`, `tier1-version-backfill`, `tier1-crypto-primitive-tamper`, and `tier1-ai-slop-dropper` into `backend/detectors/index.js` via `runTier1`.
 
 ## [1.0.0] — 2026-06-03
 
