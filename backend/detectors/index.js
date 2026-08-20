@@ -49,6 +49,9 @@ import { scan as tier1LifecycleHookFollowthroughScan } from './tier1-lifecycle-h
 import { scan as tier1VersionBackfillScan } from './tier1-version-backfill.js';
 import { scan as tier1CryptoPrimitiveTamperScan } from './tier1-crypto-primitive-tamper.js';
 import { scan as tier1AiSlopDropperScan } from './tier1-ai-slop-dropper.js';
+import { scan as tier1RuntimeEvasionScan } from './tier1-runtime-evasion.js';
+import { scan as tier1WorkspacePersistenceScan } from './tier1-workspace-persistence.js';
+import { scan as tier1TarballGitDesyncScan } from './tier1-tarball-git-desync.js';
 import { scanPromptInjection } from './lib/prompt-injection.js';
 
 function timeout(ms) {
@@ -57,11 +60,17 @@ function timeout(ms) {
   );
 }
 
-async function runTier1(name, scanFn, pkgJson, files, registryMeta, allFiles) {
+/**
+ * @param {object} [extra]
+ * @param {number} [extra.timeoutMs] override the default budget; the
+ *   tarball/git differential is network-bound and needs far more than 800ms.
+ * @param {object} [extra.detectorOptions] passed to the detector as a 5th arg.
+ */
+async function runTier1(name, scanFn, pkgJson, files, registryMeta, allFiles, extra) {
   try {
     const result = await Promise.race([
-      scanFn(pkgJson, files, registryMeta, allFiles),
-      timeout(800),
+      scanFn(pkgJson, files, registryMeta, allFiles, extra?.detectorOptions),
+      timeout(extra?.timeoutMs ?? 800),
     ]);
     const fileCount = allFiles && allFiles.length > 0 ? allFiles.length : files.length;
     if (fileCount >= 10 && result.length > 0) {
@@ -76,7 +85,19 @@ async function runTier1(name, scanFn, pkgJson, files, registryMeta, allFiles) {
   }
 }
 
-export async function runAll(pkgJson, files = [], registryMeta = null, allFiles = null) {
+/**
+ * @param {object} [options]
+ * @param {object} [options.gitDiff] options for D31 (`{ enabled, sourceProvider }`).
+ *   D31 is the only network-bound detector and stays off unless enabled here
+ *   or in thresholds.
+ */
+export async function runAll(
+  pkgJson,
+  files = [],
+  registryMeta = null,
+  allFiles = null,
+  options = {}
+) {
   const findings = [];
   findings.push(...(await atk001.scan(pkgJson, files)));
   findings.push(...(await atk002.scan(pkgJson, files)));
@@ -416,6 +437,38 @@ export async function runAll(pkgJson, files = [], registryMeta = null, allFiles 
       files,
       registryMeta,
       allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-runtime-evasion',
+      tier1RuntimeEvasionScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-workspace-persistence',
+      tier1WorkspacePersistenceScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  // Network-bound and opt-in: returns [] before any I/O unless enabled.
+  findings.push(
+    ...(await runTier1(
+      'tier1-tarball-git-desync',
+      tier1TarballGitDesyncScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files,
+      { timeoutMs: 30000, detectorOptions: options.gitDiff }
     ))
   );
   return findings.sort((a, b) => b.severity.localeCompare(a.severity));

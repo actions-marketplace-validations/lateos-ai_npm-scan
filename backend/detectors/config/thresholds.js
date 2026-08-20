@@ -64,7 +64,8 @@ export default {
   'TIER1-SLSA-ATTESTATION': {
     flag_threshold: 85,
     warn_threshold: 70,
-    notes: 'Placeholder; threshold TBD when API stabilizes',
+    notes:
+      'Structural provenance check only (no signature/chain/Rekor verification), so it never grants trust. Actionable outputs are digest_unbound and subject_mismatch (high); presence/absence of provenance is informational (low). Revisit thresholds when cryptographic verification lands.',
   },
   'TIER1-SELF-PROPAGATION': {
     flag_threshold: 75,
@@ -507,6 +508,83 @@ export default {
     ],
     notes:
       'D28: "AI Slop" / WEL1DROPPER 800-package campaign. README-directed require()/import entry (no lifecycle hooks) + hex/base64 string-array obfuscation + process.platform/arch fingerprinting coupled to out-of-band DNS TXT stage-2 resolution. Findings require an anchor signal; supporting signals only modulate severity. dns_txt_oob is suppressed for genuine DNS/mail utilities (network_utility_safelist/keywords); dns_payload_assembly never is. Verified 0 FPs across the 50-package clean corpus with the reputable-package bail defeated.',
+  },
+  'D29-RUNTIME-EVASION': {
+    enabled: true,
+    flag_threshold: 80,
+    warn_threshold: 55,
+    max_file_bytes: 512000,
+    // Only anchor signals can justify a finding. Everything else is something
+    // legitimate Bun/Deno tooling does routinely — Bun.file and Bun.serve are
+    // the ordinary way to write a Bun HTTP server, and a runtime fingerprint is
+    // how cross-runtime libraries pick a code path. Gating on execution,
+    // native linking and runtime downloads is what keeps this detector off
+    // honest Bun-based packages, and it also corrects D24's inverted coverage,
+    // where the four *benign* primitives were the four that fired.
+    anchor_signals: [
+      'runtime_download_install_time',
+      'runtime_download',
+      'alt_runtime_exec_entry',
+      'alt_runtime_exec',
+      'alt_runtime_ffi',
+      'alt_runtime_hook_interpreter',
+    ],
+    pattern_weights: {
+      runtime_download_install_time: 90,
+      alt_runtime_ffi: 80,
+      alt_runtime_exec_entry: 70,
+      runtime_download: 60,
+      alt_runtime_credential_access: 55,
+      alt_runtime_exec: 50,
+      // At or above warn_threshold on purpose: this is an anchor signal, and an
+      // anchor weighted below the threshold can never fire on its own.
+      alt_runtime_hook_interpreter: 55,
+      alt_runtime_network_entry: 35,
+      alt_runtime_network: 25,
+      alt_runtime_env_read: 20,
+      alt_runtime_listen: 15,
+      alt_runtime_fs_read: 15,
+      runtime_fingerprint: 10,
+      unparsable_source: 15,
+    },
+    notes:
+      'D29: alternative-runtime evasion (Bun/Deno/QuickJS). Closes the gap where a Deno-idiom credential stealer scored zero findings while the byte-identical Node version scored HIGH. Capability classification is delegated to lib/runtime-primitives.js so adding a runtime is a registry edit. Weights are pre-telemetry and calibrated against the gap-analysis PoCs only — retune once production scan data exists, particularly alt_runtime_network and alt_runtime_fs_read, which legitimate Bun tooling triggers.',
+  },
+  'D30-WORKSPACE-PERSISTENCE': {
+    enabled: true,
+    flag_threshold: 80,
+    warn_threshold: 45,
+    max_file_bytes: 512000,
+    // Severity follows the surface band, not the syntax. An injected
+    // instruction needs an agent to comply (high); an injected server command
+    // executes unconditionally on the next agent/editor start (critical).
+    band_weights: {
+      exec: 30,
+      agent_read: 15,
+      editor_config: 0,
+    },
+    pattern_weights: {
+      shipped_workflow_privileged_trigger: 70,
+      shipped_exec_config: 65,
+      dynamic_surface_write: 55,
+      static_surface_write: 40,
+    },
+    notes:
+      'D30: agent/IDE workspace persistence. Paths are constant-folded through lib/path-resolver.js before matching, so dynamic assembly (Array.join, path.join, String.fromCharCode, template literals) resolves to the same target as a literal. Replaces ATK-004 coverage, which required a literal "mkdir" token on the same line as the directory name. Packages that legitimately declare themselves MCP servers are suppressed unless the config launches a shell, passes an inline -c payload, or fetches from the network.',
+  },
+  'D31-TARBALL-GIT-DESYNC': {
+    // OFF BY DEFAULT. This is the only network-bound detector in the suite: it
+    // fetches the repository tree for the attested commit or release tag. The
+    // scan pipeline short-circuits before any I/O when disabled, so the
+    // default path carries no added cost. Enable per-scan via options, or flip
+    // this flag in a deployment that accepts the latency.
+    enabled: false,
+    // When enabled but the source cannot be fetched, emit an informational
+    // finding rather than silence — "not compared" must not read as "clean".
+    report_unverifiable: true,
+    timeout_ms: 8000,
+    notes:
+      'D31: tarball-to-git differential (ERR_TARBALL_GIT_DESYNC). Answers the question provenance cannot: npm attestations bind an attestation to a tarball, never a tarball to its source, so a build from a dirty working tree produces a genuine attestation with a perfectly matching digest. Provenance state is deliberately never consulted — a valid attestation over tampered output is the attack. Build-output directories are skipped rather than treated as clean, and the skip count is reported so callers can distinguish verified from unchecked.',
   },
   SERVERLESS_PAAS_WATCHLIST: {
     domains: ['*.run.app', '*.web.app', '*.vercel.app', '*.netlify.app', '*.workers.dev'],

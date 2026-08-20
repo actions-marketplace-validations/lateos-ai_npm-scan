@@ -169,8 +169,68 @@ function generateNistTable(scans) {
 </table>`;
 }
 
+/**
+ * Two finding shapes reach this function and both must produce valid SARIF:
+ *
+ *   ATK-*   { title, description, evidence: string }
+ *   tier-1  { message, evidence: string[], locations: [{file, line}] }
+ *
+ * The tier-1 shape previously emitted `message: {}` (SARIF requires
+ * `message.text`) and an *array* in `artifactLocation.uri` (requires a string),
+ * so every D-series finding produced a non-conformant result. Both shapes are
+ * normalized here rather than in the detectors, so the finding contract stays
+ * as it is everywhere else in the codebase.
+ */
+function sarifText(finding) {
+  return (
+    finding.description || finding.message || finding.title || finding.recommendation || finding.id
+  );
+}
+
+function sarifLocations(finding) {
+  // Preferred: real file/line locations from tier-1 detectors.
+  if (Array.isArray(finding.locations) && finding.locations.length > 0) {
+    const seen = new Set();
+    const locations = [];
+    for (const loc of finding.locations) {
+      const uri = typeof loc === 'string' ? loc : loc?.file;
+      if (!uri) {
+        continue;
+      }
+      const line = Number.isFinite(loc?.line) && loc.line > 0 ? loc.line : 1;
+      const key = `${uri}:${line}`;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      locations.push({
+        physicalLocation: {
+          artifactLocation: { uri: String(uri) },
+          region: { startLine: line, startColumn: 1 },
+        },
+      });
+    }
+    if (locations.length > 0) {
+      return locations;
+    }
+  }
+
+  // ATK-* shape: evidence is a plain string standing in for a location.
+  const uri =
+    typeof finding.evidence === 'string' && finding.evidence ? finding.evidence : 'unknown';
+  return [
+    {
+      physicalLocation: {
+        artifactLocation: { uri },
+        region: { startLine: 1, startColumn: 1 },
+      },
+    },
+  ];
+}
+
 export function generateSARIF(scan, format = 'json') {
   const findings = scan.findings || [];
+  const severityMap = { critical: 'error', high: 'error', medium: 'warning', low: 'note' };
   const runs = [
     {
       tool: {
@@ -178,30 +238,36 @@ export function generateSARIF(scan, format = 'json') {
           name: 'npm-scan',
           version: '0.9.7',
           informationUri: 'https://github.com/lateos-ai/npm-scan',
-          rules: Array.from(new Set(findings.map((f) => f.id))).map((id) => ({
-            id,
-            name: `ATK-${id.replace('ATK-', '')}`,
-            shortDescription: { text: findings.find((f) => f.id === id)?.title || id },
-            fullDescription: { text: findings.find((f) => f.id === id)?.description || '' },
-            defaultConfiguration: { enabled: true },
-          })),
+          rules: Array.from(new Set(findings.map((f) => f.id))).map((id) => {
+            const example = findings.find((f) => f.id === id) || {};
+            return {
+              id,
+              name: id,
+              shortDescription: { text: example.title || example.detector || id },
+              fullDescription: { text: sarifText(example) || id },
+              defaultConfiguration: { enabled: true },
+            };
+          }),
         },
       },
       results: findings.map((f) => {
-        const severityMap = { critical: 'error', high: 'error', medium: 'warning', low: 'note' };
-        return {
+        const result = {
           ruleId: f.id,
           level: severityMap[f.severity] || 'note',
-          message: { text: f.description || f.title },
-          locations: [
-            {
-              physicalLocation: {
-                artifactLocation: { uri: f.evidence || 'unknown' },
-                region: { startLine: 1, startColumn: 1 },
-              },
-            },
-          ],
+          message: { text: String(sarifText(f) ?? f.id) },
+          locations: sarifLocations(f),
         };
+        // Evidence lines are diagnostic detail, not a location.
+        if (Array.isArray(f.evidence) && f.evidence.length > 0) {
+          result.properties = { evidence: f.evidence.map(String) };
+          if (f.confidenceScore !== undefined) {
+            result.properties.confidenceScore = f.confidenceScore;
+          }
+          if (f.recommendation) {
+            result.properties.recommendation = f.recommendation;
+          }
+        }
+        return result;
       }),
     },
   ];
