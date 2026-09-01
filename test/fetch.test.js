@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'assert/strict';
 import { cleanup } from '../backend/fetch.js';
-import { mkdirSync, writeFileSync, rmSync, existsSync } from 'fs';
-import { join } from 'path';
+import { mkdirSync, writeFileSync, rmSync as _rmSync, existsSync } from 'fs';
+import { join as _join } from 'path';
 
 test('fetch: cleanup removes directory', async () => {
   mkdirSync('/tmp/npm-scan-test-cleanup', { recursive: true });

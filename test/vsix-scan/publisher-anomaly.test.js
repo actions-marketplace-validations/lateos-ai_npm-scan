@@ -1,4 +1,4 @@
-import { test, mock } from 'node:test';
+import { test, mock as _mock } from 'node:test';
 import assert from 'assert/strict';
 import { checkPublisherAnomaly } from '../../backend/vsix-scan/detectors/publisher-anomaly.js';
 
@@ -9,13 +9,20 @@ function makeExtMeta(installCount = 0) {
 }
 
 function makeProfile(ageDays) {
-  if (ageDays === null) return {};
+  if (ageDays === null) {
+    return {};
+  }
   const created = new Date(Date.now() - ageDays * 24 * 60 * 60 * 1000).toISOString();
   return { dateCreated: created };
 }
 
 function makeVersions(entries) {
-  return entries.map(([v, t, pub]) => ({ version: v, publishedAt: t, publishedBy: pub, flags: [] }));
+  return entries.map(([v, t, pub]) => ({
+    version: v,
+    publishedAt: t,
+    publishedBy: pub,
+    flags: [],
+  }));
 }
 
 test('VSIX publisher: cross-namespace burst fires', async () => {
@@ -32,12 +39,10 @@ test('VSIX publisher: cross-namespace burst fires', async () => {
 test('VSIX publisher: new account on high-install ext fires', async () => {
   const extMeta = makeExtMeta(150000);
   const profile = makeProfile(15);
-  const versions = makeVersions([
-    ['1.0.0', '2026-05-01T00:00:00Z', 'nrwl'],
-  ]);
+  const versions = makeVersions([['1.0.0', '2026-05-01T00:00:00Z', 'nrwl']]);
   const result = await checkPublisherAnomaly(extMeta, profile, versions);
   assert.ok(result.triggered);
-  assert.ok(result.signals.some(s => s.type === 'NEW_ACCOUNT_HIGH_INSTALL'));
+  assert.ok(result.signals.some((s) => s.type === 'NEW_ACCOUNT_HIGH_INSTALL'));
 });
 
 test('VSIX publisher: 15-min add+publish window fires', async () => {
@@ -50,7 +55,7 @@ test('VSIX publisher: 15-min add+publish window fires', async () => {
   ]);
   const result = await checkPublisherAnomaly(extMeta, profile, versions);
   assert.ok(result.triggered);
-  assert.ok(result.signals.some(s => s.type === 'ADD_PUBLISH_RAPID'));
+  assert.ok(result.signals.some((s) => s.type === 'ADD_PUBLISH_RAPID'));
 });
 
 test('VSIX publisher: different publisher account fires', async () => {
@@ -62,7 +67,7 @@ test('VSIX publisher: different publisher account fires', async () => {
   ]);
   const result = await checkPublisherAnomaly(extMeta, profile, versions);
   assert.ok(result.triggered);
-  assert.ok(result.signals.some(s => s.type === 'PUBLISHER_ACCOUNT_SUBSTITUTION'));
+  assert.ok(result.signals.some((s) => s.type === 'PUBLISHER_ACCOUNT_SUBSTITUTION'));
 });
 
 test('VSIX publisher: same publisher history = silent', async () => {

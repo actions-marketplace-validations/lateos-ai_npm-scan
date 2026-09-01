@@ -1,0 +1,74 @@
+{
+  "packages": [
+    {
+      "name": "webpack",
+      "reason": "Bundler; naturally high entropy in bundled code",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "terser",
+      "reason": "Minifier library; intentional obfuscation",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "uglify-js",
+      "reason": "Minifier library; intentional obfuscation",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "browserify",
+      "reason": "Bundler; bundled JS has high entropy",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "rollup",
+      "reason": "Bundler; bundled JS has high entropy",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "esbuild",
+      "reason": "Bundler/compiler; bundled JS has high entropy",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "@babel/core",
+      "reason": "Transpiler; generated code has high pattern frequency",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "typescript",
+      "reason": "Compiler; generated JS has high entropy",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "lodash",
+      "reason": "Utility library; high pattern frequency from common JS idioms",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "underscore",
+      "reason": "Utility library; high pattern frequency",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "moment",
+      "reason": "Date library; legitimate build artifacts with binary-like data",
+      "detectors": ["TIER1-BINARY-EMBED"]
+    },
+    {
+      "name": "crypto-js",
+      "reason": "Cryptography library; legitimate use of hex/unicode escapes and bitwise ops",
+      "detectors": ["TIER1-OBFUSCATION-HEURISTICS"]
+    },
+    {
+      "name": "preact",
+      "reason": "React alternative; shares naming similarity with react, triggering TYPOSQUAT_VPMDHAJ",
+      "detectors": ["TYPOSQUAT_VPMDHAJ"]
+    },
+    {
+      "name": "@commitlint/read",
+      "reason": "Legitimate commitlint scoped sub-package; edit-distance FP",
+      "detectors": ["TIER1-TYPOSQUAT"]
+    }
+  ]
+}

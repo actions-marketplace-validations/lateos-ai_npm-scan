@@ -5,7 +5,19 @@ const HMAC_KEY = process.env.NPM_SCAN_LICENSE_SECRET || 'npm-scan-default-dev-ke
 const FEATURE_TIERS = {
   community: [],
   premium: ['sandbox', 'siem', 'cra', 'nist-pdf', 'rest-api', 'webhooks', 'helm'],
-  enterprise: ['sandbox', 'siem', 'cra', 'nist-pdf', 'rest-api', 'webhooks', 'helm', 'sso', 'audit-logs', 'pg-backend', 'kubernetes'],
+  enterprise: [
+    'sandbox',
+    'siem',
+    'cra',
+    'nist-pdf',
+    'rest-api',
+    'webhooks',
+    'helm',
+    'sso',
+    'audit-logs',
+    'pg-backend',
+    'kubernetes',
+  ],
 };
 
 const ALL_FEATURES = Object.values(FEATURE_TIERS).flat();
@@ -70,7 +82,9 @@ export function validateLicense(key, feature = '*') {
   }
 
   if (feature !== '*' && !allowed.includes(feature) && !ALLOWED_UNLOCKED.includes(feature)) {
-    throw new Error(`Feature "${feature}" requires ${edition === 'community' ? 'premium' : 'enterprise'} license`);
+    throw new Error(
+      `Feature "${feature}" requires ${edition === 'community' ? 'premium' : 'enterprise'} license`
+    );
   }
 
   return { edition, features: allowed, ...payload };
@@ -80,7 +94,9 @@ export function isFeatureEnabled(feature, licenseKey = process.env.NPM_SCAN_LICE
   try {
     if (!licenseKey) {
       const unlocked = feature === 'scan' || ALLOWED_UNLOCKED.includes(feature);
-      if (unlocked) return true;
+      if (unlocked) {
+        return true;
+      }
     }
     validateLicense(licenseKey, feature);
     return true;

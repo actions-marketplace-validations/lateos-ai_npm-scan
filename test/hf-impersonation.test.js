@@ -1,9 +1,12 @@
-import { test, mock } from 'node:test';
+import { test, mock as _mock } from 'node:test';
 import assert from 'assert/strict';
 import { scan, clearCache } from '../backend/detectors/hf-impersonation/index.js';
 import { KNOWN_HF_ORGS } from '../backend/detectors/hf-impersonation/known-orgs.js';
 import { jaroWinkler } from '../backend/detectors/hf-impersonation/jaro-winkler.js';
-import { simhash, similarity as simhashSimilarity } from '../backend/detectors/hf-impersonation/simhash.js';
+import {
+  simhash,
+  similarity as simhashSimilarity,
+} from '../backend/detectors/hf-impersonation/simhash.js';
 
 function mockResponse(body, status = 200, headers = {}) {
   return new Response(typeof body === 'string' ? body : JSON.stringify(body), {
@@ -82,13 +85,29 @@ test('HF: 0penai/gpt2 triggers HF_ORG_SPOOF HIGH with similarity', async (t) => 
   const spoofedId = '0penai/gpt2';
   const [spoofedOrg] = spoofedId.split('/');
 
-  t.mock.method(globalThis, 'fetch', makeMockFetch([
-    [`/api/models/${spoofedId}`, () => mockResponse(buildModelResponse({ id: spoofedId, downloads: 50 }))],
-    ['/api/models/openai/gpt2', () => mockResponse(buildModelResponse({ id: 'openai/gpt2', downloads: 500000 }))],
-    [`/api/users/${spoofedOrg}`, () => mockResponse(buildUserResponse({ user: spoofedOrg, dateCreated: '2023-06-01T00:00:00.000Z' }))],
-    [`${spoofedId}/resolve/main/README.md`, () => mockResponse('spoofed readme content', 200)],
-    ['openai/gpt2/resolve/main/README.md', () => mockResponse('canonical readme content', 200)],
-  ]));
+  t.mock.method(
+    globalThis,
+    'fetch',
+    makeMockFetch([
+      [
+        `/api/models/${spoofedId}`,
+        () => mockResponse(buildModelResponse({ id: spoofedId, downloads: 50 })),
+      ],
+      [
+        '/api/models/openai/gpt2',
+        () => mockResponse(buildModelResponse({ id: 'openai/gpt2', downloads: 500000 })),
+      ],
+      [
+        `/api/users/${spoofedOrg}`,
+        () =>
+          mockResponse(
+            buildUserResponse({ user: spoofedOrg, dateCreated: '2023-06-01T00:00:00.000Z' })
+          ),
+      ],
+      [`${spoofedId}/resolve/main/README.md`, () => mockResponse('spoofed readme content', 200)],
+      ['openai/gpt2/resolve/main/README.md', () => mockResponse('canonical readme content', 200)],
+    ])
+  );
 
   const pkgJson = {
     name: 'test-pkg',
@@ -98,7 +117,7 @@ test('HF: 0penai/gpt2 triggers HF_ORG_SPOOF HIGH with similarity', async (t) => 
   const findings = await scan(pkgJson, []);
   assert.ok(findings.length >= 1);
 
-  const spoof = findings.find(f => f.id === 'HF_ORG_SPOOF');
+  const spoof = findings.find((f) => f.id === 'HF_ORG_SPOOF');
   assert.ok(spoof, 'Expected HF_ORG_SPOOF finding');
   assert.equal(spoof.severity, 'high');
   assert.equal(spoof.referencedRepo, spoofedId);
@@ -115,19 +134,37 @@ test('HF: rnicrosoft/privacy-filter triggers spoof + README clone', async (t) =>
   const [spoofedOrg] = spoofedId.split('/');
   const [canonicalOrg] = canonicalId.split('/');
 
-  const readmeText = Array(50).fill(
-    'This model provides privacy-preserving filtering for AI applications. '
-    + 'It is designed to remove sensitive information from text while maintaining '
-    + 'semantic meaning. Built on transformer architecture with 350M parameters.'
-  ).join(' ');
+  const readmeText = Array(50)
+    .fill(
+      'This model provides privacy-preserving filtering for AI applications. ' +
+        'It is designed to remove sensitive information from text while maintaining ' +
+        'semantic meaning. Built on transformer architecture with 350M parameters.'
+    )
+    .join(' ');
 
-  t.mock.method(globalThis, 'fetch', makeMockFetch([
-    [`/api/models/${spoofedId}`, () => mockResponse(buildModelResponse({ id: spoofedId, downloads: 10 }))],
-    [`/api/models/${canonicalId}`, () => mockResponse(buildModelResponse({ id: canonicalId, downloads: 25000 }))],
-    [`/api/users/${spoofedOrg}`, () => mockResponse(buildUserResponse({ user: spoofedOrg, dateCreated: '2023-06-01T00:00:00.000Z' }))],
-    [`${spoofedId}/resolve/main/README.md`, () => mockResponse(readmeText, 200)],
-    [`${canonicalId}/resolve/main/README.md`, () => mockResponse(readmeText, 200)],
-  ]));
+  t.mock.method(
+    globalThis,
+    'fetch',
+    makeMockFetch([
+      [
+        `/api/models/${spoofedId}`,
+        () => mockResponse(buildModelResponse({ id: spoofedId, downloads: 10 })),
+      ],
+      [
+        `/api/models/${canonicalId}`,
+        () => mockResponse(buildModelResponse({ id: canonicalId, downloads: 25000 })),
+      ],
+      [
+        `/api/users/${spoofedOrg}`,
+        () =>
+          mockResponse(
+            buildUserResponse({ user: spoofedOrg, dateCreated: '2023-06-01T00:00:00.000Z' })
+          ),
+      ],
+      [`${spoofedId}/resolve/main/README.md`, () => mockResponse(readmeText, 200)],
+      [`${canonicalId}/resolve/main/README.md`, () => mockResponse(readmeText, 200)],
+    ])
+  );
 
   const pkgJson = {
     name: 'test-pkg',
@@ -137,11 +174,11 @@ test('HF: rnicrosoft/privacy-filter triggers spoof + README clone', async (t) =>
   const findings = await scan(pkgJson, []);
   assert.ok(findings.length >= 2);
 
-  const spoof = findings.find(f => f.id === 'HF_ORG_SPOOF');
+  const spoof = findings.find((f) => f.id === 'HF_ORG_SPOOF');
   assert.ok(spoof, 'Expected HF_ORG_SPOOF');
   assert.equal(spoof.canonicalOrg, canonicalOrg);
 
-  const clone = findings.find(f => f.id === 'HF_README_CLONE');
+  const clone = findings.find((f) => f.id === 'HF_README_CLONE');
   assert.ok(clone, 'Expected HF_README_CLONE');
   assert.equal(clone.severity, 'high');
   assert.ok(clone.similarityScore >= 0.9);
@@ -155,24 +192,43 @@ test('HF: m1crosoft/suspicious-repo with .exe sibling triggers artifact mismatch
   const spoofedId = 'm1crosoft/suspicious-repo';
   const canonicalId = 'microsoft/suspicious-repo';
   const [spoofedOrg] = spoofedId.split('/');
-  const [canonicalOrg] = canonicalId.split('/');
+  const [_canonicalOrg] = canonicalId.split('/');
 
-  t.mock.method(globalThis, 'fetch', makeMockFetch([
-    [`/api/models/${spoofedId}`, () => mockResponse(buildModelResponse({
-      id: spoofedId,
-      downloads: 5,
-      cardData: { library_name: 'transformers' },
-      siblings: [
-        { rfilename: 'pytorch_model.bin' },
-        { rfilename: 'config.json' },
-        { rfilename: 'install.exe' },
+  t.mock.method(
+    globalThis,
+    'fetch',
+    makeMockFetch([
+      [
+        `/api/models/${spoofedId}`,
+        () =>
+          mockResponse(
+            buildModelResponse({
+              id: spoofedId,
+              downloads: 5,
+              cardData: { library_name: 'transformers' },
+              siblings: [
+                { rfilename: 'pytorch_model.bin' },
+                { rfilename: 'config.json' },
+                { rfilename: 'install.exe' },
+              ],
+            })
+          ),
       ],
-    }))],
-    [`/api/models/${canonicalId}`, () => mockResponse(buildModelResponse({ id: canonicalId, downloads: 100000 }))],
-    [`/api/users/${spoofedOrg}`, () => mockResponse(buildUserResponse({ user: spoofedOrg, dateCreated: '2023-06-01T00:00:00.000Z' }))],
-    [`${spoofedId}/resolve/main/README.md`, () => mockResponse('spoofed readme', 200)],
-    [`${canonicalId}/resolve/main/README.md`, () => mockResponse('canonical readme', 200)],
-  ]));
+      [
+        `/api/models/${canonicalId}`,
+        () => mockResponse(buildModelResponse({ id: canonicalId, downloads: 100000 })),
+      ],
+      [
+        `/api/users/${spoofedOrg}`,
+        () =>
+          mockResponse(
+            buildUserResponse({ user: spoofedOrg, dateCreated: '2023-06-01T00:00:00.000Z' })
+          ),
+      ],
+      [`${spoofedId}/resolve/main/README.md`, () => mockResponse('spoofed readme', 200)],
+      [`${canonicalId}/resolve/main/README.md`, () => mockResponse('canonical readme', 200)],
+    ])
+  );
 
   const pkgJson = {
     name: 'test-pkg',
@@ -182,10 +238,10 @@ test('HF: m1crosoft/suspicious-repo with .exe sibling triggers artifact mismatch
   const findings = await scan(pkgJson, []);
   assert.ok(findings.length >= 2);
 
-  const spoof = findings.find(f => f.id === 'HF_ORG_SPOOF');
+  const spoof = findings.find((f) => f.id === 'HF_ORG_SPOOF');
   assert.ok(spoof);
 
-  const artifact = findings.find(f => f.id === 'HF_ARTIFACT_MISMATCH');
+  const artifact = findings.find((f) => f.id === 'HF_ARTIFACT_MISMATCH');
   assert.ok(artifact, 'Expected HF_ARTIFACT_MISMATCH');
   assert.equal(artifact.severity, 'critical');
   assert.equal(artifact.artifactConflict.declaredType, 'transformers');
@@ -199,24 +255,43 @@ test('HF: m1crosoft/suspicious-repo with postinstall escalates all findings', as
   const spoofedId = 'm1crosoft/suspicious-repo';
   const canonicalId = 'microsoft/suspicious-repo';
   const [spoofedOrg] = spoofedId.split('/');
-  const [canonicalOrg] = canonicalId.split('/');
+  const [_canonicalOrg] = canonicalId.split('/');
 
-  t.mock.method(globalThis, 'fetch', makeMockFetch([
-    [`/api/models/${spoofedId}`, () => mockResponse(buildModelResponse({
-      id: spoofedId,
-      downloads: 5,
-      cardData: { library_name: 'transformers' },
-      siblings: [
-        { rfilename: 'pytorch_model.bin' },
-        { rfilename: 'config.json' },
-        { rfilename: 'install.exe' },
+  t.mock.method(
+    globalThis,
+    'fetch',
+    makeMockFetch([
+      [
+        `/api/models/${spoofedId}`,
+        () =>
+          mockResponse(
+            buildModelResponse({
+              id: spoofedId,
+              downloads: 5,
+              cardData: { library_name: 'transformers' },
+              siblings: [
+                { rfilename: 'pytorch_model.bin' },
+                { rfilename: 'config.json' },
+                { rfilename: 'install.exe' },
+              ],
+            })
+          ),
       ],
-    }))],
-    [`/api/models/${canonicalId}`, () => mockResponse(buildModelResponse({ id: canonicalId, downloads: 100000 }))],
-    [`/api/users/${spoofedOrg}`, () => mockResponse(buildUserResponse({ user: spoofedOrg, dateCreated: '2023-06-01T00:00:00.000Z' }))],
-    [`${spoofedId}/resolve/main/README.md`, () => mockResponse('spoofed readme', 200)],
-    [`${canonicalId}/resolve/main/README.md`, () => mockResponse('canonical readme', 200)],
-  ]));
+      [
+        `/api/models/${canonicalId}`,
+        () => mockResponse(buildModelResponse({ id: canonicalId, downloads: 100000 })),
+      ],
+      [
+        `/api/users/${spoofedOrg}`,
+        () =>
+          mockResponse(
+            buildUserResponse({ user: spoofedOrg, dateCreated: '2023-06-01T00:00:00.000Z' })
+          ),
+      ],
+      [`${spoofedId}/resolve/main/README.md`, () => mockResponse('spoofed readme', 200)],
+      [`${canonicalId}/resolve/main/README.md`, () => mockResponse('canonical readme', 200)],
+    ])
+  );
 
   const pkgJson = {
     name: 'test-pkg',
@@ -230,7 +305,10 @@ test('HF: m1crosoft/suspicious-repo with postinstall escalates all findings', as
 
   for (const f of findings) {
     assert.equal(f.severity, 'critical', `Expected critical severity for ${f.id}`);
-    assert.ok(f.tags.includes('POSTINSTALL_ESCALATED'), `Expected POSTINSTALL_ESCALATED tag on ${f.id}`);
+    assert.ok(
+      f.tags.includes('POSTINSTALL_ESCALATED'),
+      `Expected POSTINSTALL_ESCALATED tag on ${f.id}`
+    );
   }
 });
 
@@ -241,17 +319,30 @@ test('HF: new org with dateCreated < 30 days gets NEW_ORG tag', async (t) => {
   const spoofedId = 'm1crosoft/new-repo';
   const canonicalId = 'microsoft/new-repo';
   const [spoofedOrg] = spoofedId.split('/');
-  const [canonicalOrg] = canonicalId.split('/');
+  const [_canonicalOrg] = canonicalId.split('/');
 
   const recentDate = new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString();
 
-  t.mock.method(globalThis, 'fetch', makeMockFetch([
-    [`/api/models/${spoofedId}`, () => mockResponse(buildModelResponse({ id: spoofedId, downloads: 2 }))],
-    [`/api/models/${canonicalId}`, () => mockResponse(buildModelResponse({ id: canonicalId, downloads: 50000 }))],
-    [`/api/users/${spoofedOrg}`, () => mockResponse(buildUserResponse({ user: spoofedOrg, dateCreated: recentDate }))],
-    [`${spoofedId}/resolve/main/README.md`, () => mockResponse('readme', 200)],
-    [`${canonicalId}/resolve/main/README.md`, () => mockResponse('readme', 200)],
-  ]));
+  t.mock.method(
+    globalThis,
+    'fetch',
+    makeMockFetch([
+      [
+        `/api/models/${spoofedId}`,
+        () => mockResponse(buildModelResponse({ id: spoofedId, downloads: 2 })),
+      ],
+      [
+        `/api/models/${canonicalId}`,
+        () => mockResponse(buildModelResponse({ id: canonicalId, downloads: 50000 })),
+      ],
+      [
+        `/api/users/${spoofedOrg}`,
+        () => mockResponse(buildUserResponse({ user: spoofedOrg, dateCreated: recentDate })),
+      ],
+      [`${spoofedId}/resolve/main/README.md`, () => mockResponse('readme', 200)],
+      [`${canonicalId}/resolve/main/README.md`, () => mockResponse('readme', 200)],
+    ])
+  );
 
   const pkgJson = {
     name: 'test-pkg',
@@ -297,13 +388,29 @@ test('HF: simhash very similar texts have high similarity', () => {
 test('HF: from_pretrained with spoofed org is detected', async (t) => {
   const spoofedId = 'm1crosoft/fancy-model';
 
-  t.mock.method(globalThis, 'fetch', makeMockFetch([
-    [`/api/models/${spoofedId}`, () => mockResponse(buildModelResponse({ id: spoofedId, downloads: 3 }))],
-    ['/api/models/microsoft/fancy-model', () => mockResponse(buildModelResponse({ id: 'microsoft/fancy-model', downloads: 80000 }))],
-    ['/api/users/m1crosoft', () => mockResponse(buildUserResponse({ user: 'm1crosoft', dateCreated: '2023-06-01T00:00:00.000Z' }))],
-    [`${spoofedId}/resolve/main/README.md`, () => mockResponse('readme', 200)],
-    ['microsoft/fancy-model/resolve/main/README.md', () => mockResponse('readme', 200)],
-  ]));
+  t.mock.method(
+    globalThis,
+    'fetch',
+    makeMockFetch([
+      [
+        `/api/models/${spoofedId}`,
+        () => mockResponse(buildModelResponse({ id: spoofedId, downloads: 3 })),
+      ],
+      [
+        '/api/models/microsoft/fancy-model',
+        () => mockResponse(buildModelResponse({ id: 'microsoft/fancy-model', downloads: 80000 })),
+      ],
+      [
+        '/api/users/m1crosoft',
+        () =>
+          mockResponse(
+            buildUserResponse({ user: 'm1crosoft', dateCreated: '2023-06-01T00:00:00.000Z' })
+          ),
+      ],
+      [`${spoofedId}/resolve/main/README.md`, () => mockResponse('readme', 200)],
+      ['microsoft/fancy-model/resolve/main/README.md', () => mockResponse('readme', 200)],
+    ])
+  );
 
   const pkgJson = {
     name: 'test-pkg',
@@ -311,7 +418,7 @@ test('HF: from_pretrained with spoofed org is detected', async (t) => {
   };
 
   const findings = await scan(pkgJson, []);
-  const spoof = findings.find(f => f.id === 'HF_ORG_SPOOF');
+  const spoof = findings.find((f) => f.id === 'HF_ORG_SPOOF');
   assert.ok(spoof);
   assert.equal(spoof.referencedRepo, 'm1crosoft/fancy-model');
 });

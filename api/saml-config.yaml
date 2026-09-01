@@ -4,9 +4,9 @@
 
 # --- SP (Service Provider) Identity ---
 sp:
-  entity_id: "https://npm-scan.example.com/saml/metadata"
-  acs_url: "https://npm-scan.example.com/api/v1/sso/acs"
-  slo_url: "https://npm-scan.example.com/api/v1/sso/slo"
+  entity_id: 'https://npm-scan.example.com/saml/metadata'
+  acs_url: 'https://npm-scan.example.com/api/v1/sso/acs'
+  slo_url: 'https://npm-scan.example.com/api/v1/sso/slo'
 
   # Generate: openssl req -x509 -newkey rsa:2048 -keyout sp.key -out sp.crt -days 3650 -nodes
   # private_key: |
@@ -21,7 +21,7 @@ sp:
 # --- IdP (Identity Provider) ---
 idp:
   # Option A: Metadata URL (preferred — auto-discovers all endpoints)
-  metadata_url: "https://idp.example.com/metadata"
+  metadata_url: 'https://idp.example.com/metadata'
 
   # Option B: Manual configuration
   # entity_id: "https://idp.example.com"
@@ -37,21 +37,21 @@ security:
   want_assertions_signed: true
   want_response_signed: true
   want_assertions_encrypted: false
-  signature_algorithm: "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"
-  digest_algorithm: "http://www.w3.org/2001/04/xmlenc#sha256"
+  signature_algorithm: 'http://www.w3.org/2001/04/xmldsig-more#rsa-sha256'
+  digest_algorithm: 'http://www.w3.org/2001/04/xmlenc#sha256'
 
 # --- User Provisioning ---
 provisioning:
   auto_provision: true
   default_role: viewer
   admin_domains:
-    - "example.com"
+    - 'example.com'
   attribute_mapping:
-    email: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-    name: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/displayname"
-    firstName: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname"
-    lastName: "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname"
-    groups: "http://schemas.xmlsoap.org/claims/Group"
+    email: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'
+    name: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/displayname'
+    firstName: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'
+    lastName: 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'
+    groups: 'http://schemas.xmlsoap.org/claims/Group'
 
 # --- Session ---
 session:

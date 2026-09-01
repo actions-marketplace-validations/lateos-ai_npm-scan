@@ -11,7 +11,9 @@ const __dirname = dirname(__filename);
 const IOC_PATH = join(__dirname, '..', 'vsix-iocs.json');
 
 function loadIOCData() {
-  if (iocsLoaded) return iocsData;
+  if (iocsLoaded) {
+    return iocsData;
+  }
   iocsLoaded = true;
   try {
     iocsData = JSON.parse(readFileSync(IOC_PATH, 'utf8'));
@@ -32,9 +34,17 @@ export function reloadIOCData() {
   return loadIOCData();
 }
 
-export async function checkKnownIOC(extensionId, version, publisherAccount, orphanCommits = [], versionHistory = []) {
+export async function checkKnownIOC(
+  extensionId,
+  version,
+  publisherAccount,
+  orphanCommits = [],
+  versionHistory = []
+) {
   const data = loadIOCData();
-  if (!data) return { triggered: false, matches: [] };
+  if (!data) {
+    return { triggered: false, matches: [] };
+  }
 
   const matches = [];
   const iocs = data.iocs || [];
@@ -43,7 +53,11 @@ export async function checkKnownIOC(extensionId, version, publisherAccount, orph
     switch (ioc.type) {
       case 'extensionId': {
         if (ioc.value === extensionId) {
-          if (!ioc.maliciousVersions || ioc.maliciousVersions.length === 0 || ioc.maliciousVersions.includes(version)) {
+          if (
+            !ioc.maliciousVersions ||
+            ioc.maliciousVersions.length === 0 ||
+            ioc.maliciousVersions.includes(version)
+          ) {
             matches.push({
               type: 'extensionId',
               value: extensionId,
@@ -60,9 +74,10 @@ export async function checkKnownIOC(extensionId, version, publisherAccount, orph
 
       case 'publisherAccount': {
         if (ioc.value === publisherAccount) {
-          const pubTime = versionHistory.length > 0
-            ? new Date(versionHistory[versionHistory.length - 1]?.publishedAt).getTime()
-            : null;
+          const pubTime =
+            versionHistory.length > 0
+              ? new Date(versionHistory[versionHistory.length - 1]?.publishedAt).getTime()
+              : null;
 
           const windowStart = new Date(ioc.compromiseWindowStart).getTime();
           const windowEnd = ioc.compromiseWindowEnd
@@ -84,7 +99,7 @@ export async function checkKnownIOC(extensionId, version, publisherAccount, orph
 
       case 'orphanCommitHash': {
         for (const commit of orphanCommits) {
-          if (ioc.value === commit || (ioc.value === 'PLACEHOLDER_UPDATE_FROM_THREAT_INTEL')) {
+          if (ioc.value === commit || ioc.value === 'PLACEHOLDER_UPDATE_FROM_THREAT_INTEL') {
             continue;
           }
           if (ioc.value && commit && ioc.value.toLowerCase() === commit.toLowerCase()) {

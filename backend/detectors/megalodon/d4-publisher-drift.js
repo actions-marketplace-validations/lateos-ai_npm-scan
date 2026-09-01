@@ -7,8 +7,12 @@ export async function scan(registryMeta, velocityResult) {
 
   const filteredTimes = {};
   for (const [v, t] of Object.entries(timeMap)) {
-    if (v === 'created' || v === 'modified') continue;
-    if (t) filteredTimes[v] = t;
+    if (v === 'created' || v === 'modified') {
+      continue;
+    }
+    if (t) {
+      filteredTimes[v] = t;
+    }
   }
 
   const sortedVersions = Object.entries(filteredTimes)
@@ -16,7 +20,9 @@ export async function scan(registryMeta, velocityResult) {
     .sort((a, b) => new Date(a[1]).getTime() - new Date(b[1]).getTime())
     .map(([v]) => v);
 
-  if (sortedVersions.length === 0) return [];
+  if (sortedVersions.length === 0) {
+    return [];
+  }
 
   if (velocityResult?.triggered) {
     const windowStartISO = velocityResult.windowStartISO;
@@ -24,14 +30,20 @@ export async function scan(registryMeta, velocityResult) {
 
     const priorPublishers = new Set();
     for (const v of sortedVersions) {
-      if (new Date(filteredTimes[v]).getTime() >= new Date(windowStartISO).getTime()) break;
+      if (new Date(filteredTimes[v]).getTime() >= new Date(windowStartISO).getTime()) {
+        break;
+      }
       const user = versions[v]?._npmUser?.name;
-      if (user) priorPublishers.add(user);
+      if (user) {
+        priorPublishers.add(user);
+      }
     }
 
     if (priorPublishers.size === 0 && allInWindow.length > 0) {
       const firstUser = versions[allInWindow[0]]?._npmUser?.name;
-      if (firstUser) priorPublishers.add(firstUser);
+      if (firstUser) {
+        priorPublishers.add(firstUser);
+      }
     }
 
     const suspiciousPublishers = [];
@@ -39,15 +51,19 @@ export async function scan(registryMeta, velocityResult) {
     for (const v of allInWindow) {
       const user = versions[v]?._npmUser?.name;
       if (user && !priorPublishers.has(user)) {
-        if (!suspiciousPublishers.includes(user)) suspiciousPublishers.push(user);
-        if (!affectedVersions.includes(v)) affectedVersions.push(v);
+        if (!suspiciousPublishers.includes(user)) {
+          suspiciousPublishers.push(user);
+        }
+        if (!affectedVersions.includes(v)) {
+          affectedVersions.push(v);
+        }
       }
     }
 
     if (suspiciousPublishers.length > 0) {
       const detail = `Drift detected: known publishers [${[...priorPublishers].join(', ')}], new publisher(s) [${suspiciousPublishers.join(', ')}] in versions [${affectedVersions.join(', ')}]`;
 
-      const firstSuspiciousVer = allInWindow.find(v => affectedVersions.includes(v));
+      const firstSuspiciousVer = allInWindow.find((v) => affectedVersions.includes(v));
       let ageNote = '';
       if (firstSuspiciousVer && suspiciousPublishers[0]) {
         ageNote = await checkAccountAge(suspiciousPublishers[0], filteredTimes[firstSuspiciousVer]);
@@ -62,7 +78,9 @@ export async function scan(registryMeta, velocityResult) {
       });
     }
   } else {
-    if (sortedVersions.length < 4) return [];
+    if (sortedVersions.length < 4) {
+      return [];
+    }
 
     const last3 = sortedVersions.slice(-3);
     const prior = sortedVersions.slice(0, -3);
@@ -70,7 +88,9 @@ export async function scan(registryMeta, velocityResult) {
     const priorPublishers = new Set();
     for (const v of prior) {
       const user = versions[v]?._npmUser?.name;
-      if (user) priorPublishers.add(user);
+      if (user) {
+        priorPublishers.add(user);
+      }
     }
 
     const suspiciousPublishers = [];
@@ -78,8 +98,12 @@ export async function scan(registryMeta, velocityResult) {
     for (const v of last3) {
       const user = versions[v]?._npmUser?.name;
       if (user && !priorPublishers.has(user)) {
-        if (!suspiciousPublishers.includes(user)) suspiciousPublishers.push(user);
-        if (!affectedVersions.includes(v)) affectedVersions.push(v);
+        if (!suspiciousPublishers.includes(user)) {
+          suspiciousPublishers.push(user);
+        }
+        if (!affectedVersions.includes(v)) {
+          affectedVersions.push(v);
+        }
       }
     }
 
@@ -88,7 +112,10 @@ export async function scan(registryMeta, velocityResult) {
 
       let ageNote = '';
       if (suspiciousPublishers[0] && affectedVersions[0]) {
-        ageNote = await checkAccountAge(suspiciousPublishers[0], filteredTimes[affectedVersions[0]]);
+        ageNote = await checkAccountAge(
+          suspiciousPublishers[0],
+          filteredTimes[affectedVersions[0]]
+        );
       }
 
       evidence.push({
@@ -108,10 +135,14 @@ async function checkAccountAge(npmUser, firstSuspiciousTime) {
   try {
     const url = `https://registry.npmjs.org/-/user/org.couchdb.user/${encodeURIComponent(npmUser)}`;
     const res = await fetch(url);
-    if (!res.ok) return '';
+    if (!res.ok) {
+      return '';
+    }
     const data = await res.json();
     const created = data?.date;
-    if (!created) return '';
+    if (!created) {
+      return '';
+    }
     const createdDate = new Date(created).getTime();
     const firstPub = new Date(firstSuspiciousTime).getTime();
     const daysDiff = (firstPub - createdDate) / (1000 * 60 * 60 * 24);
@@ -119,6 +150,7 @@ async function checkAccountAge(npmUser, firstSuspiciousTime) {
       return `Publisher account created ${Math.round(daysDiff)} days before first suspicious publish`;
     }
   } catch {
+    /* ignore fetch errors */
   }
   return '';
 }

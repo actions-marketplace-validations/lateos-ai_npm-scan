@@ -1,7 +1,7 @@
 export function generateSentinel(scans) {
   const events = [];
   for (const s of scans) {
-    for (const f of (s.findings || [])) {
+    for (const f of s.findings || []) {
       const atkId = f.atk_id || f.id;
       events.push({
         TimeGenerated: new Date().toISOString(),

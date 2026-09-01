@@ -1,7 +1,7 @@
 function hashToken(str) {
   let hash = 5381;
   for (let i = 0; i < str.length; i++) {
-    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    hash = (hash << 5) + hash + str.charCodeAt(i);
     hash = hash & hash;
   }
   return hash >>> 0;
@@ -25,7 +25,7 @@ export function simhash(text) {
   let fingerprint = 0n;
   for (let i = 0; i < 64; i++) {
     if (v[i] > 0) {
-      fingerprint |= (1n << BigInt(i));
+      fingerprint |= 1n << BigInt(i);
     }
   }
   return fingerprint;

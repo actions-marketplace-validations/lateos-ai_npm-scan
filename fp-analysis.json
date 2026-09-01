@@ -1,0 +1,34 @@
+{
+  "total_fps": 1,
+  "scanned_packages": 0,
+  "fp_rate": "0%",
+  "detectors": {
+    "TYPOSQUAT_VPMDHAJ": {
+      "fp_count": 1,
+      "avg_confidence": "NaN",
+      "confidences": [
+        null
+      ],
+      "severities": [
+        "critical"
+      ],
+      "examples": [
+        {
+          "package": "preact",
+          "version": "10.8.1"
+        }
+      ],
+      "unique_package_count": 1
+    }
+  },
+  "high_fp_detectors": [],
+  "recommendations": [],
+  "per_package": {
+    "preact": [
+      {
+        "detector": "TYPOSQUAT_VPMDHAJ",
+        "version": "10.8.1"
+      }
+    ]
+  }
+}

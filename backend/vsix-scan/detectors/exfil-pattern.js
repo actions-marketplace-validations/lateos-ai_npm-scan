@@ -35,7 +35,9 @@ const ANTI_ANALYSIS_PATTERNS = [
 ];
 
 function truncateSnippet(str, maxLen = 200) {
-  if (!str || str.length <= maxLen) return str || '';
+  if (!str || str.length <= maxLen) {
+    return str || '';
+  }
   return str.slice(0, maxLen) + '...';
 }
 
@@ -46,14 +48,16 @@ export async function checkExfilPattern(extensionFiles = []) {
 
   for (const file of extensionFiles) {
     const content = typeof file.content === 'string' ? file.content : '';
-    if (!content) continue;
+    if (!content) {
+      continue;
+    }
     const path = file.path || '';
 
     for (const cp of CREDENTIAL_FILE_PATTERNS) {
       const match = content.match(cp);
       if (match) {
         const snippet = truncateSnippet(match[0]);
-        if (!exfilPatterns.some(e => e.includes(snippet))) {
+        if (!exfilPatterns.some((e) => e.includes(snippet))) {
           exfilPatterns.push(`${path}: ${snippet}`);
           signals.push({ type: 'CREDENTIAL_FILE_TARGET', pattern: cp.source, file: path });
         }

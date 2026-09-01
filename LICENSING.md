@@ -1,19 +1,39 @@
 # LICENSING.md
 
-## Model: Apache-2.0 core + Commons Clause premium
+## Model: MIT + Business License Agreement (BLA)
 
-### Core (Apache-2.0):
-- Static analysis engine, ATK-001–007 detectors, CLI, lockfile scanner, SBOM output (CycloneDX), GitHub Action, Docker images, JSON output, SQLite-backed local storage, basic HTML report.
+All features are available to everyone. No code gatekeeping.
+No feature gates. No license key required to unlock functionality.
 
-### Premium (Apache-2.0 + Commons Clause):
-- Dynamic sandbox (ATK-008+), advanced compliance reports (PDF, regulatory templates), SIEM connectors, reachability analysis, team dashboard, SSO, audit logs, API/webhooks, on-prem/air-gapped licenses, priority support.
+### MIT License (Free)
 
-## Commons Clause
-The Commons Clause prohibits selling our open core software as a service. See https://commonsclause.com/ for details.
+**Who:** Individuals, open-source projects, and teams evaluating
+for production — no time limit.
 
-## Feature Flags
-Premium features gated by license key validated at runtime. Keys issued per-seat CLI, per-org hosted.
+**Covers:** All features, unlimited use, full CLI, all detectors
+(D1–D25), SBOM output, GitHub Action, Docker images, JSON output.
 
-Full Apache-2.0 license in LICENSE file (TBD).
+**Support:** Community (GitHub issues)
 
-Licensing boundaries defined before external contributions. Changes require PR updating this file.
+### Business License Agreement (Paid)
+
+**Who:** Required when your team ships to production commercially
+(any company with employees using the tool as part of their work).
+
+**Covers:** Everything in MIT license, plus email support and
+legal documentation for compliance auditing.
+
+**Tiers:**
+- Small Team (1–10 developers): $799/year
+- Mid-Market (10–50 developers): $2,499/year
+- Enterprise (50+ developers): $9,900/year
+
+**Simple rule:** Evaluate freely, no time limit. Purchase when
+your team ships to production.
+
+Questions? [licensing@lateos.ai](mailto:licensing@lateos.ai)
+Full terms: [lateos.ai/npm-scan/licensing](https://lateos.ai/npm-scan/licensing)
+
+---
+
+Full MIT license text is in the LICENSE file.

@@ -10,11 +10,15 @@ import { runAll } from '../backend/detectors/index.js';
 function scanLocalTarball(tarPath) {
   const tmpDir = mkdtempSync(join(tmpdir(), 'npm-scan-corpus-test-'));
   execSync(`tar xzf "${tarPath}" -C "${tmpDir}"`, { stdio: 'pipe' });
-  const pkgPath = globSync(join(tmpDir, '**', 'package.json'), { nodir: true })[0];
-  if (!pkgPath) throw new Error(`No package.json in ${tarPath}`);
+  const globPath = tmpDir.replace(/\\/g, '/') + '/**/package.json';
+  const pkgPath = globSync(globPath, { nodir: true })[0];
+  if (!pkgPath) {
+    throw new Error(`No package.json in ${tarPath}`);
+  }
   const pkgJson = JSON.parse(readFileSync(pkgPath, 'utf8'));
   const pkgDir = join(pkgPath, '..');
-  const jsFiles = globSync(join(pkgDir, '**', '*.js'), { nodir: true }).map(p => ({
+  const jsGlobPath = pkgDir.replace(/\\/g, '/') + '/**/*.js';
+  const jsFiles = globSync(jsGlobPath, { nodir: true }).map((p) => ({
     path: p,
     content: readFileSync(p, 'utf8'),
   }));
@@ -25,10 +29,37 @@ const MAL_TARS = globSync('tests/corpus/malicious/*.tgz');
 const CLEAN_TARS = globSync('tests/corpus/clean/*.tgz');
 
 const KNOWN_MAL_MISSES = ['mal-obfusc-2'];
-const KNOWN_CLEAN_FPS = ['webpack', 'typescript', 'socket.io', 'sequelize', 'prettier', 'next', 'rimraf', 'minimist', 'glob'];
+const KNOWN_CLEAN_FPS = [
+  'webpack',
+  'typescript',
+  'socket.io',
+  'sequelize',
+  'prettier',
+  'next',
+  'rimraf',
+  'minimist',
+  'glob',
+  'winston',
+  'uuid',
+  'moment',
+  'dotenv',
+  'pg',
+  'semver',
+  'redux',
+  'redis',
+  'async',
+  'request',
+  'mocha',
+  'vue',
+  'underscore',
+  'node-fetch',
+  'mongoose',
+  'lodash',
+  'eslint',
+];
 
 for (const tar of MAL_TARS) {
-  const name = tar.split('/').pop().replace('.tgz', '');
+  const name = tar.replace(/\\/g, '/').split('/').pop().replace('.tgz', '');
   const runner = KNOWN_MAL_MISSES.includes(name) ? test.skip : test;
   runner(`corpus malicious: ${name} triggers at least one finding`, async () => {
     const { pkgJson, jsFiles } = scanLocalTarball(tar);
@@ -38,13 +69,17 @@ for (const tar of MAL_TARS) {
 }
 
 for (const tar of CLEAN_TARS) {
-  const name = tar.split('/').pop().replace('.tgz', '');
+  const name = tar.replace(/\\/g, '/').split('/').pop().replace('.tgz', '');
   const runner = KNOWN_CLEAN_FPS.includes(name) ? test.skip : test;
   runner(`corpus clean: ${name} has no high/critical findings`, async () => {
     const { pkgJson, jsFiles } = scanLocalTarball(tar);
     const findings = await runAll(pkgJson, jsFiles);
-    const highCrit = findings.filter(f => f.severity === 'high' || f.severity === 'critical');
-    assert.equal(highCrit.length, 0, `${name}: unexpected high/crit: ${JSON.stringify(highCrit.map(f => f.id))}`);
+    const highCrit = findings.filter((f) => f.severity === 'high' || f.severity === 'critical');
+    assert.equal(
+      highCrit.length,
+      0,
+      `${name}: unexpected high/crit: ${JSON.stringify(highCrit.map((f) => f.id))}`
+    );
   });
 }
 

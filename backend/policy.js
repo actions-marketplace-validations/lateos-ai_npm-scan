@@ -5,16 +5,93 @@ const SEVERITY_ORDER = ['none', 'low', 'medium', 'high', 'critical'];
 const VALID_SEVERITIES = new Set(SEVERITY_ORDER);
 
 const KNOWN_REPUTABLE_PACKAGES = new Set([
-  'react', 'react-dom', 'vue', 'angular', 'next', 'nuxt',
-  'express', 'fastify', 'hono', 'koa', 'connect',
-  'webpack', 'vite', 'rollup', 'esbuild', 'typescript', 'babel-core',
-  'lodash', 'ramda', 'underscore',
-  'axios', 'node-fetch', 'got', 'superagent',
-  'sequelize', 'prisma', 'typeorm', 'mongoose',
-  'jest', 'mocha', 'vitest', 'ava',
-  'prettier', 'eslint', 'stylelint',
-  'socket.io', 'ws',
-  'rimraf', 'glob', 'minimatch', 'fs-extra',
+  'react',
+  'react-dom',
+  'vue',
+  'angular',
+  'next',
+  'nuxt',
+  'express',
+  'fastify',
+  'hono',
+  'koa',
+  'connect',
+  'webpack',
+  'vite',
+  'rollup',
+  'esbuild',
+  'typescript',
+  'babel-core',
+  'lodash',
+  'ramda',
+  'underscore',
+  'axios',
+  'node-fetch',
+  'got',
+  'superagent',
+  'sequelize',
+  'prisma',
+  'typeorm',
+  'mongoose',
+  'jest',
+  'mocha',
+  'vitest',
+  'ava',
+  'prettier',
+  'eslint',
+  'stylelint',
+  'socket.io',
+  'ws',
+  'rimraf',
+  'glob',
+  'minimatch',
+  'fs-extra',
+  'electron',
+  'puppeteer',
+  'playwright',
+  'sharp',
+  'node-canvas',
+  'ffmpeg-static',
+  'turbo',
+  'react-scripts',
+  '@angular/cli',
+  'gatsby',
+  'parcel',
+  'tslib',
+  'core-js',
+  'regenerator-runtime',
+  'buffer',
+  'node-gyp',
+  'node-pre-gyp',
+  'winston',
+  'uuid',
+  'moment',
+  'dotenv',
+  'pg',
+  'semver',
+  'redux',
+  'redis',
+  'dayjs',
+  'luxon',
+  'chalk',
+  'debug',
+  'cors',
+  'helmet',
+  'multer',
+  'body-parser',
+  'cheerio',
+  'bluebird',
+  'bcrypt',
+  'commander',
+  'yargs',
+  'passport',
+  'jsonwebtoken',
+  'nodemailer',
+  'class-validator',
+  'rxjs',
+  'request',
+  'async',
+  'minimist',
 ]);
 
 function severityIndex(s) {
@@ -22,8 +99,12 @@ function severityIndex(s) {
 }
 
 function matchesFilePath(filePath, pattern) {
-  if (!pattern) return false;
-  if (pattern === '*') return true;
+  if (!pattern) {
+    return false;
+  }
+  if (pattern === '*') {
+    return true;
+  }
   const regexPattern = pattern
     .replace(/\./g, '\\.')
     .replace(/\*\*/g, '___DOUBLE_STAR___')
@@ -34,42 +115,97 @@ function matchesFilePath(filePath, pattern) {
 
 function matchesContext(finding, rule) {
   const ctx = finding.context;
-  if (!ctx) return false;
+  if (!ctx) {
+    return false;
+  }
 
-  if (rule.context?.is_dist_build === true && !ctx.is_dist_build) return false;
-  if (rule.context?.is_dist_build === false && ctx.is_dist_build) return false;
-  if (rule.context?.is_test_fixture === true && !ctx.is_test_fixture) return false;
-  if (rule.context?.is_test_fixture === false && ctx.is_test_fixture) return false;
-  if (rule.context?.is_lifecycle_hook === true && !ctx.is_lifecycle_hook) return false;
-  if (rule.context?.is_lifecycle_hook === false && ctx.is_lifecycle_hook) return false;
-  if (rule.context?.is_known_safe_domain === true && !ctx.is_known_safe_domain) return false;
-  if (rule.context?.is_known_safe_domain === false && ctx.is_known_safe_domain) return false;
+  if (rule.context?.is_dist_build === true && !ctx.is_dist_build) {
+    return false;
+  }
+  if (rule.context?.is_dist_build === false && ctx.is_dist_build) {
+    return false;
+  }
+  if (rule.context?.is_test_fixture === true && !ctx.is_test_fixture) {
+    return false;
+  }
+  if (rule.context?.is_test_fixture === false && ctx.is_test_fixture) {
+    return false;
+  }
+  if (rule.context?.is_lifecycle_hook === true && !ctx.is_lifecycle_hook) {
+    return false;
+  }
+  if (rule.context?.is_lifecycle_hook === false && ctx.is_lifecycle_hook) {
+    return false;
+  }
+  if (rule.context?.is_known_safe_domain === true && !ctx.is_known_safe_domain) {
+    return false;
+  }
+  if (rule.context?.is_known_safe_domain === false && ctx.is_known_safe_domain) {
+    return false;
+  }
 
-  if (rule.context?.file_path && !matchesFilePath(ctx.file_path, rule.context.file_path)) return false;
+  if (rule.context?.provenance_verified === true && !ctx.provenance_verified) {
+    return false;
+  }
+  if (rule.context?.provenance_verified === false && ctx.provenance_verified) {
+    return false;
+  }
+
+  if (rule.context?.file_path && !matchesFilePath(ctx.file_path, rule.context.file_path)) {
+    return false;
+  }
   if (rule.context?.url_domain) {
-    if (!ctx.url_domain) return false;
+    if (!ctx.url_domain) {
+      return false;
+    }
     const domainPattern = rule.context.url_domain.replace(/\*/g, '.*');
-    if (!new RegExp(`^${domainPattern}$`).test(ctx.url_domain)) return false;
+    if (!new RegExp(`^${domainPattern}$`).test(ctx.url_domain)) {
+      return false;
+    }
   }
 
   return true;
 }
 
+function matchesKnownReputable(packageName) {
+  if (KNOWN_REPUTABLE_PACKAGES.has(packageName)) {
+    return true;
+  }
+  const [scope, name] = packageName.split('/');
+  if (scope && name && KNOWN_REPUTABLE_PACKAGES.has(`${scope}/*`)) {
+    return true;
+  }
+  return false;
+}
+
 function getPackageReputationTier(pkgName) {
   const name = pkgName?.replace(/^@/, '').replace(/\/.*/, '') || '';
-  if (KNOWN_REPUTABLE_PACKAGES.has(name)) return 'trusted';
+  if (matchesKnownReputable(name)) {
+    return 'trusted';
+  }
   return 'unknown';
 }
 
 function matchesSuppressRule(finding, pkgName, rule) {
-  if (rule.atk_id !== (finding.atk_id || finding.id)) return false;
-  if (rule.package && rule.package !== '*' && rule.package !== pkgName) return false;
+  if (rule.atk_id !== (finding.atk_id || finding.id)) {
+    return false;
+  }
+  if (rule.package && rule.package !== '*' && rule.package !== pkgName) {
+    return false;
+  }
 
-  if (rule.context && !matchesContext(finding, rule)) return false;
+  if (rule.context && !matchesContext(finding, rule)) {
+    return false;
+  }
 
   if (rule.reputation_tier) {
     const tier = getPackageReputationTier(pkgName);
-    if (rule.reputation_tier !== tier && !(rule.reputation_tier === '*' || rule.reputation_tier === 'any')) return false;
+    if (
+      rule.reputation_tier !== tier &&
+      !(rule.reputation_tier === '*' || rule.reputation_tier === 'any')
+    ) {
+      return false;
+    }
   }
 
   return true;
@@ -92,13 +228,17 @@ function loadPolicy(path) {
   if (policy.severity_overrides) {
     for (const [atkId, severity] of Object.entries(policy.severity_overrides)) {
       if (!VALID_SEVERITIES.has(severity)) {
-        throw new Error(`Invalid severity "${severity}" for ${atkId} — must be one of: low, medium, high, critical`);
+        throw new Error(
+          `Invalid severity "${severity}" for ${atkId} — must be one of: low, medium, high, critical`
+        );
       }
     }
   }
 
   if (policy.fail_on && !VALID_SEVERITIES.has(policy.fail_on)) {
-    throw new Error(`Invalid fail_on "${policy.fail_on}" — must be one of: none, low, medium, high, critical`);
+    throw new Error(
+      `Invalid fail_on "${policy.fail_on}" — must be one of: none, low, medium, high, critical`
+    );
   }
 
   if (policy.suppress) {
@@ -126,34 +266,41 @@ function sanitizePolicy(policy) {
     allow: { packages: policy.allow?.packages ?? [] },
     severity_overrides: policy.severity_overrides ?? {},
     fail_on: policy.fail_on ?? 'none',
-    suppress: (policy.suppress ?? []).map(r => ({
+    suppress: (policy.suppress ?? []).map((r) => ({
       atk_id: r.atk_id,
       package: r.package || '*',
       reason: r.reason || '',
       context: r.context || null,
       reputation_tier: r.reputation_tier || null,
+      provenance_verified: r.provenance_verified ?? null,
     })),
   };
 }
 
 function isAllowed(packageName, policy) {
-  if (!policy.allow.packages.length) return false;
+  if (!policy.allow.packages.length) {
+    return false;
+  }
   const nameOnly = packageName.split('@')[0];
-  return policy.allow.packages.some(p => p === packageName || p === nameOnly);
+  return policy.allow.packages.some((p) => p === packageName || p === nameOnly);
 }
 
 function applyPolicy(findings, packageName, policy) {
   let filtered = [...findings];
 
   if (policy.suppress.length) {
-    filtered = filtered.filter(f => {
-      if (f.context?.is_lifecycle_hook) return true;
-      if (f.context?.is_multi_layer) return true;
-      return !policy.suppress.some(r => matchesSuppressRule(f, packageName, r));
+    filtered = filtered.filter((f) => {
+      if (f.context?.is_lifecycle_hook) {
+        return true;
+      }
+      if (f.context?.is_multi_layer) {
+        return true;
+      }
+      return !policy.suppress.some((r) => matchesSuppressRule(f, packageName, r));
     });
   }
 
-  filtered = filtered.map(f => {
+  filtered = filtered.map((f) => {
     const override = policy.severity_overrides[f.atk_id || f.id];
     if (override) {
       return { ...f, severity: override, _severityOverridden: true };
@@ -167,10 +314,19 @@ function applyPolicy(findings, packageName, policy) {
 }
 
 function checkFailOn(findings, policy) {
-  if (policy.fail_on === 'none') return false;
+  if (policy.fail_on === 'none') {
+    return false;
+  }
 
   const threshold = severityIndex(policy.fail_on);
-  return findings.some(f => severityIndex(f.severity) >= threshold);
+  return findings.some((f) => severityIndex(f.severity) >= threshold);
 }
 
-export { loadPolicy, applyPolicy, isAllowed, getPackageReputationTier, matchesContext };
+export {
+  loadPolicy,
+  applyPolicy,
+  isAllowed,
+  getPackageReputationTier,
+  matchesContext,
+  KNOWN_REPUTABLE_PACKAGES,
+};

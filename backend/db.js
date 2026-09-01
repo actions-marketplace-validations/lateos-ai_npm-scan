@@ -11,8 +11,12 @@ let db = null;
 let initPromise = null;
 
 async function ensureInit() {
-  if (db) return;
-  if (initPromise) return initPromise;
+  if (db) {
+    return;
+  }
+  if (initPromise) {
+    return initPromise;
+  }
   initPromise = (async () => {
     const SQL = await initSqlJs();
     if (fs.existsSync(DB_PATH)) {
@@ -29,7 +33,9 @@ async function ensureInit() {
 
 function queryAll(sql, params = []) {
   const stmt = db.prepare(sql);
-  if (params.length) stmt.bind(params);
+  if (params.length) {
+    stmt.bind(params);
+  }
   const rows = [];
   while (stmt.step()) {
     rows.push(stmt.getAsObject());
@@ -43,7 +49,7 @@ function queryOne(sql, params = []) {
 }
 
 function lastId() {
-  const r = db.exec("SELECT last_insert_rowid()");
+  const r = db.exec('SELECT last_insert_rowid()');
   return Number(r[0].values[0][0]);
 }
 
@@ -53,9 +59,11 @@ function persist() {
 
 export async function saveScan(pkgName, version = 'latest', findings = []) {
   await ensureInit();
-  db.run("INSERT INTO scans (package_name, version) VALUES (?, ?)", [pkgName, version]);
+  db.run('INSERT INTO scans (package_name, version) VALUES (?, ?)', [pkgName, version]);
   const scanId = lastId();
-  const stmt = db.prepare("INSERT INTO findings (scan_id, atk_id, severity, description, evidence) VALUES (?, ?, ?, ?, ?)");
+  const stmt = db.prepare(
+    'INSERT INTO findings (scan_id, atk_id, severity, description, evidence) VALUES (?, ?, ?, ?, ?)'
+  );
   for (const f of findings) {
     stmt.run([scanId, f.id, f.severity, f.title || f.description, f.evidence || '']);
   }
@@ -66,17 +74,17 @@ export async function saveScan(pkgName, version = 'latest', findings = []) {
 
 export async function getRecentScans(limit = 10) {
   await ensureInit();
-  return queryAll("SELECT * FROM scans ORDER BY scanned_at DESC LIMIT ?", [limit]);
+  return queryAll('SELECT * FROM scans ORDER BY scanned_at DESC LIMIT ?', [limit]);
 }
 
 export async function getFindings(scanId) {
   await ensureInit();
-  return queryAll("SELECT * FROM findings WHERE scan_id = ?", [scanId]);
+  return queryAll('SELECT * FROM findings WHERE scan_id = ?', [scanId]);
 }
 
 export async function getScan(scanId) {
   await ensureInit();
-  return queryOne("SELECT * FROM scans WHERE id = ?", [scanId]);
+  return queryOne('SELECT * FROM scans WHERE id = ?', [scanId]);
 }
 
 export async function close() {

@@ -6,6 +6,120 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-08-20
+
+### Added
+- **D29-RUNTIME-EVASION** (`tier1-runtime-evasion.js`): AST detector for alternative-runtime evasion (Mini Shai-Hulud / Miasma, ChainDrop). Covers Bun, Deno and QuickJS process primitives (`Bun.$`, `Bun.spawn`/`spawnSync`, `Deno.Command`, `Deno.run`, `std.popen`), native FFI (`bun:ffi` `dlopen`, `Deno.dlopen`), outbound network (`Bun.connect`, `Deno.connect`), credential env and file access, and runtime *binary downloads* in lifecycle hooks — including hooks that indirect through a script file (`"preinstall": "node setup.mjs"`). Blocks at aggregate 80, warns at 55; a finding requires an anchor signal (download / exec / FFI / alt-runtime hook interpreter) so ordinary Bun tooling does not fire. **Closes the headline gap: a Deno-idiom credential stealer previously produced zero findings across the entire pipeline while the byte-identical Node version scored HIGH.**
+- **D30-WORKSPACE-PERSISTENCE** (`tier1-workspace-persistence.js`): Detects agent/IDE workspace persistence against `.claude/*`, `.cursor/rules/*`, `.vscode/*` and `.github/workflows/*`. Two directions: code that *writes* to a surface, and executable agent config *shipped* in the tarball (MCP `command`+`args`, `.vscode/tasks.json` `runOn: folderOpen`, workflows with `pull_request_target`/`workflow_run`). Write targets are constant-folded first, so `['.','claude'].join('')`, `path.join(process.cwd(),'.cursor','rules')`, `String.fromCharCode(46,99,…)` and single-assignment variable indirection all resolve to the same target as a literal path. Severity follows the surface band — an injected instruction is `high`, an injected server command is `critical`.
+- **ERR_TARBALL_GIT_DESYNC** (`tier1-tarball-git-desync.js` + `backend/validators/git-diff.js`): Tarball-to-Git commit differential. Resolves the repository and candidate refs (attested `gitCommit` → `registryMeta.gitHead` → release tags), fetches the source tree, and flags executable scripts or capability-bearing code present in the tarball but absent from — or newly introduced relative to — the source commit. **Answers the question provenance cannot:** npm attestations bind an attestation to a *tarball*, never a tarball to its *source*, so a CI build from a dirty working tree yields a genuine attestation with a perfectly matching digest. Provenance state is deliberately never consulted. **Opt-in and off by default** (the only network-bound detector); enable via `runAll(pkg, files, meta, allFiles, { gitDiff: { enabled: true } })`.
+- **`lib/ast-parse.js`**: Single hardened acorn entry point for all AST detectors — `ecmaVersion: 'latest'`, `allowHashBang: true`, module→script→hashbang-stripped fallback, and a bounded content-keyed parse cache shared across detectors. Parse failure returns `{ degraded, reason }` and is treated as a **signal**, never a silent skip.
+- **`lib/runtime-primitives.js`**: Cross-runtime capability registry (Node/Bun/Deno/QuickJS) keyed by capability — EXEC, FFI, NET_CONNECT, NET_LISTEN, FS_READ, FS_WRITE, ENV_READ, FINGERPRINT — rather than by API name, so adding a runtime is a registry edit instead of a change to every detector. Resolves four AST shapes previous helpers could not express: tagged templates (`Bun.$\`…\``), constructor calls (`new Deno.Command`), bare-specifier imports (`bun:ffi`), and inline `require('child_process').execSync()`.
+- **`lib/path-resolver.js`**: Constant-folds path expressions (string concat, template literals, `Array.join`, `path.join`/`resolve`, `String.fromCharCode`, `.concat`, single-assignment bindings). Runtime-only roots fold to `<cwd>`/`<home>`/`<dirname>` placeholders so partially-known paths still match. Reassigned variables are dropped rather than guessed at.
+- **`lib/agent-surfaces.js`**: Agent/editor surface registry banded `exec` / `agent_read` / `editor_config`, with directory-terminal matching so a write to `.cursor/rules` (the directory) matches as well as a write to a file inside it.
+- **111 new tests** across `test/tier1-runtime-evasion.test.js`, `test/tier1-workspace-persistence.test.js`, `test/validators-git-diff.test.js`, `test/lib-ast-parse.test.js`, `test/sarif-conformance.test.js` and `test/perf-detector-overhead.test.js`, reproducing each bypass vector from the gap assessment alongside false-positive controls.
+- **D28-AI-SLOP-DROPPER** (`tier1-ai-slop-dropper.js`): New AST-based detector for the "AI Slop" / WEL1DROPPER 800-package campaign (Aug 2026). The campaign ships no lifecycle hooks — the README instructs the victim to `require()`/`import` the package explicitly — so hook-only detectors see a clean `package.json`. Detects the multi-stage downloader through nine signals: `dns_payload_assembly` (95), `encoded_string_array` (60), `dns_txt_oob` (55), `string_array_decoder` (50), `fingerprint_network_coupling` (40), `readme_directed_entry` (30), `high_entropy_literals` (20), `paas_stage_resolution` (20), `env_fingerprint` (10). Blocks at aggregate 80, warns at 55. A finding requires one of the three `anchor_signals` (`dns_payload_assembly`, `dns_txt_oob`, `encoded_string_array`); the rest modulate severity but never fire alone.
+- **Scope-aware fingerprint/network coupling**: `process.platform`/`process.arch`/`os.*` reads are correlated with network and DNS calls via acorn lexical scope chains. Module-scope fingerprints only couple when the network call's enclosing function actually references the fingerprint variable, so `const isWindows = process.platform === 'win32'` plus an unrelated `https.get` does not fire.
+- **DNS out-of-band profiling**: `dns.resolveTxt`/`resolveAny` and `dns.resolve(host, 'TXT'|'ANY')` are elevated to high outside safelisted network utilities (`network_utility_safelist` + `network_utility_keywords` in thresholds). TXT responses decoded into an execution sink (`dns_payload_assembly`) always block, safelist included.
+- **`highEntropyStrings()`** (`lib/entropy-analyzer.js`): Per-string-literal Shannon entropy filter applied to AST string literals in non-minified files. Complements the existing whole-file entropy check in `tier1-obfuscation-heuristics.js`.
+- **Test fixtures**: `test/fixtures/campaigns/ai-slop-wel1dropper/` (full dropper + three FP controls: a real DNS/SPF utility, an ordinary README `require()` example, a prebuilt-binary installer) and `fixtures/campaigns/d28-ai-slop-wel1dropper.jsonl` (7 packages with expected BLOCK/WARN/PASS verdicts).
+- **24 new tests**: `test/tier1-ai-slop-dropper.test.js` covering each signal, the FP controls, safelist behaviour, pipeline integration, and the campaign fixture verdicts.
+
+### Fixed
+- **SARIF conformance for every tier-1 detector** (`backend/report.js`): `generateSARIF` assumed the ATK-* finding shape (`title`/`description`/`evidence: string`). Tier-1 detectors emit `message`/`evidence: string[]`/`locations: [{file,line}]`, which serialized to `message: {}` — SARIF requires `message.text` — and put an *array* in `artifactLocation.uri`, which requires a string. Every D-series finding therefore produced a non-conformant result. Both shapes are now normalized: real file/line locations are used when present, evidence lines move to `properties.evidence`, and rule `name` no longer produces `ATK-D28-…` for non-ATK rules.
+- **js-yaml bumped to 4.3.1** to resolve GHSA-5p4m-2wfm-xmqj (quadratic CPU consumption in `!!omap` resolution, CVE-2026-59870 not backported to 3.x/4.x). Vulnerable range is 4.0.0–4.3.0 and the lockfile pinned 4.3.0. Both consumers — this package directly and eslint via `@eslint/eslintrc` — declare `^4.1.1`, so 4.3.1 satisfies each and still dedupes to a single copy; no major upgrade and no `overrides` entry needed. `package.json` was bumped alongside the lockfile so the floor survives a lockfile regeneration.
+- **`runTier1` timeout is now per-detector** (`backend/detectors/index.js`): the fixed 800 ms budget is unchanged for existing detectors, but network-bound detectors can declare their own. `runAll` also accepts an `options` argument for detector-specific configuration.
+
+### Calibration
+- **D29/D30 are pre-telemetry.** Weights are calibrated against the gap-assessment proof-of-concept vectors and verified to produce **0 findings across 123 real `node_modules` packages**. They have *not* been measured against the 50-package clean corpus, because `test/detectors-corpus.test.js` cannot run on Windows (pre-existing: `execSync` passes a `C:\…` temp path to GNU tar, which reads the drive letter as a remote host spec — 108 failures, 0 assertion failures). Re-run the corpus suite on Linux before relying on the FP numbers.
+- **D29 anchor gate corrects D24's inverted coverage.** D24 fires on the four *benign* Bun primitives (`Bun.file`, `Bun.serve`, `Bun.write`, `Bun.spawn`) while `Bun.$`, `bun:ffi`, `Bun.spawnSync`, `Bun.connect`, `Bun.listen`, `Bun.env`, `bun:sqlite`, `bun:jsc`, `Bun.embeddedFiles` and `process.versions.bun` all evade it — 4 of 15 primitives covered, and the covered four are the ones legitimate Bun tooling uses. D29 gates on capability (execution, native linking, runtime download) instead. D24 is left untouched to avoid recalibrating its weights; both may fire on a genuine Bun payload. D24's `Bun.shell(` pattern targets an API that does not exist — Bun's shell is the `Bun.$` tagged template.
+- **D29/D30 performance: 0.72% of a full pipeline pass** (57 ms of 7,970 ms over 150 real files), inside the 5% budget. Prefilters reject ~97% of files before parsing and the shared parse cache means the two detectors parse each file once between them. Measured as the detectors' direct cost over pipeline cost rather than by differencing two pipeline runs — an ~8 s pipeline varies by more than 5% run to run, so differencing measures machine noise, not the detectors.
+- **D30's prefilter is deliberately two-tier.** Precise dotted markers alone silently skipped assembled paths: a file building `.claude/mcp.json` from `['.','claude'].join('')` never contains the literal `.claude`. A second tier (write sink + bare surface word, or `String.fromCharCode`) keeps assembly in scope — the same prefilter/AST mismatch already documented for D28.
+- **D31 skips build output rather than treating it as clean**, and reports the skip count so "verified" stays distinguishable from "not checked". Content comparison is insensitive to line endings and trailing whitespace, and a content difference only escalates when the tarball introduces capability the source lacks — reformatting and version stamping are not attacks.
+- **D28 thresholds measured against the clean corpus with the reputable-package bail defeated** (the bail otherwise masks FPs on large packages). Initial calibration produced two critical FPs — prettier (arrays of camelCase identifiers matched a base64 *shape* test; HTML attribute tables reached 4.76 bits) and Next.js (dev-server code couples `process.platform` with network calls). Fixed by the anchor-signal gate, raising `entropy_threshold` to 5.0 at `min_literal_length` 64, and requiring base64-shaped literals to clear `base64_min_entropy` 4.5. Final: 0 FPs across all 50 clean packages.
+- **D28 performance**: prefilter markers were retargeted from single literals to encoded-literal *runs*, and ubiquitous decode calls (`Buffer.from`, `atob`, `fromCharCode`) dropped from the prefilter — files reaching acorn fell from 4.3% to 1.3% of corpus JS. Worst-case cost went from 5.08 s to 1.15 s against a ~30 s full-pipeline pass (3.8%, inside the 5% budget); with normal exemptions the A/B delta is within run-to-run noise.
+- **VINCE Integration** (`backend/vince.js`): New vulnerability coordination module for submitting findings to CISA's VINCE (Vulnerability Information and Coordination Environment). Features include formatted vulnerability reports, detailed review summaries, manual approval workflow, and secure API key handling. New CLI command `npm-scan submit-vince` with `--auto-approve` flag for controlled submissions.
+- **VINCE Submission Workflow**: Manual review-before-submission process ensuring findings are vetted via Claude before coordination with vendors. Generates detailed severity summaries and evidence snippets for informed approval decisions.
+- **VINCE Integration Documentation** (`VINCE_INTEGRATION.md`): Complete setup guide, usage workflow, security considerations, and troubleshooting.
+- **TIER1-CRYPTO-TAMPER** (`tier1-crypto-primitive-tamper.js`): New diff-aware detector for semantic backdoors in crypto/wallet SDKs. Monitors security-sensitive functions (`fromMnemonic`, `fromPrivateKey`, `sign`, `signTransaction`, etc.) and compares against previous published version to detect newly injected network calls (`fetch`, `axios`, `http.request`) or dynamic code execution (`eval`, `new Function`). Closes gap from Injective SDK 2026-07-08 incident where `fromMnemonic()` was modified to exfiltrate wallet keys disguised as normal telemetry. confidenceScore 85, severity high. Diff-awareness eliminates FPs from legitimate analytics/telemetry that existed in prior versions.
+- **TIER1-HOOK-FOLLOWTHROUGH** (`tier1-lifecycle-hook-followthrough.js`): New detector that follows `node`/`sh`/`bash` indirection in lifecycle hooks to referenced files, running the same obfuscation/network/env-exfil/entropy checks against the resolved file content. Chains up to 2 levels of indirection (script A requires/spawns script B). Closes gap where hooks like `"postinstall": "node scripts/postinstall.js"` scored zero because the payload lived in the referenced file.
+- **TIER1-VERSION-BACKFILL** (`tier1-version-backfill.js`): New detector that flags packages with >= 8 versions published within 24 hours spanning a wide version range (e.g. 0.1.0 through 1.x), indicating version history was backfilled in a single publish burst to fake maturity. confidenceScore 80, severity high.
+- **TIER1-INFOSTEALER identity_recon_exfil**: Extended infostealer detector with identity/credential-adjacent path patterns (`.gitconfig`, `.ssh/*.pub`, `.aws/config`, `.config/gcloud/properties`, `/etc/resolv.conf`, `git config user.email` exec). Scores HIGH even without matched credential regex, since recon-only payloads that never touch actual secrets are the attack technique.
+- **Serverless PaaS domain watchlist** (`lib/paas-domains.js`): `*.run.app`, `*.web.app`, `*.vercel.app`, `*.netlify.app`, `*.workers.dev` flagged as contributing MEDIUM signal when appearing as network targets in lifecycle hooks or referenced install scripts. Boosts aggregate score when co-occurring with identity file reads.
+- **Shared obfuscation utilities** (`lib/obfuscation-check.js`): Extracted `isObfuscated()` and `shannonEntropy()` from `tier1-lifecycle-hook.js` into shared lib for reuse across detectors.
+- **Test fixtures**: `fixtures/campaigns/npm-package-logger-2026/` with minimal repro packages for AI-SDK postinstall pattern, @aspect-security/argon2 preinstall pattern, and version-backfill manifest.
+- **27 new tests** across 3 test files: `tier1-lifecycle-hook-followthrough.test.js` (10), `tier1-version-backfill.test.js` (8), `tier1-infostealer-identity-recon.test.js` (9).
+- **8 new tests** for crypto primitive tamper detector: `tier1-crypto-primitive-tamper.test.js` covering semantic backdoor detection, legitimate analytics FP validation, and edge cases.
+- **TIER1-MAINTAINER-COMPROMISE extended detection** (`tier1-maintainer-compromise.js`): Added two new subtypes to catch Jscrambler-style hijacks: `single_version_compromise` (version published after 30+ day gap, deprecated and remediated within 24h, confidenceScore 70) and `dist_tag_manipulation` (dist-tag pointing to version with next version published within 1 hour, confidenceScore 85). Closes gap where single compromised publishes or tag repointing without version bursts went undetected.
+- **9 new tests** for maintainer compromise extensions: `tier1-maintainer-compromise-extended.test.js` covering single version compromise, dist-tag manipulation, and combined detection scenarios.
+
+### Changed
+- **Thresholds**: Added `TIER1-HOOK-FOLLOWTHROUGH`, `TIER1-VERSION-BACKFILL`, `TIER1-CRYPTO-TAMPER`, `D28-AI-SLOP-DROPPER`, and `SERVERLESS_PAAS_WATCHLIST` entries to `config/thresholds.js`.
+- **Detector index**: Wired `tier1-lifecycle-hook-followthrough`, `tier1-version-backfill`, `tier1-crypto-primitive-tamper`, and `tier1-ai-slop-dropper` into `backend/detectors/index.js` via `runTier1`.
+
+## [1.0.0] — 2026-06-03
+
+### Added
+- **Production Validation**: D6, D7, D5 detectors validated against 3 real May 2026 supply chain attack campaigns (100% detection rate)
+- **False Positive Calibration**: Thresholds calibrated on top 1,000 npm packages; 0.0% FP rate at production thresholds
+- **D6 (Version Anomaly Detector)**: Z-score-based detection of dependency confusion attacks (e.g., 99.99.99 hijack)
+- **D7 (Obfuscation Heuristics Detector)**: Shannon entropy + 9-pattern AST matching for malicious obfuscation
+- **D5 Enhancement (Binary Embedding)**: Cross-platform binary set detection (ELF, Mach-O, PE)
+- **Config-Driven Thresholds**: `backend/detectors/config/thresholds.js` with per-detector confidence settings
+- **Whitelist System**: `backend/detectors/config/whitelist.json` for known-good packages (webpack, terser, lodash, etc.)
+- **Validation Scripts**: `backend/scripts/validate-detectors.js`, `analyze-validation.js`, `fetch-top-packages.js`, `detect-false-positives.js`, `analyze-false-positives.js`
+- **Comprehensive Validation Report**: [VALIDATION.md](./VALIDATION.md) with detection rates, FP metrics, and per-detector performance
+
+### Changed
+- **Major Version Bump**: v0.18.3 → v1.0.0 — production-grade release with published validation metrics
+- **Tool Description**: Updated with 100% campaign detection / 0% FP rate claims
+- **D1 (Typosquat) Threshold**: Increased to 85 to eliminate 46 false positives on legitimate scoped sub-packages
+- **D7 (Obfuscation) Threshold**: Raised to 75 post-calibration; reduces false positives on bundlers (webpack, esbuild) by 82%
+
+### Fixed
+- Graceful fallback when npm registry unavailable (D6 uses pattern-only heuristics)
+- Encoding fix: All JSONL reads/writes now explicitly use `utf-8` encoding for Windows compatibility
+- False positive guard: Palindrome check in D7 no longer flagged as obfuscation
+
+### Docs
+- Added [VALIDATION.md](./VALIDATION.md): Full detection rates, false positive analysis, threshold justification
+- Updated README with validation summary and per-detector confidence table
+
+### Tests
+- 690 tests total (671 pass, 0 fail, 19 skip)
+- Zero regressions post-validation
+
+## v0.18.2 — June 2, 2026
+
+### New Detectors
+- **D6a** `tier1-version-confusion.js` — Detects dependency confusion via sentinel
+  versions (99.99.99 family → HIGH) and high-version heuristic (major≥9 → MEDIUM).
+  Covers Sonatype-2026-003429 and Microsoft scope confusion campaigns.
+- **D6b** `tier1-multistage-postinstall.js` — Detects two-stage remote download +
+  binary execution and detached background persistence in lifecycle scripts.
+  Covers Gen-2 stager patterns from the OpenSearch/ES typosquatting wave.
+- **D6c** `tier1-cloud-imds.js` — Detects GCP metadata server and Azure IMDS endpoint
+  targeting in scripts and JS files. Covers the Miasma @redhat-cloud-services campaign.
+
+### Detector Enhancements
+- **D2** `tier1-infostealer.js` — Added NAMED_SIGNATURES array with early-return
+  CRITICAL detection for confirmed malware campaign strings. First entry: Miasma
+  campaign identifier (June 2026).
+
+### Bug Fixes
+- **D6b** `tier1-multistage-postinstall.js`
+  - Removed /g flag from REMOTE_FETCH_RE, BINARY_EXEC_RE, DETACHED_RE —
+    eliminated fragile lastIndex state between hook iterations
+  - Added critical severity tier to severityLabel — Signal A+B findings
+    now consistently report severity: critical / confidence: CRITICAL
+  - Fixed hardcoded "postinstall" in finding message — now reflects
+    whichever hook fired and the subtype string
+
+### Infrastructure
+- Added Detector Registry section to AGENTS.md with calibration notes.
+
+### Test Suite
+- 656 passing, 0 failing, 19 skipping.
+
 ### Added
 - `scan --file <path>` flag to analyze local `.tgz` tarballs without fetching from npm registry
 - `scan --fail-on <level>` flag to exit with code 1 when findings >= severity (CI/CD integration)

@@ -1,4 +1,4 @@
-import { test, mock } from 'node:test';
+import { test, mock as _mock } from 'node:test';
 import assert from 'assert/strict';
 import { checkActivationEventRisk } from '../../backend/vsix-scan/detectors/activation-event-risk.js';
 
@@ -34,7 +34,7 @@ test('VSIX activation: first-time activation event addition fires', async () => 
   const priorVersions = [{ activationEvents: ['onCommand:foo'] }];
   const result = await checkActivationEventRisk(manifest, [], priorVersions);
   assert.ok(result.triggered);
-  assert.ok(result.why.some(w => w.includes('First-time')));
+  assert.ok(result.why.some((w) => w.includes('First-time')));
 });
 
 test('VSIX activation: low-risk onCommand = silent', async () => {

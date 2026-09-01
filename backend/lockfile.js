@@ -1,5 +1,5 @@
 import { readFileSync } from 'fs';
-import { resolve, dirname } from 'path';
+import { resolve as _resolve, dirname as _dirname } from 'path';
 import yaml from 'js-yaml';
 
 export function parseLockfile(filePath, options = {}) {
@@ -32,17 +32,19 @@ export function parseLockfile(filePath, options = {}) {
 
     return parseNpmLockfile(content, filePath);
   } catch (e) {
-    throw new Error(`Failed to parse lockfile: ${e.message}`);
+    throw new Error(`Failed to parse lockfile: ${e.message}`, { cause: e });
   }
 }
 
-function parseNpmLockfile(content, filePath) {
+function parseNpmLockfile(content, _filePath) {
   const lockfile = JSON.parse(content);
   const packages = [];
 
   if (lockfile.packages) {
     for (const [key, pkg] of Object.entries(lockfile.packages)) {
-      if (key === '') continue;
+      if (key === '') {
+        continue;
+      }
       const name = pkg.name || key.replace(/^node_modules\//, '').replace(/^[^/]+\//, '');
       packages.push({
         name,
@@ -54,7 +56,7 @@ function parseNpmLockfile(content, filePath) {
         dev: pkg.dev || false,
         optional: pkg.optional || false,
         scripts: pkg.scripts || {},
-        dependencies: pkg.dependencies || {}
+        dependencies: pkg.dependencies || {},
       });
     }
   }
@@ -68,22 +70,23 @@ function parseNpmLockfile(content, filePath) {
       version: rootDeps.version || 'unknown',
       dependencies: rootDeps.dependencies || {},
       devDependencies: rootDeps.devDependencies || {},
-      peerDependencies: rootDeps.peerDependencies || {}
-    }
+      peerDependencies: rootDeps.peerDependencies || {},
+    },
   };
 }
 
-function parseYarnLockfile(content, filePath) {
+function parseYarnLockfile(content, _filePath) {
   const packages = [];
   const lines = content.split('\n');
   let i = 0;
   const n = lines.length;
 
-  const MULTI_ENTRY_RE = /^"?([\w@./-]+)@(\^?[\w.+\-~]+)"?\s*,\s*"?([\w@./-]+)@(\^?[\w.+\-~]+)"?\s*:\s*$/;
+  const MULTI_ENTRY_RE =
+    /^"?([\w@./-]+)@(\^?[\w.+\-~]+)"?\s*,\s*"?([\w@./-]+)@(\^?[\w.+\-~]+)"?\s*:\s*$/;
   const SINGLE_ENTRY_RE = /^"?([\w@./-]+)@(\^?[\w.+\-~]+)"?\s*:\s*$/;
 
   while (i < n) {
-    let line = lines[i].trimEnd();
+    const line = lines[i].trimEnd();
 
     let specs = [];
 
@@ -93,7 +96,7 @@ function parseYarnLockfile(content, filePath) {
     if (multiMatch) {
       specs = [
         { name: multiMatch[1], specVersion: multiMatch[2] },
-        { name: multiMatch[3], specVersion: multiMatch[4] }
+        { name: multiMatch[3], specVersion: multiMatch[4] },
       ];
     } else if (singleMatch) {
       specs = [{ name: singleMatch[1], specVersion: singleMatch[2] }];
@@ -125,26 +128,37 @@ function parseYarnLockfile(content, filePath) {
 
         if (bodyTrim.startsWith('version ')) {
           const vMatch = bodyTrim.match(/^version ['"]([^'"]+)['"]/);
-          if (vMatch) version = vMatch[1];
+          if (vMatch) {
+            version = vMatch[1];
+          }
         } else if (bodyTrim.match(/^\s*resolved\s+(.+)/)) {
           const rMatch = bodyTrim.match(/^\s*resolved\s+(.+)/);
           if (rMatch) {
             resolved = rMatch[1].trim().replace(/^['"]|['"]$/g, '');
             if (resolved.startsWith('https://registry.yarnpkg.com/')) {
-              resolved = resolved.replace('https://registry.yarnpkg.com/', 'https://registry.npmjs.org/');
+              resolved = resolved.replace(
+                'https://registry.yarnpkg.com/',
+                'https://registry.npmjs.org/'
+              );
             }
           }
         } else if (bodyTrim.startsWith('integrity ')) {
           integrity = bodyTrim.replace('integrity ', '').trim();
         } else if (bodyTrim.startsWith('dependencies')) {
           const m = bodyTrim.match(/^dependencies\s+(.*)/);
-          if (m) parseDepList(m[1], dependencies);
+          if (m) {
+            parseDepList(m[1], dependencies);
+          }
         } else if (bodyTrim.startsWith('optionalDependencies')) {
           const m = bodyTrim.match(/^optionalDependencies\s+(.*)/);
-          if (m) parseDepList(m[1], optionalDependencies);
+          if (m) {
+            parseDepList(m[1], optionalDependencies);
+          }
         } else if (bodyTrim.startsWith('peerDependencies')) {
           const m = bodyTrim.match(/^peerDependencies\s+(.*)/);
-          if (m) parseDepList(m[1], peerDependencies);
+          if (m) {
+            parseDepList(m[1], peerDependencies);
+          }
         } else if (bodyTrim.match(/^\s*dev\s+(true|false)$/)) {
           dev = bodyTrim.includes('true');
         } else if (bodyTrim.match(/^\s*optional\s+(true|false)$/)) {
@@ -166,7 +180,7 @@ function parseYarnLockfile(content, filePath) {
           optional,
           scripts: {},
           dependencies,
-          optionalDependencies
+          optionalDependencies,
         });
       }
     } else {
@@ -192,14 +206,16 @@ function parseYarnLockfile(content, filePath) {
       version: 'unknown',
       dependencies: rootDeps,
       devDependencies: rootDevDeps,
-      peerDependencies: {}
-    }
+      peerDependencies: {},
+    },
   };
 }
 
 function parseDepList(str, dest) {
   const cleaned = str.replace(/^[[\]]/g, '').trim();
-  if (!cleaned) return;
+  if (!cleaned) {
+    return;
+  }
   const re = /([\w@./-]+)\s+\^?([\w@./-]+)/g;
   let m;
   while ((m = re.exec(cleaned)) !== null) {
@@ -207,14 +223,16 @@ function parseDepList(str, dest) {
   }
 }
 
-function parsePnpmLockfile(content, filePath) {
+function parsePnpmLockfile(content, _filePath) {
   const lockfile = yaml.load(content);
   const packages = [];
 
   if (lockfile.packages) {
     for (const [key, pkg] of Object.entries(lockfile.packages)) {
       const nameMatch = key.match(/^\/(.+?)@([^@/]+)$/);
-      if (!nameMatch) continue;
+      if (!nameMatch) {
+        continue;
+      }
       const name = nameMatch[1];
       const version = nameMatch[2];
 
@@ -237,7 +255,7 @@ function parsePnpmLockfile(content, filePath) {
         optional: pkg.optional || false,
         scripts: pkg.hasBundledMedia ? { bundled: true } : {},
         dependencies: pkg.dependencies || {},
-        optionalDependencies: pkg.optionalDependencies || {}
+        optionalDependencies: pkg.optionalDependencies || {},
       });
     }
   }
@@ -257,8 +275,8 @@ function parsePnpmLockfile(content, filePath) {
       version: lockfile.lockfileVersion ? 'unknown' : 'unknown',
       dependencies: rootDepsMap,
       devDependencies: rootDevDepsMap,
-      peerDependencies: rootPeerDepsMap
-    }
+      peerDependencies: rootPeerDepsMap,
+    },
   };
 }
 
@@ -282,7 +300,7 @@ export function checkMaliciousPatterns(pkg) {
         severity: 'high',
         title: 'Typosquat detected',
         description: `Package name "${pkg.name}" is similar to popular packages`,
-        evidence: `similar to ${pattern.source}`
+        evidence: `similar to ${pattern.source}`,
       });
     }
   }
@@ -307,21 +325,25 @@ export function analyzeDependencyGraph(lockfileData) {
             severity: 'high',
             title: 'Transitive propagation (worm)',
             description: `Package "${pkg.name}" depends on peer "${peerName}@${peerVersion}" - potential worm propagation chain`,
-            evidence: `peer dep chain: ${pkg.name} -> ${peerName}`
+            evidence: `peer dep chain: ${pkg.name} -> ${peerName}`,
           });
         }
       }
     }
 
-    if (pkg.dependencies && typeof pkg.dependencies === 'object' && Object.keys(pkg.dependencies).length > 5) {
-      const transitiveCount = Object.keys(pkg.dependencies).filter(k => k.includes('/')).length;
+    if (
+      pkg.dependencies &&
+      typeof pkg.dependencies === 'object' &&
+      Object.keys(pkg.dependencies).length > 5
+    ) {
+      const transitiveCount = Object.keys(pkg.dependencies).filter((k) => k.includes('/')).length;
       if (transitiveCount > 3) {
         findings.push({
           id: 'ATK-011',
           severity: 'medium',
           title: 'Transitive propagation (worm)',
           description: `Package "${pkg.name}" has excessive transitive dependencies (${transitiveCount} scoped)`,
-          evidence: `heavy transitive dep chain: ${pkg.name}`
+          evidence: `heavy transitive dep chain: ${pkg.name}`,
         });
       }
     }
@@ -332,7 +354,7 @@ export function analyzeDependencyGraph(lockfileData) {
         severity: 'low',
         title: 'Transitive propagation (worm)',
         description: `Package "${pkg.name}" has excessive optional dependencies (${Object.keys(pkg.optionalDependencies).length})`,
-        evidence: `optional dep chain: ${pkg.name} -> [${Object.keys(pkg.optionalDependencies).slice(0, 3).join(', ')}, ...]`
+        evidence: `optional dep chain: ${pkg.name} -> [${Object.keys(pkg.optionalDependencies).slice(0, 3).join(', ')}, ...]`,
       });
     }
   }
@@ -342,8 +364,8 @@ export function analyzeDependencyGraph(lockfileData) {
 
 export function generateLockfileReport(lockfileData) {
   const total = lockfileData.packages.length;
-  const dev = lockfileData.packages.filter(p => p.dev).length;
-  const optional = lockfileData.packages.filter(p => p.optional).length;
+  const dev = lockfileData.packages.filter((p) => p.dev).length;
+  const optional = lockfileData.packages.filter((p) => p.optional).length;
 
   const findings = [];
 
@@ -363,12 +385,14 @@ export function generateLockfileReport(lockfileData) {
     optionalDependencies: optional,
     lockfileVersion: lockfileData.version,
     findings,
-    riskScore: calculateRiskScore(findings)
+    riskScore: calculateRiskScore(findings),
   };
 }
 
 function calculateRiskScore(findings) {
-  if (!findings.length) return '0.0';
+  if (!findings.length) {
+    return '0.0';
+  }
   const weights = { critical: 10, high: 7, medium: 4, low: 2, info: 0.5 };
   const maxSeverity = findings.reduce((max, f) => {
     const w = weights[f.severity] || 0;

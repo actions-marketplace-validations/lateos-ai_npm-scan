@@ -4,12 +4,14 @@ export async function checkBurstPublish(versionHistory, config = {}) {
   const hotPullMinutes = config.hotPullMinutes ?? 20;
 
   const entries = versionHistory
-    .filter(v => v.publishedAt)
-    .map(v => ({ version: v.version, time: new Date(v.publishedAt).getTime() }))
-    .filter(e => !Number.isNaN(e.time))
+    .filter((v) => v.publishedAt)
+    .map((v) => ({ version: v.version, time: new Date(v.publishedAt).getTime() }))
+    .filter((e) => !Number.isNaN(e.time))
     .sort((a, b) => a.time - b.time);
 
-  if (entries.length < threshold) return { triggered: false };
+  if (entries.length < threshold) {
+    return { triggered: false };
+  }
 
   const windowMs = windowMinutes * 60 * 1000;
   let burstFound = false;
@@ -21,14 +23,14 @@ export async function checkBurstPublish(versionHistory, config = {}) {
   for (let i = 0; i < entries.length; i++) {
     const start = entries[i].time;
     const end = start + windowMs;
-    const inWindow = entries.filter(e => e.time >= start && e.time <= end);
+    const inWindow = entries.filter((e) => e.time >= start && e.time <= end);
 
     if (inWindow.length >= threshold) {
       burstFound = true;
       burstWindowStart = new Date(start).toISOString();
       burstWindowEnd = new Date(end).toISOString();
       burstVersionCount = inWindow.length;
-      burstVersions = inWindow.map(e => e.version);
+      burstVersions = inWindow.map((e) => e.version);
       break;
     }
   }
@@ -45,7 +47,12 @@ export async function checkBurstPublish(versionHistory, config = {}) {
   return {
     triggered: burstFound || hotPullDetected,
     burstWindow: burstFound
-      ? { start: burstWindowStart, end: burstWindowEnd, versionCount: burstVersionCount, versions: burstVersions }
+      ? {
+          start: burstWindowStart,
+          end: burstWindowEnd,
+          versionCount: burstVersionCount,
+          versions: burstVersions,
+        }
       : null,
     hotPullDetected,
   };

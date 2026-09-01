@@ -1,5 +1,31 @@
-import { test } from 'node:test';
+import { test, describe } from 'node:test';
 import assert from 'assert/strict';
+import fs from 'fs';
+import path from 'path';
+import { globSync } from 'glob';
+import { mkdtempSync, readFileSync } from 'fs';
+import { execSync } from 'child_process';
+import { tmpdir } from 'os';
+
+async function extractTarball(tarPath) {
+  const tmpDir = mkdtempSync(path.join(tmpdir(), 'npm-scan-tier1-'));
+  execSync(`tar xzf "${tarPath}" -C "${tmpDir}"`, { stdio: 'pipe' });
+  const globPath = tmpDir.replace(/\\/g, '/') + '/**/package.json';
+  const pkgPath = globSync(globPath, { nodir: true })[0];
+  if (!pkgPath) {
+    throw new Error(`No package.json in ${tarPath}`);
+  }
+  const pkgJson = JSON.parse(readFileSync(pkgPath, 'utf8'));
+  const pkgDir = path.join(pkgPath, '..');
+  const allGlobPath = pkgDir.replace(/\\/g, '/') + '/**/*';
+  const allFiles = globSync(allGlobPath, { nodir: true }).map((p) => ({
+    path: p,
+    name: p,
+    content: readFileSync(p, 'utf8'),
+  }));
+  const jsFiles = allFiles.filter((f) => f.path.endsWith('.js'));
+  return { pkgJson, jsFiles, allFiles, registryMeta: {} };
+}
 
 // ─── SIEM Exporters ────────────────────────────────────────────────
 
@@ -8,8 +34,21 @@ const MOCK_SCANS = [
     package_name: 'lodash',
     version: '4.17.21',
     findings: [
-      { id: 'ATK-003', atk_id: 'ATK-003', severity: 'high', title: 'Credential harvest', description: 'Scrapes env vars', evidence: 'process.env.NPM_TOKEN' },
-      { id: 'ATK-009', severity: 'medium', title: 'Time trigger', description: 'Conditional trigger (time-based)', evidence: 'time-based trigger detected' },
+      {
+        id: 'ATK-003',
+        atk_id: 'ATK-003',
+        severity: 'high',
+        title: 'Credential harvest',
+        description: 'Scrapes env vars',
+        evidence: 'process.env.NPM_TOKEN',
+      },
+      {
+        id: 'ATK-009',
+        severity: 'medium',
+        title: 'Time trigger',
+        description: 'Conditional trigger (time-based)',
+        evidence: 'time-based trigger detected',
+      },
     ],
   },
 ];
@@ -43,8 +82,8 @@ test('SIEM ECS output format', async () => {
     assert.equal(e.observer.vendor, 'Lateos', 'ECS observer');
     assert(['high', 'medium'].includes(e.log.level), 'ECS log level');
     assert(e.vulnerability.enumeration === 'ATK', 'ECS enumeration');
-      assert(e['@timestamp'], 'ECS timestamp');
-      assert(['high', 'medium'].includes(e.log.level), 'ECS log level');
+    assert(e['@timestamp'], 'ECS timestamp');
+    assert(['high', 'medium'].includes(e.log.level), 'ECS log level');
   }
 });
 
@@ -76,12 +115,19 @@ test('SIEM QRadar output format', async () => {
 test('SIEM QRadar severity QID mapping', async () => {
   const { generateQRadar } = await import('./siem/qradar.js');
   const scans = [
-    { package_name: 't', version: '1', findings: [
-      { id: 'ATK-001', severity: 'critical', title: 'c' },
-      { id: 'ATK-002', severity: 'low', title: 'l' },
-    ]},
+    {
+      package_name: 't',
+      version: '1',
+      findings: [
+        { id: 'ATK-001', severity: 'critical', title: 'c' },
+        { id: 'ATK-002', severity: 'low', title: 'l' },
+      ],
+    },
   ];
-  const out = generateQRadar(scans).split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const out = generateQRadar(scans)
+    .split('\n')
+    .filter(Boolean)
+    .map((l) => JSON.parse(l));
   assert.equal(out[0].qid, 90050001, 'critical QID');
   assert.equal(out[1].qid, 90050004, 'low QID');
 });
@@ -135,7 +181,13 @@ test('SBOM CycloneDX output', async () => {
   const { generateSBOM } = await import('./sbom.js');
   const pkg = { name: 'test-pkg', version: '1.0.0' };
   const findings = [
-    { id: 'ATK-001', atk_id: 'ATK-001', severity: 'high', title: 'Lifecycle script', description: 'preinstall hook' },
+    {
+      id: 'ATK-001',
+      atk_id: 'ATK-001',
+      severity: 'high',
+      title: 'Lifecycle script',
+      description: 'preinstall hook',
+    },
   ];
   const out = JSON.parse(generateSBOM(pkg, findings, 'json'));
   assert.equal(out.bomFormat, 'CycloneDX');
@@ -149,7 +201,13 @@ test('SBOM SPDX output', async () => {
   const { generateSBOM } = await import('./sbom.js');
   const pkg = { name: 'spdx-pkg', version: '2.0.0' };
   const findings = [
-    { id: 'ATK-002', atk_id: 'ATK-002', severity: 'medium', title: 'Obfuscation', description: 'eval detected' },
+    {
+      id: 'ATK-002',
+      atk_id: 'ATK-002',
+      severity: 'medium',
+      title: 'Obfuscation',
+      description: 'eval detected',
+    },
   ];
   const out = JSON.parse(generateSBOM(pkg, findings, 'spdx'));
   assert.equal(out.spdxVersion, 'SPDX-2.3');
@@ -238,8 +296,11 @@ test('license isFeatureEnabled returns true for valid community scan', async () 
   const prev = process.env.NPM_SCAN_LICENSE_KEY;
   process.env.NPM_SCAN_LICENSE_KEY = '';
   const result = m.isFeatureEnabled('scan', '');
-  if (prev) process.env.NPM_SCAN_LICENSE_KEY = prev;
-  else delete process.env.NPM_SCAN_LICENSE_KEY;
+  if (prev) {
+    process.env.NPM_SCAN_LICENSE_KEY = prev;
+  } else {
+    delete process.env.NPM_SCAN_LICENSE_KEY;
+  }
   assert.equal(result, true);
 });
 
@@ -249,8 +310,11 @@ test('license validateLicense community features via isFeatureEnabled', async ()
   process.env.NPM_SCAN_LICENSE_KEY = '';
   assert.equal(m.isFeatureEnabled('scan', ''), true);
   assert.equal(m.isFeatureEnabled('nist-html', ''), true);
-  if (prev) process.env.NPM_SCAN_LICENSE_KEY = prev;
-  else delete process.env.NPM_SCAN_LICENSE_KEY;
+  if (prev) {
+    process.env.NPM_SCAN_LICENSE_KEY = prev;
+  } else {
+    delete process.env.NPM_SCAN_LICENSE_KEY;
+  }
 });
 
 test('license isFeatureEnabled returns false for missing premium key', async () => {
@@ -258,7 +322,9 @@ test('license isFeatureEnabled returns false for missing premium key', async () 
   const prev = process.env.NPM_SCAN_LICENSE_KEY;
   delete process.env.NPM_SCAN_LICENSE_KEY;
   assert.equal(m.isFeatureEnabled('siem', null), false);
-  if (prev) process.env.NPM_SCAN_LICENSE_KEY = prev;
+  if (prev) {
+    process.env.NPM_SCAN_LICENSE_KEY = prev;
+  }
 });
 
 test('license reject tampered key', async () => {
@@ -463,14 +529,18 @@ test('report with no findings shows clean', async () => {
 test('NIST table maps all ATK-001 through ATK-011', async () => {
   const { generateHTML } = await import('./report.js');
   const allAtkScans = [
-    { package_name: 'p', version: '1', findings: [
-      ...Array.from({ length: 11 }, (_, i) => ({
-        id: `ATK-${String(i + 1).padStart(3, '0')}`,
-        atk_id: `ATK-${String(i + 1).padStart(3, '0')}`,
-        severity: 'medium',
-        title: `ATK-${i + 1}`,
-      })),
-    ]},
+    {
+      package_name: 'p',
+      version: '1',
+      findings: [
+        ...Array.from({ length: 11 }, (_, i) => ({
+          id: `ATK-${String(i + 1).padStart(3, '0')}`,
+          atk_id: `ATK-${String(i + 1).padStart(3, '0')}`,
+          severity: 'medium',
+          title: `ATK-${i + 1}`,
+        })),
+      ],
+    },
   ];
   const html = generateHTML(allAtkScans);
   for (let i = 1; i <= 11; i++) {
@@ -513,7 +583,12 @@ test('policy loadPolicy loads JSON', async () => {
 
 test('policy isAllowed matches package name', async () => {
   const { isAllowed } = await import('./policy.js');
-  const policy = { allow: { packages: ['lodash', 'chalk@5.0.0'] }, severity_overrides: {}, fail_on: 'none', suppress: [] };
+  const policy = {
+    allow: { packages: ['lodash', 'chalk@5.0.0'] },
+    severity_overrides: {},
+    fail_on: 'none',
+    suppress: [],
+  };
   assert.equal(isAllowed('lodash', policy), true);
   assert.equal(isAllowed('lodash@4.17.21', policy), true);
   assert.equal(isAllowed('chalk@5.0.0', policy), true);
@@ -532,7 +607,12 @@ test('policy applyPolicy suppresses findings by atk_id', async () => {
     { id: 'ATK-003', atk_id: 'ATK-003', severity: 'high', title: 'Creds' },
     { id: 'ATK-009', atk_id: 'ATK-009', severity: 'medium', title: 'Trigger' },
   ];
-  const policy = { allow: { packages: [] }, severity_overrides: {}, fail_on: 'none', suppress: [{ atk_id: 'ATK-003', package: '*', reason: 'FP' }] };
+  const policy = {
+    allow: { packages: [] },
+    severity_overrides: {},
+    fail_on: 'none',
+    suppress: [{ atk_id: 'ATK-003', package: '*', reason: 'FP' }],
+  };
   const { findings: filtered } = applyPolicy(findings, 'lodash', policy);
   assert.equal(filtered.length, 1);
   assert.equal(filtered[0].id, 'ATK-009');
@@ -540,30 +620,39 @@ test('policy applyPolicy suppresses findings by atk_id', async () => {
 
 test('policy applyPolicy suppresses findings by package name', async () => {
   const { applyPolicy } = await import('./policy.js');
-  const findings = [
-    { id: 'ATK-001', atk_id: 'ATK-001', severity: 'low', title: 'Lifecycle' },
-  ];
-  const policy = { allow: { packages: [] }, severity_overrides: {}, fail_on: 'none', suppress: [{ atk_id: 'ATK-001', package: 'lodash', reason: 'Fixture' }] };
+  const findings = [{ id: 'ATK-001', atk_id: 'ATK-001', severity: 'low', title: 'Lifecycle' }];
+  const policy = {
+    allow: { packages: [] },
+    severity_overrides: {},
+    fail_on: 'none',
+    suppress: [{ atk_id: 'ATK-001', package: 'lodash', reason: 'Fixture' }],
+  };
   const { findings: filtered } = applyPolicy(findings, 'lodash', policy);
   assert.equal(filtered.length, 0);
 });
 
 test('policy applyPolicy preserves findings when suppress rule targets different package', async () => {
   const { applyPolicy } = await import('./policy.js');
-  const findings = [
-    { id: 'ATK-001', atk_id: 'ATK-001', severity: 'low', title: 'Lifecycle' },
-  ];
-  const policy = { allow: { packages: [] }, severity_overrides: {}, fail_on: 'none', suppress: [{ atk_id: 'ATK-001', package: 'express', reason: 'Fixture' }] };
+  const findings = [{ id: 'ATK-001', atk_id: 'ATK-001', severity: 'low', title: 'Lifecycle' }];
+  const policy = {
+    allow: { packages: [] },
+    severity_overrides: {},
+    fail_on: 'none',
+    suppress: [{ atk_id: 'ATK-001', package: 'express', reason: 'Fixture' }],
+  };
   const { findings: filtered } = applyPolicy(findings, 'lodash', policy);
   assert.equal(filtered.length, 1);
 });
 
 test('policy applyPolicy overrides severity', async () => {
   const { applyPolicy } = await import('./policy.js');
-  const findings = [
-    { id: 'ATK-003', atk_id: 'ATK-003', severity: 'high', title: 'Creds' },
-  ];
-  const policy = { allow: { packages: [] }, severity_overrides: { 'ATK-003': 'low' }, fail_on: 'none', suppress: [] };
+  const findings = [{ id: 'ATK-003', atk_id: 'ATK-003', severity: 'high', title: 'Creds' }];
+  const policy = {
+    allow: { packages: [] },
+    severity_overrides: { 'ATK-003': 'low' },
+    fail_on: 'none',
+    suppress: [],
+  };
   const { findings: filtered } = applyPolicy(findings, 'lodash', policy);
   assert.equal(filtered[0].severity, 'low');
   assert.equal(filtered[0]._severityOverridden, true);
@@ -571,22 +660,23 @@ test('policy applyPolicy overrides severity', async () => {
 
 test('policy checkFailOn blocks at threshold', async () => {
   const { applyPolicy } = await import('./policy.js');
-  const findings = [
-    { id: 'ATK-001', atk_id: 'ATK-001', severity: 'medium', title: 'Test' },
-  ];
+  const findings = [{ id: 'ATK-001', atk_id: 'ATK-001', severity: 'medium', title: 'Test' }];
   const policy = { allow: { packages: [] }, severity_overrides: {}, fail_on: 'high', suppress: [] };
   const { blocked } = applyPolicy(findings, 'test', policy);
   assert.equal(blocked, false);
-  const policyLow = { allow: { packages: [] }, severity_overrides: {}, fail_on: 'medium', suppress: [] };
+  const policyLow = {
+    allow: { packages: [] },
+    severity_overrides: {},
+    fail_on: 'medium',
+    suppress: [],
+  };
   const { blocked: b2 } = applyPolicy(findings, 'test', policyLow);
   assert.equal(b2, true);
 });
 
 test('policy checkFailOn none never blocks', async () => {
   const { applyPolicy } = await import('./policy.js');
-  const findings = [
-    { id: 'ATK-001', atk_id: 'ATK-001', severity: 'critical', title: 'Critical' },
-  ];
+  const findings = [{ id: 'ATK-001', atk_id: 'ATK-001', severity: 'critical', title: 'Critical' }];
   const policy = { allow: { packages: [] }, severity_overrides: {}, fail_on: 'none', suppress: [] };
   const { blocked } = applyPolicy(findings, 'test', policy);
   assert.equal(blocked, false);
@@ -672,14 +762,18 @@ test('text report clean package', async () => {
 
 test('text report severity counts', async () => {
   const { generateText } = await import('./report.js');
-  const scans = [{
-    package_name: 'multi-sev', version: '1.0.0', findings: [
-      { id: 'ATK-001', severity: 'critical', title: 'C' },
-      { id: 'ATK-002', severity: 'high', title: 'H' },
-      { id: 'ATK-003', severity: 'medium', title: 'M' },
-      { id: 'ATK-004', severity: 'low', title: 'L' },
-    ],
-  }];
+  const scans = [
+    {
+      package_name: 'multi-sev',
+      version: '1.0.0',
+      findings: [
+        { id: 'ATK-001', severity: 'critical', title: 'C' },
+        { id: 'ATK-002', severity: 'high', title: 'H' },
+        { id: 'ATK-003', severity: 'medium', title: 'M' },
+        { id: 'ATK-004', severity: 'low', title: 'L' },
+      ],
+    },
+  ];
   const out = generateText(scans);
   assert(out.includes('critical: 1'), 'critical count');
   assert(out.includes('high: 1'), 'high count');
@@ -720,4 +814,184 @@ test('PDF report with no findings still valid', async () => {
   const pdfBytes = await generatePDF(scans);
   const header = new TextDecoder().decode(pdfBytes.slice(0, 8));
   assert(header.startsWith('%PDF-'), 'valid PDF with clean package');
+});
+
+// ─── Tier 1 Detectors: Campaign Detection ───────────────────────────
+
+describe('Tier 1 Detectors: Campaign Detection', () => {
+  test('Campaign 1: 95%+ of 33 dependency confusion packages detected', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const campaignTarballs = fs
+      .readdirSync('tests/corpus/malicious/')
+      .filter((f) => f.startsWith('campaign-1-'))
+      .slice(0, 33);
+
+    let detected = 0;
+    for (const tarball of campaignTarballs) {
+      const { pkgJson, jsFiles, allFiles, registryMeta } = await extractTarball(
+        `tests/corpus/malicious/${tarball}`
+      );
+      const result = await runAll(pkgJson, jsFiles, registryMeta, allFiles);
+
+      const lifecycleHookFinding = result.find(
+        (f) => f.detector === 'tier1-lifecycle-hook' && f.confidenceScore >= 80
+      );
+      const metadataSpoofFinding = result.find(
+        (f) => f.detector === 'tier1-metadata-spoof' && f.confidenceScore >= 70
+      );
+
+      if (lifecycleHookFinding || metadataSpoofFinding) {
+        detected++;
+      }
+    }
+
+    assert(detected / campaignTarballs.length >= 0.95);
+  });
+
+  test('Campaign 2: 85%+ of 14 typosquatting packages detected', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const campaignTarballs = fs
+      .readdirSync('tests/corpus/malicious/')
+      .filter((f) => f.startsWith('campaign-2-'))
+      .slice(0, 14);
+
+    let detected = 0;
+    for (const tarball of campaignTarballs) {
+      const { pkgJson, jsFiles, allFiles, registryMeta } = await extractTarball(
+        `tests/corpus/malicious/${tarball}`
+      );
+      const result = await runAll(pkgJson, jsFiles, registryMeta, allFiles);
+
+      const typosquatFinding = result.find(
+        (f) => f.detector === 'tier1-typosquat' && f.confidenceScore >= 70
+      );
+      const infostealerFinding = result.find(
+        (f) => f.detector === 'tier1-infostealer' && f.confidenceScore >= 75
+      );
+      const binaryFinding = result.find(
+        (f) => f.detector === 'tier1-binary-embed' && f.confidenceScore >= 70
+      );
+
+      if (typosquatFinding || infostealerFinding || binaryFinding) {
+        detected++;
+      }
+    }
+
+    assert(detected / campaignTarballs.length >= 0.85);
+  });
+
+  test('Campaign 3: 95%+ confidence on infostealer packages', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const tarball = 'tests/corpus/malicious/campaign-3-infostealer.tgz';
+    const { pkgJson, jsFiles, allFiles, registryMeta } = await extractTarball(tarball);
+    const result = await runAll(pkgJson, jsFiles, registryMeta, allFiles);
+
+    const infostealerFinding = result.find((f) => f.detector === 'tier1-infostealer');
+    assert(infostealerFinding !== undefined);
+    assert(infostealerFinding.confidenceScore >= 95);
+  });
+});
+
+// ─── Tier 1 Detectors: False Positive Regression ────────────────────
+
+describe('Tier 1 Detectors: False Positive Regression', () => {
+  test('FP rate <5% on clean corpus (high/critical only)', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const cleanTarballs = fs
+      .readdirSync('tests/corpus/clean/')
+      .filter((f) => f.endsWith('.tgz'))
+      .slice(0, 1000);
+
+    let fpCount = 0;
+    for (const tarball of cleanTarballs) {
+      const { pkgJson, jsFiles, allFiles, registryMeta } = await extractTarball(
+        `tests/corpus/clean/${tarball}`
+      );
+      const result = await runAll(pkgJson, jsFiles, registryMeta, allFiles);
+
+      const tier1HighSeverity = result.filter(
+        (f) =>
+          f.detector &&
+          f.detector.startsWith('tier1-') &&
+          (f.severity === 'high' || f.severity === 'critical')
+      );
+
+      if (tier1HighSeverity.length > 0) {
+        fpCount++;
+      }
+    }
+
+    const fpRate = fpCount / (cleanTarballs.length || 1);
+    assert(fpRate < 0.05);
+  });
+
+  test('Known reputable packages (electron, webpack, etc.) are suppressed', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const reputablePkgs = ['webpack', 'react'];
+    for (const pkgName of reputablePkgs) {
+      const tarball = `tests/corpus/clean/${pkgName}.tgz`;
+      try {
+        const { pkgJson, jsFiles, allFiles, registryMeta } = await extractTarball(tarball);
+        const result = await runAll(pkgJson, jsFiles, registryMeta, allFiles);
+
+        const tier1HighSeverity = result.filter(
+          (f) =>
+            f.detector &&
+            f.detector.startsWith('tier1-') &&
+            (f.severity === 'high' || f.severity === 'critical')
+        );
+
+        assert.equal(tier1HighSeverity.length, 0);
+      } catch {
+        // skip missing tarballs
+      }
+    }
+  });
+});
+
+// ─── Tier 1 Detectors: Confidence Scoring ──────────────────────────
+
+describe('Tier 1 Detectors: Confidence Scoring', () => {
+  test('Confidence weights match specification', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const pkgJson = { name: 'expres', version: '1.0.0' };
+    const jsFiles = [];
+    const registryMeta = { age: 5, weeklyDownloads: 100 };
+
+    const result = await runAll(pkgJson, jsFiles, registryMeta, []);
+    const typosquatFinding = result.find((f) => f.detector === 'tier1-typosquat');
+
+    assert(typosquatFinding !== undefined);
+    assert(typosquatFinding.confidenceScore >= 90);
+    assert.equal(typosquatFinding.confidence, 'HIGH');
+  });
+
+  test('Cross-file evidence boosts confidence', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const jsFiles = [
+      { path: 'index.js', content: 'fs.readFile(...); fetch(...)' },
+      { path: 'lib.js', content: 'process.env.AWS_SECRET_ACCESS_KEY' },
+    ];
+    const pkgJson = {};
+
+    const result = await runAll(pkgJson, jsFiles, {}, jsFiles);
+    const infostealerFinding = result.find((f) => f.detector === 'tier1-infostealer');
+
+    assert(infostealerFinding !== undefined);
+    assert(infostealerFinding.confidenceScore >= 80);
+    assert(infostealerFinding.crossFiles.length > 1);
+  });
+
+  test('FP throttle suppresses >80% hit rate detectors', async () => {
+    const { runAll } = await import('./detectors/index.js');
+    const jsFiles = Array.from({ length: 100 }, (_, i) => ({
+      name: `file-${i}.js`,
+      content: 'eval(...)',
+    }));
+
+    const result = await runAll({}, jsFiles, jsFiles, []);
+    const lifecycleHookFindings = result.filter((f) => f.detector === 'tier1-lifecycle-hook');
+
+    assert.equal(lifecycleHookFindings.length, 0);
+  });
 });

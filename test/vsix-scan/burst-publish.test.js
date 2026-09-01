@@ -1,4 +1,4 @@
-import { test, mock } from 'node:test';
+import { test, mock as _mock } from 'node:test';
 import assert from 'assert/strict';
 import { checkBurstPublish } from '../../backend/vsix-scan/detectors/burst-publish.js';
 

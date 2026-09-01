@@ -13,23 +13,463 @@ import { scanAll as megalodonScan } from './megalodon/index.js';
 import { scan as hfScan } from './hf-impersonation/index.js';
 import { scan as miniShaiHuludScan } from './mini-shai-hulud/index.js';
 import { scan as badhostScan } from './cve-2026-48710-badhost/index.js';
+import { scan as trapdoorScan } from './trapdoor/index.js';
+import { scan as nodeIpcScan } from './node-ipc-compromise/index.js';
+import { scan as mshSupplementScan } from './msh-supplement/index.js';
+import { scan as typosquatScan } from './typosquat-vpmdhaj/index.js';
+import { scan as axiosPoisoningScan } from './axios-poisoning/index.js';
+import { scan as tier1TyposquatScan } from './tier1-typosquat.js';
+import { scan as tier1InfostealerScan } from './tier1-infostealer.js';
+import { scan as tier1LifecycleHookScan } from './tier1-lifecycle-hook.js';
+import { scan as tier1BinaryEmbedScan } from './tier1-binary-embed.js';
+import { scan as tier1MetadataSpoofScan } from './tier1-metadata-spoof.js';
+import { scan as tier1VersionConfusionScan } from './tier1-version-confusion.js';
+import { scan as tier1CloudImdsScan } from './tier1-cloud-imds.js';
+import { scan as tier1MultistagePostinstallScan } from './tier1-multistage-postinstall.js';
+import { scan as tier1VersionAnomalyScan } from './tier1-version-anomaly.js';
+import { scan as tier1ObfuscationHeuristicsScan } from './tier1-obfuscation-heuristics.js';
+import { scan as tier1SlsaAttestationScan } from './tier1-slsa-attestation.js';
+import { scan as tier1SelfPropagationScan } from './tier1-self-propagation.js';
+import { scan as tier1EncryptedC2Scan } from './tier1-encrypted-c2.js';
+import { scan as tier1TransitiveDepsScan } from './tier1-transitive-deps.js';
+import { scan as tier1MaintainerCompromiseScan } from './tier1-maintainer-compromise.js';
+import { scan as tier1BuildConfigAbuseScan } from './tier1-build-config-abuse.js';
+import { scan as tier1MemoryExtractionScan } from './tier1-memory-extraction.js';
+import { scan as tier1EbpfRootkitScan } from './tier1-ebpf-rootkit.js';
+import { scan as tier1PrivilegeEscalationScan } from './tier1-privilege-escalation.js';
+import { scan as tier1SelfDefendingScan } from './tier1-self-defending.js';
+import { scan as tier1ModuleLoadScan } from './tier1-module-load.js';
+import { scan as tier1ProfilingReconScan } from './tier1-profiling-recon.js';
+import { scan as tier1SelfCleaningScan } from './tier1-self-cleaning.js';
+import { scan as tier1AiTokenTargetingScan } from './tier1-ai-token-targeting.js';
+import { scan as tier1GitHubAuthorSpoofScan } from './tier1-github-author-spoof.js';
+import { scan as tier1BunRuntimeSwapScan } from './tier1-bun-runtime-swap.js';
+import { scan as tier1SplitDynamicPayloadScan } from './tier1-split-dynamic-payload.js';
+import { scan as tier1LifecycleHookFollowthroughScan } from './tier1-lifecycle-hook-followthrough.js';
+import { scan as tier1VersionBackfillScan } from './tier1-version-backfill.js';
+import { scan as tier1CryptoPrimitiveTamperScan } from './tier1-crypto-primitive-tamper.js';
+import { scan as tier1AiSlopDropperScan } from './tier1-ai-slop-dropper.js';
+import { scan as tier1RuntimeEvasionScan } from './tier1-runtime-evasion.js';
+import { scan as tier1WorkspacePersistenceScan } from './tier1-workspace-persistence.js';
+import { scan as tier1TarballGitDesyncScan } from './tier1-tarball-git-desync.js';
+import { scanPromptInjection } from './lib/prompt-injection.js';
 
-export async function runAll(pkgJson, files = [], registryMeta = null, allFiles = null) {
+function timeout(ms) {
+  return new Promise((_, reject) =>
+    setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms)
+  );
+}
+
+/**
+ * @param {object} [extra]
+ * @param {number} [extra.timeoutMs] override the default budget; the
+ *   tarball/git differential is network-bound and needs far more than 800ms.
+ * @param {object} [extra.detectorOptions] passed to the detector as a 5th arg.
+ */
+async function runTier1(name, scanFn, pkgJson, files, registryMeta, allFiles, extra) {
+  try {
+    const result = await Promise.race([
+      scanFn(pkgJson, files, registryMeta, allFiles, extra?.detectorOptions),
+      timeout(extra?.timeoutMs ?? 800),
+    ]);
+    const fileCount = allFiles && allFiles.length > 0 ? allFiles.length : files.length;
+    if (fileCount >= 10 && result.length > 0) {
+      const hitRate = result.length / fileCount;
+      if (hitRate > 0.8) {
+        return [];
+      }
+    }
+    return result;
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * @param {object} [options]
+ * @param {object} [options.gitDiff] options for D31 (`{ enabled, sourceProvider }`).
+ *   D31 is the only network-bound detector and stays off unless enabled here
+ *   or in thresholds.
+ */
+export async function runAll(
+  pkgJson,
+  files = [],
+  registryMeta = null,
+  allFiles = null,
+  options = {}
+) {
   const findings = [];
-  findings.push(...await atk001.scan(pkgJson, files));
-  findings.push(...await atk002.scan(pkgJson, files));
-  findings.push(...await atk003.scan(pkgJson, files));
-  findings.push(...await atk004.scan(pkgJson, files));
-  findings.push(...await atk005.scan(pkgJson, files));
-  findings.push(...await atk006.scan(pkgJson, files));
-  findings.push(...await atk007.scan(pkgJson, files));
-  findings.push(...await atk008.scan(pkgJson, files));
-  findings.push(...await atk009.scan(pkgJson, files));
-  findings.push(...await atk010.scan(pkgJson, files));
-  findings.push(...await atk011.scan(pkgJson, files));
-  findings.push(...await megalodonScan(pkgJson, allFiles || files, registryMeta));
-  findings.push(...await hfScan(pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await miniShaiHuludScan(pkgJson, files, registryMeta, allFiles || files));
-  findings.push(...await badhostScan(pkgJson, files, registryMeta, allFiles || files));
+  findings.push(...(await atk001.scan(pkgJson, files)));
+  findings.push(...(await atk002.scan(pkgJson, files)));
+  findings.push(...(await atk003.scan(pkgJson, files)));
+  findings.push(...(await atk004.scan(pkgJson, files)));
+  findings.push(...(await atk005.scan(pkgJson, files)));
+  findings.push(...(await atk006.scan(pkgJson, files)));
+  findings.push(...(await atk007.scan(pkgJson, files)));
+  findings.push(...(await atk008.scan(pkgJson, files)));
+  findings.push(...(await atk009.scan(pkgJson, files)));
+  findings.push(...(await atk010.scan(pkgJson, files)));
+  findings.push(...(await atk011.scan(pkgJson, files)));
+  findings.push(...(await megalodonScan(pkgJson, allFiles || files, registryMeta)));
+  findings.push(...(await hfScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await miniShaiHuludScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await badhostScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await trapdoorScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await nodeIpcScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await mshSupplementScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await typosquatScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(...(await axiosPoisoningScan(pkgJson, files, registryMeta, allFiles || files)));
+  findings.push(
+    ...(await runTier1(
+      'prompt-injection',
+      scanPromptInjection,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-typosquat',
+      tier1TyposquatScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-infostealer',
+      tier1InfostealerScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-lifecycle-hook',
+      tier1LifecycleHookScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-binary-embed',
+      tier1BinaryEmbedScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-metadata-spoof',
+      tier1MetadataSpoofScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-version-confusion',
+      tier1VersionConfusionScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-cloud-imds',
+      tier1CloudImdsScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-multistage-postinstall',
+      tier1MultistagePostinstallScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-version-anomaly',
+      tier1VersionAnomalyScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-obfuscation-heuristics',
+      tier1ObfuscationHeuristicsScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-slsa-attestation',
+      tier1SlsaAttestationScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-self-propagation',
+      tier1SelfPropagationScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-encrypted-c2',
+      tier1EncryptedC2Scan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-transitive-deps',
+      tier1TransitiveDepsScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-maintainer-compromise',
+      tier1MaintainerCompromiseScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-build-config-abuse',
+      tier1BuildConfigAbuseScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-memory-extraction',
+      tier1MemoryExtractionScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-ebpf-rootkit',
+      tier1EbpfRootkitScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-privilege-escalation',
+      tier1PrivilegeEscalationScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-self-defending',
+      tier1SelfDefendingScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-module-load',
+      tier1ModuleLoadScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-profiling-recon',
+      tier1ProfilingReconScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-self-cleaning',
+      tier1SelfCleaningScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-ai-token-targeting',
+      tier1AiTokenTargetingScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-github-author-spoof',
+      tier1GitHubAuthorSpoofScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-bun-runtime-swap',
+      tier1BunRuntimeSwapScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-split-dynamic-payload',
+      tier1SplitDynamicPayloadScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-lifecycle-hook-followthrough',
+      tier1LifecycleHookFollowthroughScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-version-backfill',
+      tier1VersionBackfillScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-crypto-primitive-tamper',
+      tier1CryptoPrimitiveTamperScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-ai-slop-dropper',
+      tier1AiSlopDropperScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-runtime-evasion',
+      tier1RuntimeEvasionScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  findings.push(
+    ...(await runTier1(
+      'tier1-workspace-persistence',
+      tier1WorkspacePersistenceScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files
+    ))
+  );
+  // Network-bound and opt-in: returns [] before any I/O unless enabled.
+  findings.push(
+    ...(await runTier1(
+      'tier1-tarball-git-desync',
+      tier1TarballGitDesyncScan,
+      pkgJson,
+      files,
+      registryMeta,
+      allFiles || files,
+      { timeoutMs: 30000, detectorOptions: options.gitDiff }
+    ))
+  );
   return findings.sort((a, b) => b.severity.localeCompare(a.severity));
 }

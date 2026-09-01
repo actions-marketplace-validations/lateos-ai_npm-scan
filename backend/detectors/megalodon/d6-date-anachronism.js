@@ -1,3 +1,3 @@
-export async function scan(pkgJson, registryMeta) {
+export async function scan(_pkgJson, _registryMeta) {
   return [];
 }

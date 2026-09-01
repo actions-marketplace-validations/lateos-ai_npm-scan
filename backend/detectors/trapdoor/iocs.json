@@ -1,0 +1,51 @@
+{
+  "lastUpdated": "2026-05-28T00:00:00.000Z",
+  "campaign": {
+    "id": "trapdoor",
+    "description": "TrapDoor cross-ecosystem supply chain attack (npm, PyPI, Crates.io) targeting crypto, DeFi, Solana, and AI developer communities.",
+    "firstObserved": "2026-05-22T00:00:00.000Z",
+    "attribution": {
+      "npmPublisher": "asdxzxc",
+      "githubAccount": "ddjidd564",
+      "githubPages": "ddjidd564.github.io"
+    }
+  },
+  "iocs": [
+    {
+      "type": "publisherAccount",
+      "value": "asdxzxc",
+      "ecosystem": "npm",
+      "notes": "TrapDoor campaign — known malicious npm publisher account."
+    },
+    {
+      "type": "campaignMarker",
+      "value": "P-2024-001",
+      "notes": "Hardcoded campaign marker found in package files (README.md, .cursorrules, CLAUDE.md)."
+    },
+    {
+      "type": "payloadFilename",
+      "value": "trap-core.js",
+      "notes": "Shared payload filename in TrapDoor packages."
+    },
+    {
+      "type": "payloadSize",
+      "value": 48485,
+      "notes": "Exact byte size of trap-core.js payload."
+    },
+    {
+      "type": "xorKey",
+      "value": "cargo-build-helper-2026",
+      "notes": "XOR key string found in Crates.io / cross-ecosystem packages."
+    },
+    {
+      "type": "c2Domain",
+      "value": "ddjidd564.github.io",
+      "notes": "GitHub Pages C2 infrastructure."
+    },
+    {
+      "type": "gistDomain",
+      "value": "gist.github.com",
+      "notes": "GitHub Gist used for exfiltration."
+    }
+  ]
+}

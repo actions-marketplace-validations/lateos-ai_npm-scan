@@ -1,7 +1,7 @@
 export async function scan(pkgJson, files = []) {
   const findings = [];
   const repo = pkgJson.repository || {};
-  const repoUrl = typeof repo === 'string' ? repo : (repo.url || '');
+  const repoUrl = typeof repo === 'string' ? repo : repo.url || '';
   const pkgName = (pkgJson.name || '').toLowerCase();
 
   const knownRepos = {
@@ -29,7 +29,7 @@ export async function scan(pkgJson, files = []) {
   };
 
   if (repoUrl && repoUrl.includes('github.com')) {
-    const repoMatch = repoUrl.match(/github\.com[\/:]([\w.-]+\/[\w.-]+?)(?:\.git)?$/);
+    const repoMatch = repoUrl.match(/github\.com[/:]([\w.-]+\/[\w.-]+?)(?:\.git)?$/);
     if (repoMatch) {
       const ghRepo = repoMatch[1].toLowerCase();
       const ghName = ghRepo.split('/')[1];
@@ -45,7 +45,7 @@ export async function scan(pkgJson, files = []) {
             severity: 'high',
             title: 'Tarball tampering suspect',
             description: `Repository "${ghRepo}" does not match expected "${expectedRepo}" for package "${pkgName}"`,
-            evidence: `repo: ${ghRepo}, expected: ${expectedRepo}`
+            evidence: `repo: ${ghRepo}, expected: ${expectedRepo}`,
           });
         } else {
           const orgExpected = knownRepos[shortName];
@@ -57,7 +57,7 @@ export async function scan(pkgJson, files = []) {
                 severity: 'medium',
                 title: 'Tarball tampering suspect',
                 description: `Repository "${ghRepo}" is a different repo under a different org (legitimate: ${expectedRepo})`,
-                evidence: `org mismatch: ${ghOrg} vs ${expectedOrg}`
+                evidence: `org mismatch: ${ghOrg} vs ${expectedOrg}`,
               });
             }
           }
@@ -66,7 +66,7 @@ export async function scan(pkgJson, files = []) {
     }
   }
 
-  const code = files.map(f => f.content).join('\n');
+  const code = files.map((f) => f.content).join('\n');
   const embeddedIntros = code.match(/\/\/\s*Source:\s*(https?:\/\/[^\s]+)/gi);
   if (embeddedIntros && repoUrl) {
     for (const intro of embeddedIntros) {
@@ -78,7 +78,7 @@ export async function scan(pkgJson, files = []) {
             severity: 'medium',
             title: 'Tarball tampering suspect',
             description: 'Source URL in file does not match declared repository',
-            evidence: srcUrl
+            evidence: srcUrl,
           });
         }
       } catch {

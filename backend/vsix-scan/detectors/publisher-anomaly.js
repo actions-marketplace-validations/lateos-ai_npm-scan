@@ -1,24 +1,33 @@
-export async function checkPublisherAnomaly(extensionMetadata, publisherProfile, versionHistory, config = {}) {
+export async function checkPublisherAnomaly(
+  extensionMetadata,
+  publisherProfile,
+  versionHistory,
+  config = {}
+) {
   const signals = [];
 
-  const crossNamespaceThreshold = config.crossNamespaceThreshold ?? 3;
-  const crossNamespaceDays = config.crossNamespaceDays ?? 14;
+  const _crossNamespaceThreshold = config.crossNamespaceThreshold ?? 3;
+  const _crossNamespaceDays = config.crossNamespaceDays ?? 14;
   const newAccountAgeDays = config.newAccountAgeDays ?? 30;
   const highInstallThreshold = config.highInstallThreshold ?? 100000;
   const addPublishWindowMinutes = config.addPublishWindowMinutes ?? 15;
 
   const versions = versionHistory || [];
-  if (versions.length === 0) return { triggered: false, signals: [] };
+  if (versions.length === 0) {
+    return { triggered: false, signals: [] };
+  }
 
-  const publishers = [...new Set(versions.map(v => v.publishedBy).filter(Boolean))];
-  if (publishers.length === 0) return { triggered: false, signals: [] };
+  const publishers = [...new Set(versions.map((v) => v.publishedBy).filter(Boolean))];
+  if (publishers.length === 0) {
+    return { triggered: false, signals: [] };
+  }
 
   const sortedVersions = [...versions]
-    .filter(v => v.publishedAt)
+    .filter((v) => v.publishedAt)
     .sort((a, b) => new Date(a.publishedAt) - new Date(b.publishedAt));
 
   const extPublisher = publishers[0];
-  const allSame = publishers.every(p => p === extPublisher);
+  const allSame = publishers.every((p) => p === extPublisher);
 
   if (!allSame) {
     for (const pub of publishers) {
@@ -32,13 +41,18 @@ export async function checkPublisherAnomaly(extensionMetadata, publisherProfile,
     }
   }
 
-  const extInstallCount = extensionMetadata?.statistics?.find(s => s.statisticName === 'install')?.value || 0;
+  const extInstallCount =
+    extensionMetadata?.statistics?.find((s) => s.statisticName === 'install')?.value || 0;
 
   const extAgeDays = publisherProfile?.dateCreated
     ? (Date.now() - new Date(publisherProfile.dateCreated).getTime()) / (1000 * 60 * 60 * 24)
     : null;
 
-  if (extAgeDays !== null && extAgeDays < newAccountAgeDays && extInstallCount >= highInstallThreshold) {
+  if (
+    extAgeDays !== null &&
+    extAgeDays < newAccountAgeDays &&
+    extInstallCount >= highInstallThreshold
+  ) {
     signals.push({
       type: 'NEW_ACCOUNT_HIGH_INSTALL',
       accountAgeDays: Math.round(extAgeDays),

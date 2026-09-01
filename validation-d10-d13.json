@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-06-04T23:01:55.543Z",
+  "results": [
+    {
+      "campaign": "@redhat-cloud-services Miasma",
+      "detectors": {
+        "D10": {
+          "triggered": true,
+          "confidence": 85
+        },
+        "D13": {
+          "triggered": true,
+          "confidence": 100
+        }
+      }
+    },
+    {
+      "campaign": "TanStack Mini Shai-Hulud",
+      "detectors": {
+        "D11": {
+          "triggered": true,
+          "confidence": 100
+        }
+      }
+    },
+    {
+      "campaign": "Axios Backdoor",
+      "detectors": {
+        "D12": {
+          "triggered": true,
+          "confidence": 55
+        }
+      }
+    }
+  ],
+  "passed": true
+}
